@@ -1,3 +1,4 @@
+import { ModeToggle } from "./mode-toggle";
 import {
 	Breadcrumb,
 	BreadcrumbItem,
@@ -11,9 +12,9 @@ import { SidebarTrigger } from "./ui/sidebar";
 
 function Header() {
 	return (
-		<header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
-			<div className="flex items-center gap-2 px-4">
-				<SidebarTrigger className="-ml-1" />
+		<header className="flex h-16 shrink-0 w-full items-center gap-2 transition-[width,height] ease-linear ">
+			<div className="flex items-center justify-between w-full gap-2 px-4">
+				<SidebarTrigger />
 				<Separator
 					orientation="vertical"
 					className="mr-2 data-[orientation=vertical]:h-4"
@@ -29,6 +30,7 @@ function Header() {
 						</BreadcrumbItem>
 					</BreadcrumbList>
 				</Breadcrumb>
+				<ModeToggle />
 			</div>
 		</header>
 	);

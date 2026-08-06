@@ -1,29 +1,17 @@
-import { DirectionProvider, Separator } from "@base-ui/react";
-import { TanStackDevtools } from "@tanstack/react-devtools";
 import {
 	createRootRoute,
 	HeadContent,
 	Outlet,
 	Scripts,
 } from "@tanstack/react-router";
-import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { AppSidebar } from "#/components/app-sidebar";
-import Header from "#/components/Header";
-import {
-	Breadcrumb,
-	BreadcrumbItem,
-	BreadcrumbLink,
-	BreadcrumbList,
-	BreadcrumbPage,
-	BreadcrumbSeparator,
-} from "#/components/ui/breadcrumb";
-import {
-	SidebarInset,
-	SidebarProvider,
-	SidebarTrigger,
-} from "#/components/ui/sidebar";
+import Header from "#/components/header.tsx";
+import OutletContainer from "#/components/outlet-container.tsx";
+import { SidebarInset, SidebarProvider } from "#/components/ui/sidebar";
+import { DIR, LANG } from "#/lib/locale.ts";
 import { ThemeProvider } from "@/components/theme-provider";
 import appCss from "../styles.css?url";
+
 export const Route = createRootRoute({
 	head: () => ({
 		meta: [
@@ -35,7 +23,7 @@ export const Route = createRootRoute({
 				content: "width=device-width, initial-scale=1",
 			},
 			{
-				title: "TanStack Start Starter",
+				title: "Maktabi | مکتبی",
 			},
 		],
 		links: [
@@ -50,37 +38,39 @@ export const Route = createRootRoute({
 
 function RootDocument() {
 	return (
-		<html lang="en" suppressHydrationWarning>
+		<html lang={LANG} dir={DIR} suppressHydrationWarning>
 			<head>
 				{/* <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} /> */}
 				<HeadContent />
 			</head>
 			<body>
-				<DirectionProvider direction="rtl">
-					<ThemeProvider defaultTheme="system" storageKey="theme">
-						{/* ―――――――――――――――――――――――――――― Panel + Dashboard ――――――――――――――――――――――――――― */}
-						<SidebarProvider>
-							<AppSidebar />
-							<SidebarInset>
-								<Header />
+				{/* <DirectionProvider direction={DIR}> */}
+				<ThemeProvider defaultTheme="system" storageKey="theme">
+					{/* ―――――――――――――――――――――――――――― Panel + Dashboard ――――――――――――――――――――――――――― */}
+					<SidebarProvider>
+						<AppSidebar />
+						<SidebarInset>
+							<Header />
+							<OutletContainer>
 								<Outlet />
-							</SidebarInset>
-						</SidebarProvider>
+							</OutletContainer>
+						</SidebarInset>
+					</SidebarProvider>
 
-						{/* ―――――――――――――――――――――――――――――――― DevTools ―――――――――――――――――――――――――――――――― */}
-						<TanStackDevtools
-							config={{
-								position: "bottom-right",
-							}}
-							plugins={[
-								{
-									name: "Tanstack Router",
-									render: <TanStackRouterDevtoolsPanel />,
-								},
-							]}
-						/>
-					</ThemeProvider>
-				</DirectionProvider>
+					{/* ―――――――――――――――――――――――――――――――― DevTools ―――――――――――――――――――――――――――――――― */}
+					{/* <TanStackDevtools
+						config={{
+							position: "bottom-right",
+						}}
+						plugins={[
+							{
+								name: "Tanstack Router",
+								render: <TanStackRouterDevtoolsPanel />,
+							},
+						]}
+					/> */}
+				</ThemeProvider>
+				{/* </DirectionProvider> */}
 				<Scripts />
 			</body>
 		</html>
