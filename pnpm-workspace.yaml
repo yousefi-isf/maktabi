@@ -1,0 +1,9 @@
+packages:
+  - "backend"
+  - "backend/attendance-gateway"
+  - "backend/packages/*"
+  - "frontend"
+allowBuilds:
+  '@prisma/engines': true
+  esbuild: true
+  prisma: true
