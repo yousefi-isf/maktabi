@@ -1,0 +1,26 @@
+{
+  "name": "@maktabi/db",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "exports": {
+    ".": "./src/client.ts",
+    "./client": "./generated/prisma/client.js"
+  },
+  "scripts": {
+    "generate": "prisma generate",
+    "migrate:dev": "prisma migrate dev",
+    "studio": "prisma studio"
+  },
+  "dependencies": {
+    "@prisma/client": "^7.0.0",
+    "@prisma/adapter-pg": "^7.0.0",
+    "pg": "^8.13.0",
+    "dotenv": "^16.4.0"
+  },
+  "devDependencies": {
+    "prisma": "^7.0.0",
+    "@types/pg": "^8.11.0",
+    "typescript": "^5.9.0"
+  }
+}

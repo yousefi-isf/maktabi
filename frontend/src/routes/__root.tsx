@@ -33,7 +33,7 @@ export const Route = createRootRoute({
 			},
 		],
 	}),
-	shellComponent: RootDocument,
+	component: RootDocument,
 });
 
 function RootDocument() {

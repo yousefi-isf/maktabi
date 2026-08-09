@@ -1,0 +1,777 @@
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  // No `url` here — Prisma ORM 7 moved connection URLs out of schema.prisma
+  // and into prisma.config.ts (see IMPLEMENTATION NOTES, item 9).
+}
+
+// ----------------------------------------------------------------------------
+// Enums
+// The ERD's own TODO list calls out exactly five fields that need real enums:
+// ExamType, SubjectType, AttendanceStatus, EnrollmentStatus, Branch.
+// I added three more (SchoolType, EducationStage, UserSchoolStatus) because
+// the ERD prose gives them a closed, exact value set too — flagged below so
+// you can revert to String if you'd rather decide those later.
+// ----------------------------------------------------------------------------
+
+/// SCHOOL.school_type — closed set per ERD §SCHOOL prose (not in the TODO list,
+/// added on my own judgment; easy to revert to String if you disagree).
+enum SchoolType {
+  middle_school
+  high_school
+  technical
+}
+
+/// GRADE_LEVEL.stage — kept separate from SchoolType because "technical" is a
+/// school type, not a grade-level stage; a grade level is always middle or high.
+enum EducationStage {
+  middle_school
+  high_school
+}
+
+/// FIELD_OF_STUDY.branch — required by the ERD's TODO list.
+enum Branch {
+  theoretical
+  technical
+  vocational
+}
+
+/// SUBJECT.subject_type — required by the ERD's TODO list.
+enum SubjectType {
+  theoretical
+  modular
+}
+
+/// EXAM.exam_type — required by the ERD's TODO list. The ERD explicitly says:
+/// if/when you need a makeup exam, add `makeup` here — don't build a new table.
+enum ExamType {
+  continuous
+  term_final
+  national_final
+}
+
+/// ENROLLMENT.status — required by the ERD's TODO list.
+enum EnrollmentStatus {
+  active
+  transferred
+  graduated
+  dropped
+}
+
+/// USER_SCHOOL.status — closed set per ERD §USER_SCHOOL prose.
+enum UserSchoolStatus {
+  active
+  inactive
+  left
+}
+
+/// ATTENDANCE.status — NOT enumerated anywhere in the ERD prose or sample data.
+/// These four are the conventional values for this domain — confirm with the
+/// person who owns the attendance policy before you rely on this list.
+enum AttendanceStatus {
+  present
+  absent
+  late
+  excused
+}
+
+// ----------------------------------------------------------------------------
+// Tenancy root, RBAC, global identity
+// ----------------------------------------------------------------------------
+
+model School {
+  id         String     @id @default(uuid())
+  name       String
+  district   String
+  city       String
+  province   String
+  schoolType SchoolType @map("school_type")
+  address    String?
+  phone      String?
+  deletedAt  DateTime?  @map("deleted_at") @db.Timestamptz
+
+  academicYears       AcademicYear[]
+  terms               Term[]
+  gradeLevels         GradeLevel[]
+  fieldsOfStudy       FieldOfStudy[]
+  roles               Role[]
+  userSchools         UserSchool[]
+  parentStudents      ParentStudent[]
+  schoolClasses       SchoolClass[]
+  enrollments         Enrollment[]
+  subjects            Subject[]
+  curricula           Curriculum[]
+  subjectModules      SubjectModule[]
+  teachingAssignments TeachingAssignment[]
+  timetables          Timetable[]
+  exams               Exam[]
+  scores              Score[]
+  attendances         Attendance[]
+  announcements       Announcement[]
+  auditLogs           AuditLog[]
+
+  // Student / Teacher / Parent / UserRole are intentionally NOT listed here.
+  // Per the ERD, those four only reach School through UserSchool's composite
+  // FK ("no profile without valid membership") — see UserSchool below.
+
+  @@map("school")
+}
+
+model AcademicYear {
+  id        String    @id @default(uuid())
+  schoolId  String    @map("school_id")
+  title     String
+  startDate DateTime  @map("start_date") @db.Timestamptz
+  endDate   DateTime  @map("end_date") @db.Timestamptz
+  isActive  Boolean   @default(false) @map("is_active")
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz
+
+  school              School               @relation(fields: [schoolId], references: [id])
+  terms               Term[]
+  schoolClasses       SchoolClass[]
+  enrollments         Enrollment[]
+  teachingAssignments TeachingAssignment[]
+  curricula           Curriculum[]
+  userRoles           UserRole[]
+
+  @@unique([schoolId, title])
+  @@map("academic_year")
+}
+
+model Term {
+  id             String    @id @default(uuid())
+  schoolId       String    @map("school_id")
+  academicYearId String    @map("academic_year_id")
+  termNumber     Int       @map("term_number")
+  title          String
+  startDate      DateTime  @map("start_date") @db.Timestamptz
+  endDate        DateTime  @map("end_date") @db.Timestamptz
+  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz
+
+  school       School       @relation(fields: [schoolId], references: [id])
+  academicYear AcademicYear @relation(fields: [academicYearId], references: [id])
+  exams        Exam[]
+  attendances  Attendance[]
+
+  @@unique([academicYearId, termNumber])
+  @@map("term")
+}
+
+model GradeLevel {
+  id         String         @id @default(uuid())
+  schoolId   String         @map("school_id")
+  title      String
+  orderIndex Int            @map("order_index")
+  stage      EducationStage
+  deletedAt  DateTime?      @map("deleted_at") @db.Timestamptz
+
+  school        School        @relation(fields: [schoolId], references: [id])
+  schoolClasses SchoolClass[]
+  curricula     Curriculum[]
+
+  @@unique([schoolId, orderIndex])
+  @@map("grade_level")
+}
+
+model FieldOfStudy {
+  id        String    @id @default(uuid())
+  schoolId  String    @map("school_id")
+  title     String
+  branch    Branch
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz
+
+  school        School        @relation(fields: [schoolId], references: [id])
+  schoolClasses SchoolClass[]
+  curricula     Curriculum[]
+
+  @@map("field_of_study")
+}
+
+model Role {
+  id          String    @id @default(uuid())
+  schoolId    String?   @map("school_id") // null = system-wide role (principal, teacher, ...)
+  name        String
+  description String?
+  isSystem    Boolean   @default(false) @map("is_system")
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz
+
+  school          School?          @relation(fields: [schoolId], references: [id])
+  rolePermissions RolePermission[]
+  userRoles       UserRole[]
+  announcements   Announcement[]
+
+  @@map("role")
+}
+
+model Permission {
+  id          String    @id @default(uuid())
+  code        String    @unique
+  description String?
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz
+
+  rolePermissions RolePermission[]
+
+  // Deliberately no school_id — permissions are a fixed system-wide code
+  // list. A school can't invent a new permission; that requires new
+  // application code. This is the ERD's one stated exception to "everything
+  // hangs off School".
+
+  @@map("permission")
+}
+
+model RolePermission {
+  id           String @id @default(uuid())
+  roleId       String @map("role_id")
+  permissionId String @map("permission_id")
+
+  role       Role       @relation(fields: [roleId], references: [id])
+  permission Permission @relation(fields: [permissionId], references: [id])
+
+  // Immutable junction (no deletedAt), matching ERD field list.
+  // @@unique below isn't in the ERD's constraint table but prevents an
+  // obviously-nonsensical duplicate grant — flagging as my addition.
+  @@unique([roleId, permissionId])
+  @@map("role_permission")
+}
+
+model User {
+  id           String    @id @default(uuid())
+  fullName     String    @map("full_name")
+  nationalCode String    @unique @map("national_code")
+  email        String    @unique
+  phone        String?
+  passwordHash String    @map("password_hash")
+  deletedAt    DateTime? @map("deleted_at") @db.Timestamptz
+
+  userSchools   UserSchool[]
+  announcements Announcement[]
+  auditLogs     AuditLog[]
+
+  @@map("user")
+}
+
+model UserSchool {
+  id        String           @id @default(uuid())
+  userId    String           @map("user_id")
+  schoolId  String           @map("school_id")
+  status    UserSchoolStatus @default(active)
+  joinedAt  DateTime         @map("joined_at") @db.Timestamptz
+  leftAt    DateTime?        @map("left_at") @db.Timestamptz
+  isDefault Boolean          @default(false) @map("is_default")
+  deletedAt DateTime?        @map("deleted_at") @db.Timestamptz
+
+  user   User   @relation(fields: [userId], references: [id])
+  school School @relation(fields: [schoolId], references: [id])
+
+  // This @@unique is also the composite-FK target for Student / Teacher /
+  // Parent / UserRole below — the ERD is explicit that those four must go
+  // through a valid membership, not straight to User/School.
+  students  Student[]
+  teachers  Teacher[]
+  parents   Parent[]
+  userRoles UserRole[]
+
+  @@unique([userId, schoolId])
+  @@map("user_school")
+}
+
+model UserRole {
+  id             String  @id @default(uuid())
+  userId         String  @map("user_id")
+  schoolId       String  @map("school_id")
+  roleId         String  @map("role_id")
+  academicYearId String? @map("academic_year_id") // null = year-independent (principal/admin)
+
+  userSchool   UserSchool    @relation(fields: [userId, schoolId], references: [userId, schoolId])
+  role         Role          @relation(fields: [roleId], references: [id])
+  academicYear AcademicYear? @relation(fields: [academicYearId], references: [id])
+
+  // Immutable junction (no deletedAt), matching ERD field list.
+  // See IMPLEMENTATION NOTES re: academicYearId being nullable inside a
+  // unique constraint (Postgres treats NULL <> NULL, so this alone won't
+  // stop two "principal" rows with academicYearId = null from coexisting).
+  @@unique([userId, schoolId, roleId, academicYearId])
+  @@map("user_role")
+}
+
+// ----------------------------------------------------------------------------
+// People — per-school profiles
+// ----------------------------------------------------------------------------
+
+model Student {
+  id            String    @id @default(uuid())
+  userId        String    @map("user_id")
+  schoolId      String    @map("school_id")
+  studentNumber String    @map("student_number")
+  deletedAt     DateTime? @map("deleted_at") @db.Timestamptz
+
+  // Composite FK, not two separate single-column FKs — see ERD §STUDENT:
+  // "پروفایل بدون عضویت معتبر ساخته نمی‌شود". To reach User or School from
+  // here, go through userSchool.user / userSchool.school.
+  userSchool UserSchool @relation(fields: [userId, schoolId], references: [userId, schoolId])
+
+  enrollments    Enrollment[]
+  scores         Score[]
+  attendances    Attendance[]
+  parentStudents ParentStudent[]
+
+  @@unique([userId, schoolId])
+  @@unique([schoolId, studentNumber])
+  @@map("student")
+}
+
+model Teacher {
+  id             String    @id @default(uuid())
+  userId         String    @map("user_id")
+  schoolId       String    @map("school_id")
+  specialty      String?
+  employmentType String?   @map("employment_type") // free text: رسمی / حق‌التدریس / ... (not in the ERD's enum TODO list)
+  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz
+
+  userSchool UserSchool @relation(fields: [userId, schoolId], references: [userId, schoolId])
+
+  homeroomOfClasses   SchoolClass[]        @relation("HomeroomTeacher")
+  teachingAssignments TeachingAssignment[]
+
+  @@unique([userId, schoolId])
+  @@map("teacher")
+}
+
+model Parent {
+  id         String    @id @default(uuid())
+  userId     String    @map("user_id")
+  schoolId   String    @map("school_id")
+  occupation String?
+  deletedAt  DateTime? @map("deleted_at") @db.Timestamptz
+
+  userSchool UserSchool @relation(fields: [userId, schoolId], references: [userId, schoolId])
+
+  parentStudents ParentStudent[]
+
+  @@unique([userId, schoolId])
+  @@map("parent")
+}
+
+model ParentStudent {
+  id           String @id @default(uuid())
+  schoolId     String @map("school_id")
+  parentId     String @map("parent_id")
+  studentId    String @map("student_id")
+  relationType String @map("relation_type") // پدر / مادر / سرپرست قانونی / ...
+
+  school  School  @relation(fields: [schoolId], references: [id])
+  parent  Parent  @relation(fields: [parentId], references: [id])
+  student Student @relation(fields: [studentId], references: [id])
+
+  // Immutable junction (no deletedAt, matching ERD field list).
+  // Not in the ERD's constraint table — my addition, to block registering
+  // the same guardian twice for the same student.
+  @@unique([parentId, studentId])
+  @@map("parent_student")
+}
+
+// ----------------------------------------------------------------------------
+// Classes, enrollment, curriculum, subjects
+// ----------------------------------------------------------------------------
+
+model SchoolClass {
+  id                String    @id @default(uuid())
+  schoolId          String    @map("school_id")
+  academicYearId    String    @map("academic_year_id")
+  gradeLevelId      String    @map("grade_level_id")
+  fieldOfStudyId    String?   @map("field_of_study_id") // null for schools with no tracks
+  homeroomTeacherId String?   @map("homeroom_teacher_id")
+  name              String
+  capacity          Int
+  deletedAt         DateTime? @map("deleted_at") @db.Timestamptz
+
+  school          School        @relation(fields: [schoolId], references: [id])
+  academicYear    AcademicYear  @relation(fields: [academicYearId], references: [id])
+  gradeLevel      GradeLevel    @relation(fields: [gradeLevelId], references: [id])
+  fieldOfStudy    FieldOfStudy? @relation(fields: [fieldOfStudyId], references: [id])
+  homeroomTeacher Teacher?      @relation("HomeroomTeacher", fields: [homeroomTeacherId], references: [id])
+
+  enrollments         Enrollment[]
+  teachingAssignments TeachingAssignment[]
+  attendances         Attendance[]
+
+  @@unique([schoolId, academicYearId, name])
+  @@map("school_class")
+}
+
+model Enrollment {
+  id             String           @id @default(uuid())
+  schoolId       String           @map("school_id")
+  academicYearId String           @map("academic_year_id")
+  studentId      String           @map("student_id")
+  classId        String           @map("class_id")
+  status         EnrollmentStatus @default(active)
+  enrolledAt     DateTime         @map("enrolled_at") @db.Timestamptz
+  deletedAt      DateTime?        @map("deleted_at") @db.Timestamptz
+
+  school       School       @relation(fields: [schoolId], references: [id])
+  academicYear AcademicYear @relation(fields: [academicYearId], references: [id])
+  student      Student      @relation(fields: [studentId], references: [id])
+  schoolClass  SchoolClass  @relation(fields: [classId], references: [id])
+
+  @@unique([studentId, academicYearId])
+  @@index([schoolId])
+  @@map("enrollment")
+}
+
+model Subject {
+  id          String      @id @default(uuid())
+  schoolId    String      @map("school_id")
+  name        String
+  code        String
+  subjectType SubjectType @map("subject_type")
+  defaultUnit Decimal     @map("default_unit") @db.Decimal(4, 2)
+  deletedAt   DateTime?   @map("deleted_at") @db.Timestamptz
+
+  school              School               @relation(fields: [schoolId], references: [id])
+  curricula           Curriculum[]
+  subjectModules      SubjectModule[]
+  teachingAssignments TeachingAssignment[]
+
+  @@unique([schoolId, code])
+  @@map("subject")
+}
+
+model Curriculum {
+  id               String    @id @default(uuid())
+  schoolId         String    @map("school_id")
+  academicYearId   String    @map("academic_year_id")
+  gradeLevelId     String    @map("grade_level_id")
+  fieldOfStudyId   String?   @map("field_of_study_id")
+  subjectId        String    @map("subject_id")
+  unit             Decimal   @db.Decimal(4, 2)
+  continuousWeight Decimal   @map("continuous_weight") @db.Decimal(4, 2)
+  finalWeight      Decimal   @map("final_weight") @db.Decimal(4, 2)
+  deletedAt        DateTime? @map("deleted_at") @db.Timestamptz
+
+  school       School        @relation(fields: [schoolId], references: [id])
+  academicYear AcademicYear  @relation(fields: [academicYearId], references: [id])
+  gradeLevel   GradeLevel    @relation(fields: [gradeLevelId], references: [id])
+  fieldOfStudy FieldOfStudy? @relation(fields: [fieldOfStudyId], references: [id])
+  subject      Subject       @relation(fields: [subjectId], references: [id])
+
+  // See IMPLEMENTATION NOTES re: fieldOfStudyId being nullable inside this
+  // unique constraint (same NULL <> NULL caveat as UserRole above).
+  @@unique([academicYearId, gradeLevelId, fieldOfStudyId, subjectId])
+  @@map("curriculum")
+}
+
+model SubjectModule {
+  id         String    @id @default(uuid())
+  schoolId   String    @map("school_id")
+  subjectId  String    @map("subject_id")
+  title      String
+  orderIndex Int       @map("order_index")
+  weight     Decimal   @db.Decimal(4, 2)
+  deletedAt  DateTime? @map("deleted_at") @db.Timestamptz
+
+  school  School  @relation(fields: [schoolId], references: [id])
+  subject Subject @relation(fields: [subjectId], references: [id])
+  exams   Exam[]
+
+  // Rule from the ERD: rows here should only exist for
+  // subject.subjectType == modular, and Exam.subjectModuleId should only be
+  // set when the exam's subject is modular. Not DB-enforceable without a
+  // trigger — validate in the service layer.
+  @@map("subject_module")
+}
+
+// ----------------------------------------------------------------------------
+// Teaching, scheduling
+// ----------------------------------------------------------------------------
+
+model TeachingAssignment {
+  id             String    @id @default(uuid())
+  schoolId       String    @map("school_id")
+  academicYearId String    @map("academic_year_id")
+  classId        String    @map("class_id")
+  subjectId      String    @map("subject_id")
+  teacherId      String    @map("teacher_id")
+  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz
+
+  school       School       @relation(fields: [schoolId], references: [id])
+  academicYear AcademicYear @relation(fields: [academicYearId], references: [id])
+  schoolClass  SchoolClass  @relation(fields: [classId], references: [id])
+  subject      Subject      @relation(fields: [subjectId], references: [id])
+  teacher      Teacher      @relation(fields: [teacherId], references: [id])
+
+  timetables Timetable[]
+  exams      Exam[]
+
+  @@unique([classId, subjectId, academicYearId])
+  @@map("teaching_assignment")
+}
+
+model Timetable {
+  id                   String    @id @default(uuid())
+  schoolId             String    @map("school_id")
+  teachingAssignmentId String    @map("teaching_assignment_id")
+  dayOfWeek            Int       @map("day_of_week") // convention (0=Sat..6=Fri, ISO, etc.) — decide and document
+  periodNo             Int       @map("period_no")
+  startTime            DateTime  @map("start_time") @db.Time
+  endTime              DateTime  @map("end_time") @db.Time
+  deletedAt            DateTime? @map("deleted_at") @db.Timestamptz
+
+  school             School             @relation(fields: [schoolId], references: [id])
+  teachingAssignment TeachingAssignment @relation(fields: [teachingAssignmentId], references: [id])
+  attendances        Attendance[]
+
+  // ERD's real constraint is UNIQUE(class_id, day_of_week, period_no), but
+  // class_id is one join away (via teachingAssignment.classId), not a column
+  // on this table. See IMPLEMENTATION NOTES — enforce in the app/service layer.
+  @@map("timetable")
+}
+
+// ----------------------------------------------------------------------------
+// Exams, scores, attendance
+// ----------------------------------------------------------------------------
+
+model Exam {
+  id                   String    @id @default(uuid())
+  schoolId             String    @map("school_id")
+  termId               String    @map("term_id")
+  teachingAssignmentId String    @map("teaching_assignment_id")
+  subjectModuleId      String?   @map("subject_module_id") // only for modular subjects
+  examType             ExamType  @map("exam_type")
+  title                String
+  examDate             DateTime  @map("exam_date") @db.Timestamptz
+  maxScore             Decimal   @map("max_score") @db.Decimal(4, 2)
+  deletedAt            DateTime? @map("deleted_at") @db.Timestamptz
+
+  school             School             @relation(fields: [schoolId], references: [id])
+  term               Term               @relation(fields: [termId], references: [id])
+  teachingAssignment TeachingAssignment @relation(fields: [teachingAssignmentId], references: [id])
+  subjectModule      SubjectModule?     @relation(fields: [subjectModuleId], references: [id])
+  scores             Score[]
+
+  @@index([schoolId, termId])
+  @@map("exam")
+}
+
+model Score {
+  id        String    @id @default(uuid())
+  schoolId  String    @map("school_id")
+  examId    String    @map("exam_id")
+  studentId String    @map("student_id")
+  score     Decimal?  @db.Decimal(4, 2) // null when isAbsent — absence is NOT the same as 0
+  isAbsent  Boolean   @default(false) @map("is_absent")
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz
+
+  school  School  @relation(fields: [schoolId], references: [id])
+  exam    Exam    @relation(fields: [examId], references: [id])
+  student Student @relation(fields: [studentId], references: [id])
+
+  @@unique([examId, studentId])
+  @@index([schoolId, studentId])
+  @@map("score")
+}
+
+model Attendance {
+  id          String           @id @default(uuid())
+  schoolId    String           @map("school_id")
+  termId      String           @map("term_id")
+  studentId   String           @map("student_id")
+  classId     String           @map("class_id")
+  timetableId String?          @map("timetable_id") // null when the school only tracks daily attendance
+  attDate     DateTime         @map("att_date") @db.Timestamptz
+  periodNo    Int?             @map("period_no") // null alongside timetableId for daily-only tracking
+  status      AttendanceStatus
+  deletedAt   DateTime?        @map("deleted_at") @db.Timestamptz
+
+  school      School      @relation(fields: [schoolId], references: [id])
+  term        Term        @relation(fields: [termId], references: [id])
+  student     Student     @relation(fields: [studentId], references: [id])
+  schoolClass SchoolClass @relation(fields: [classId], references: [id])
+  timetable   Timetable?  @relation(fields: [timetableId], references: [id])
+
+  // ERD's real constraint is UNIQUE(student_id, att_date, period_no) — see
+  // IMPLEMENTATION NOTES, periodNo being nullable breaks this as written.
+  @@index([schoolId, attDate])
+  @@map("attendance")
+}
+
+// ----------------------------------------------------------------------------
+// Announcements, audit log
+// ----------------------------------------------------------------------------
+
+model Announcement {
+  id           String    @id @default(uuid())
+  schoolId     String    @map("school_id")
+  authorId     String    @map("author_id")
+  title        String
+  body         String
+  targetRoleId String?   @map("target_role_id") // null = visible to everyone
+  publishedAt  DateTime? @map("published_at") @db.Timestamptz // null = draft, not yet published
+  deletedAt    DateTime? @map("deleted_at") @db.Timestamptz
+
+  school     School @relation(fields: [schoolId], references: [id])
+  author     User   @relation(fields: [authorId], references: [id])
+  targetRole Role?  @relation(fields: [targetRoleId], references: [id])
+
+  @@map("announcement")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  schoolId   String   @map("school_id")
+  userId     String   @map("user_id")
+  entityName String   @map("entity_name")
+  entityId   String   @map("entity_id")
+  action     String
+  oldValue   Json?    @map("old_value") // ERD says `string`; jsonb is a deliberate deviation — see notes
+  newValue   Json?    @map("new_value")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  school School @relation(fields: [schoolId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+
+  // No deletedAt — immutable, matching ERD field list.
+  @@index([schoolId, createdAt])
+  @@index([entityName, entityId])
+  @@map("audit_log")
+}
+
+// ============================================================================
+// IMPLEMENTATION NOTES — read before `prisma migrate dev`
+// ============================================================================
+//
+// 1. PARTIAL UNIQUE INDEXES (the big one)
+//    The ERD says explicitly: "همه‌ی این‌ها باید partial باشند
+//    (WHERE deleted_at IS NULL) چون حذف نرم داری." Prisma's schema language
+//    has no `WHERE` clause for `@@unique` — every @@unique/@@id I wrote above
+//    becomes a plain (non-filtered) unique index. That means a soft-deleted
+//    row still blocks reuse of its unique values (e.g. a deleted Subject's
+//    `code` can't be reused). Two ways to fix, in order of how much I'd
+//    recommend them:
+//      a) After `prisma migrate dev --create-only`, hand-edit the generated
+//         SQL: drop the plain `CREATE UNIQUE INDEX` Prisma generated and
+//         replace it with the same index + `WHERE deleted_at IS NULL`, e.g.:
+//           CREATE UNIQUE INDEX "subject_school_id_code_key"
+//             ON "subject" ("school_id", "code")
+//             WHERE "deleted_at" IS NULL;
+//         Repeat for every @@unique above that sits on a table with
+//         deletedAt. Prisma will keep this migration in its history; just
+//         don't let a future `prisma migrate dev` regenerate the unfiltered
+//         version by accident (it won't, once the migration is applied —
+//         Prisma diffs against the actual DB, not just the schema).
+//      b) Decide you're fine with permanent uniqueness (soft-deleted values
+//         stay reserved forever) and leave the plain unique index as-is.
+//         Simpler, and often fine in practice for things like Subject.code.
+//    USER.nationalCode and USER.email are the ones most worth doing (a):
+//    permanently blocking an email/national code because one old account
+//    was soft-deleted is the kind of thing that generates support tickets.
+//
+// 2. USER_SCHOOL — at most one is_default = true per user
+//    Not expressible as a normal @@unique. Add a partial unique index by
+//    hand: CREATE UNIQUE INDEX ... ON user_school (user_id) WHERE is_default;
+//
+// 3. NULLABLE COLUMNS INSIDE UNIQUE CONSTRAINTS
+//    Postgres treats NULL <> NULL, so a unique index that includes a
+//    nullable column doesn't stop multiple NULL-valued rows from
+//    coexisting. Three places this bites, all flagged inline above:
+//      - UserRole @@unique([userId, schoolId, roleId, academicYearId]) —
+//        two "principal" rows (academicYearId = null) for the same user
+//        would NOT violate this constraint as written.
+//      - Curriculum @@unique([..., fieldOfStudyId, subjectId]) — same issue
+//        for schools without tracks (fieldOfStudyId = null).
+//      - Attendance's intended UNIQUE(student_id, att_date, period_no) —
+//        same issue for daily-only attendance (period_no = null).
+//    Fix pattern: either give the nullable column a sentinel non-null value
+//    (e.g. a fixed "no-year" or "no-module" UUID, or periodNo = 0 for "whole
+//    day"), or split into two partial unique indexes — one
+//    `WHERE x IS NULL`, one `WHERE x IS NOT NULL`. Pick per-case; I'd lean
+//    sentinel value for periodNo (simpler queries) and partial indexes for
+//    the other two.
+//
+// 4. TIMETABLE double-booking a class
+//    The ERD's real constraint is UNIQUE(class_id, day_of_week, period_no),
+//    but class_id isn't a column on Timetable — it's one join away through
+//    teachingAssignment.classId. Options: enforce in the service layer
+//    before insert/update (simplest, but has a race-condition window under
+//    concurrent writes), or denormalize a classId column onto Timetable
+//    purely to carry this constraint (small write-time redundancy, but the
+//    DB then guarantees it). I'd start with the service-layer check and
+//    only denormalize if you actually hit a race condition in practice.
+//
+// 5. COMPOSITE TENANT-SAFETY FKs — done for 4, offered for the rest
+//    The ERD explicitly specifies composite FK (user_id, school_id) →
+//    user_school(user_id, school_id) for Student, Teacher, Parent, and
+//    UserRole, and I implemented exactly that. For every OTHER table
+//    carrying a redundant school_id (Score, Exam, Attendance, ...), the ERD
+//    discusses the same technique as an optional future hardening step, not
+//    a v6 decision — so I left those as plain single-column FKs to School.
+//    Cost of leaving it this way: nothing currently stops `Score.schoolId`
+//    from being A while `Score.exam.schoolId` is actually B — that's an
+//    app-layer discipline problem, not a DB-enforced one. If you want the
+//    DB to catch that class of bug everywhere (not just the 4 required
+//    spots), say so and I'll do a second pass adding
+//    `@@unique([id, schoolId])` to every parent model and switching each
+//    child relation to a composite FK — it roughly doubles the relation
+//    declarations in this file, which is why I didn't do it by default.
+//
+// 6. SUBJECT_MODULE / EXAM cross-field rule
+//    SubjectModule rows should only exist for subjectType == modular
+//    subjects, and Exam.subjectModuleId should only be set when the exam's
+//    subject is modular. Both are cross-table/cross-field rules a CHECK
+//    constraint can't reach without a trigger — validate in the service
+//    layer (e.g. a Zod schema or a Prisma middleware) rather than the DB.
+//
+// 7. Deviations from the ERD's literal field types (all deliberate, flagged
+//    so you can revert any of them):
+//      - AuditLog.oldValue / newValue: ERD says `string`, I used `Json?`
+//        (Postgres jsonb) since this is structured diff data and jsonb is
+//        far more useful than a raw string for anything querying the log.
+//      - Score / Curriculum / Subject / SubjectModule / Exam numeric fields
+//        (`score`, `unit`, `continuous_weight`, `final_weight`,
+//        `default_unit`, `weight`, `max_score`): ERD says `float`, I used
+//        `Decimal` (Postgres numeric) instead. GPA math sums many of these
+//        together — Decimal avoids the floating-point rounding drift that
+//        `Float` would introduce over a full transcript calculation.
+//      - Timetable.startTime / endTime: modeled as Postgres `time` (no
+//        timezone, no date) since these represent a recurring weekly slot,
+//        not a specific instant. All other dates use `timestamptz` per the
+//        ERD's own instruction; if you'd rather every date field be a plain
+//        calendar `date` (exam_date, att_date, start_date, end_date, etc.
+//        genuinely never need a time-of-day or timezone component), that's
+//        a reasonable alternative to timestamptz — say the word and I'll
+//        switch those over to `@db.Date`.
+//
+// 8. IDs
+//    Used `@default(uuid())` (UUIDv4) everywhere as a safe, dependency-free
+//    default. Given the attendance-gateway work already planned (PUNCH_LOG,
+//    high write volume, time-ordered inserts), a sortable ID scheme
+//    (UUIDv7 via `@default(uuid(7))`, or cuid2) would keep index locality
+//    better on the high-volume tables (Attendance, Score, and later
+//    PunchLog) — worth a deliberate decision before you run the first
+//    migration, since changing PK generation later is a real migration, not
+//    a config flip.
+//
+// 9. PRISMA ORM 7 — connection setup lives outside this file now
+//    This schema deliberately has no `url` in the `datasource` block. As of
+//    Prisma ORM 7 (Nov 2025), that's not optional — Prisma won't parse a
+//    `url` there anymore (it errors with P1012, "no longer supported in
+//    schema files"). Three things you need alongside this schema, all
+//    delivered together in this drop:
+//      a) `prisma.config.ts` at the package/project root — holds
+//         DATABASE_URL for the CLI (migrate, studio, db push, ...).
+//      b) A `client.ts` that constructs PrismaClient with
+//         `@prisma/adapter-pg` — the query engine is now the `pg` driver
+//         itself, not a bundled Rust binary, so the adapter is mandatory,
+//         not an optimization.
+//      c) `"type": "module"` in package.json, and dotenv loaded explicitly
+//         (env vars are no longer auto-loaded by the CLI in v7).
+//    Also worth knowing before you build on this: `prisma migrate dev` no
+//    longer auto-runs your seed script (run `prisma db seed` yourself), and
+//    `$use` middleware is gone in favor of client extensions (`$extends`) —
+//    relevant if any past Prisma code you're reusing relied on either.
+// ============================================================================
