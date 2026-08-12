@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { ChevronRightIcon } from "lucide-react";
 import {
 	Collapsible,
@@ -14,7 +15,6 @@ import {
 	SidebarMenuSubButton,
 	SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
-import { ModeToggle } from "./mode-toggle";
 
 export function NavMain({
 	items,
@@ -32,7 +32,7 @@ export function NavMain({
 }) {
 	return (
 		<SidebarGroup>
-			<SidebarGroupLabel>Platform</SidebarGroupLabel>
+			<SidebarGroupLabel>عمومی</SidebarGroupLabel>
 			<SidebarMenu>
 				{items.map((item) => (
 					<Collapsible
@@ -52,9 +52,7 @@ export function NavMain({
 							<SidebarMenuSub>
 								{item.items?.map((subItem) => (
 									<SidebarMenuSubItem key={subItem.title}>
-										<SidebarMenuSubButton
-											render={<a href={subItem.url} title="sdlfkj" />}
-										>
+										<SidebarMenuSubButton render={<Link to={subItem.url} />}>
 											<span>{subItem.title}</span>
 										</SidebarMenuSubButton>
 									</SidebarMenuSubItem>

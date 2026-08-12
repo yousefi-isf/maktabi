@@ -238,6 +238,63 @@ model RolePermission {
   @@unique([roleId, permissionId])
   @@map("role_permission")
 }
+// Authentication
+
+model AuthSession  {
+
+  id             String   @id
+  token          String   @unique
+  userId         String   @map("user_id")
+  activeSchoolId String?  @map("active_school_id")
+  expiresAt      DateTime @map("expires_at") @db.Timestamptz
+  ipAddress      String?  @map("ip_address")
+  userAgent      String?  @map("user_agent")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime @updatedAt      @map("updated_at") @db.Timestamptz
+
+  user             User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activeMembership UserSchool? @relation(fields: [userId, activeSchoolId], references: [userId, schoolId])
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("auth_session")
+}
+
+model AuthAccount  {
+  id                    String    @id
+  accountId             String    @map("account_id")
+  providerId            String    @map("provider_id")
+  userId                String    @map("user_id")
+  password              String?
+  accessToken           String?   @map("access_token")
+  refreshToken          String?   @map("refresh_token")
+  idToken               String?   @map("id_token")
+  accessTokenExpiresAt  DateTime? @map("access_token_expires_at")  @db.Timestamptz
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at") @db.Timestamptz
+  scope                 String?
+  createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt             DateTime  @updatedAt      @map("updated_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, accountId])
+  @@index([userId])
+  @@map("auth_account")
+}
+
+model AuthVerification  {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime @map("expires_at") @db.Timestamptz
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt  DateTime @updatedAt      @map("updated_at") @db.Timestamptz
+
+  @@index([identifier])
+  @@index([expiresAt])
+  @@map("auth_verification")
+}
+
 
 model User {
   id           String    @id @default(uuid())
@@ -245,12 +302,20 @@ model User {
   nationalCode String    @unique @map("national_code")
   email        String    @unique
   phone        String?
-  passwordHash String    @map("password_hash")
   deletedAt    DateTime? @map("deleted_at") @db.Timestamptz
 
   userSchools   UserSchool[]
   announcements Announcement[]
   auditLogs     AuditLog[]
+
+  emailVerified Boolean   @default(false) @map("email_verified")   
+  image         String?                    
+
+  authSessions  AuthSession[]
+  authAccounts  AuthAccount[]
+
+  createdAt     DateTime  @default(now())  @map("created_at") @db.Timestamptz
+  updatedAt     DateTime  @updatedAt       @map("updated_at") @db.Timestamptz
 
   @@map("user")
 }
@@ -268,13 +333,12 @@ model UserSchool {
   user   User   @relation(fields: [userId], references: [id])
   school School @relation(fields: [schoolId], references: [id])
 
-  // This @@unique is also the composite-FK target for Student / Teacher /
-  // Parent / UserRole below — the ERD is explicit that those four must go
-  // through a valid membership, not straight to User/School.
   students  Student[]
   teachers  Teacher[]
   parents   Parent[]
   userRoles UserRole[]
+  authSessions AuthSession[]
+
 
   @@unique([userId, schoolId])
   @@map("user_school")
