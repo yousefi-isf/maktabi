@@ -4,12 +4,14 @@ import {
 	Outlet,
 	Scripts,
 } from "@tanstack/react-router";
-import { AppSidebar } from "#/components/app-sidebar";
-import Header from "#/components/header.tsx";
-import OutletContainer from "#/components/outlet-container.tsx";
-import { SidebarInset, SidebarProvider } from "#/components/ui/sidebar";
-import { DIR, LANG } from "#/lib/locale.ts";
+import type { ReactNode } from "react";
+import { AppSidebar } from "@/components/app-sidebar";
+import Header from "@/components/header";
+import { NotFoundPage } from "@/components/not-found";
+import OutletContainer from "@/components/outlet-container";
 import { ThemeProvider } from "@/components/theme-provider";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { DIR, LANG } from "@/lib/locale";
 import appCss from "../styles.css?url";
 
 export const Route = createRootRoute({
@@ -33,44 +35,33 @@ export const Route = createRootRoute({
 			},
 		],
 	}),
-	component: RootDocument,
+	shellComponent: RootDocument,
+	component: AppLayout,
+	notFoundComponent: NotFoundPage,
 });
-
-function RootDocument() {
+function AppLayout() {
+	return (
+		<SidebarProvider>
+			<AppSidebar />
+			<SidebarInset>
+				<Header />
+				<OutletContainer>
+					<Outlet />
+				</OutletContainer>
+			</SidebarInset>
+		</SidebarProvider>
+	);
+}
+function RootDocument({ children }: { children: ReactNode }) {
 	return (
 		<html lang={LANG} dir={DIR} suppressHydrationWarning>
 			<head>
-				{/* <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} /> */}
 				<HeadContent />
 			</head>
 			<body>
-				{/* <DirectionProvider direction={DIR}> */}
 				<ThemeProvider defaultTheme="system" storageKey="theme">
-					{/* ―――――――――――――――――――――――――――― Panel + Dashboard ――――――――――――――――――――――――――― */}
-					<SidebarProvider>
-						<AppSidebar />
-						<SidebarInset>
-							<Header />
-							<OutletContainer>
-								<Outlet />
-							</OutletContainer>
-						</SidebarInset>
-					</SidebarProvider>
-
-					{/* ―――――――――――――――――――――――――――――――― DevTools ―――――――――――――――――――――――――――――――― */}
-					{/* <TanStackDevtools
-						config={{
-							position: "bottom-right",
-						}}
-						plugins={[
-							{
-								name: "Tanstack Router",
-								render: <TanStackRouterDevtoolsPanel />,
-							},
-						]}
-					/> */}
+					{children}
 				</ThemeProvider>
-				{/* </DirectionProvider> */}
 				<Scripts />
 			</body>
 		</html>

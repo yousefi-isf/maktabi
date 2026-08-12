@@ -14,6 +14,7 @@ import {
 	SidebarMenuSubButton,
 	SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
+import { ModeToggle } from "./mode-toggle";
 
 export function NavMain({
 	items,
