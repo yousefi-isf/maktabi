@@ -1,14 +1,15 @@
 {
   "compilerOptions": {
-    "customConditions": ["development"],
     "target": "ES2022",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "outDir": "dist",
-    "rootDir": "src"
+    "declaration": true,
+    "sourceMap": true,
+    "rootDir": ".",
+    "outDir": "dist"
   },
-  "include": ["src"]
+  "include": ["src/**/*.ts", "generated/prisma/**/*.ts"]
 }

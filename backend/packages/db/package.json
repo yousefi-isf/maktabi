@@ -4,10 +4,17 @@
   "version": "0.0.1",
   "type": "module",
   "exports": {
-    ".": "./src/client.ts",
-    "./client": "./generated/prisma/client.js"
+    ".": {
+      "types": "./src/client.ts",
+      "import": "./dist/src/client.js"
+    },
+    "./client": {
+      "types": "./generated/prisma/client.ts",
+      "import": "./dist/generated/prisma/client.js"
+    }
   },
   "scripts": {
+    "build": "prisma generate && tsc -p tsconfig.json",
     "generate": "prisma generate",
     "migrate:dev": "prisma migrate dev",
     "studio": "prisma studio"

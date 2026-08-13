@@ -6,56 +6,39 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  // No `url` here — Prisma ORM 7 moved connection URLs out of schema.prisma
-  // and into prisma.config.ts (see IMPLEMENTATION NOTES, item 9).
 }
 
-// ----------------------------------------------------------------------------
-// Enums
-// The ERD's own TODO list calls out exactly five fields that need real enums:
-// ExamType, SubjectType, AttendanceStatus, EnrollmentStatus, Branch.
-// I added three more (SchoolType, EducationStage, UserSchoolStatus) because
-// the ERD prose gives them a closed, exact value set too — flagged below so
-// you can revert to String if you'd rather decide those later.
-// ----------------------------------------------------------------------------
-
-/// SCHOOL.school_type — closed set per ERD §SCHOOL prose (not in the TODO list,
-/// added on my own judgment; easy to revert to String if you disagree).
 enum SchoolType {
   middle_school
   high_school
   technical
 }
 
-/// GRADE_LEVEL.stage — kept separate from SchoolType because "technical" is a
-/// school type, not a grade-level stage; a grade level is always middle or high.
 enum EducationStage {
   middle_school
   high_school
 }
 
-/// FIELD_OF_STUDY.branch — required by the ERD's TODO list.
+
 enum Branch {
   theoretical
   technical
   vocational
 }
 
-/// SUBJECT.subject_type — required by the ERD's TODO list.
+// poodemani vs modular
 enum SubjectType {
   theoretical
   modular
 }
 
-/// EXAM.exam_type — required by the ERD's TODO list. The ERD explicitly says:
-/// if/when you need a makeup exam, add `makeup` here — don't build a new table.
+
 enum ExamType {
   continuous
   term_final
   national_final
 }
 
-/// ENROLLMENT.status — required by the ERD's TODO list.
 enum EnrollmentStatus {
   active
   transferred

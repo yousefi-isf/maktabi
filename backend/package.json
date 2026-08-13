@@ -5,17 +5,28 @@
   "main": "src/server.ts",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
-    "build": "tsc",
-    "start": "node dist/server.js"
+    "dev": "tsx watch --conditions=development --env-file=.env src/server.ts",
+    "build": "pnpm --dir packages/db build && tsc",
+    "start": "node --env-file=.env dist/server.js",
+    "db:seed": "pnpm --filter @maktabi/db exec prisma db seed",
+    "db:reset": "pnpm --filter @maktabi/db exec prisma migrate reset",
+    "db:studio": "pnpm --filter @maktabi/db exec prisma studio"
+  },
+  "imports": {
+    "#env": {
+      "development": "./src/config/env.ts",
+      "default": "./dist/config/env.js"
+    }
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@better-auth/prisma-adapter": "^1.6.26",
     "@fastify/cors": "^11.3.0",
     "@fastify/helmet": "^13.1.0",
     "@maktabi/db": "workspace:*",
+    "@node-rs/argon2": "^2.0.2",
     "@trpc/server": "^11.18.0",
     "better-auth": "^1.6.26",
     "dotenv": "^16.6.1",
@@ -23,6 +34,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@better-auth/prisma-adapter": "^1.6.26"
+    "@paralleldrive/cuid2": "^3.3.0",
+    "consola": "^3.4.2"
   }
 }

@@ -1,19 +1,14 @@
-import { initTRPC } from "@trpc/server";
-import type { Context } from "./contex.js";
-
-const t = initTRPC.context<Context>().create();
-
-export const router = t.router;
-export const publicProcedure = t.procedure;
+import { authRouter } from "../modules/auth/router.js";
+import { usersRouter } from "../modules/users/router.js";
+import { publicProcedure, router } from "./trpc.js";
 
 export const appRouter = router({
   health: publicProcedure.query(() => ({
     status: "ok",
     time: new Date().toISOString(),
   })),
-  schools: router({
-    count: publicProcedure.query(({ ctx }) => ctx.prisma.school.count()),
-  }),
+  auth: authRouter,
+  users: usersRouter,
 });
 
 export type AppRouter = typeof appRouter;
