@@ -12,8 +12,8 @@ export const Route = createFileRoute("/test")({
 function RouteComponent() {
 	const trpc = useTRPC();
 
-	const health = useQuery(trpc.health.queryOptions());
-	const { data: schoolCount } = useQuery(trpc.schools.count.queryOptions());
+	// const health = useQuery(trpc.health.queryOptions());
+	// const { data: schoolCount } = useQuery(trpc.schools.count.queryOptions());
 
 	// if (health.isPending || schoolCount.isPending) {
 	//   return <p>Loading…</p>;
@@ -26,7 +26,7 @@ function RouteComponent() {
 	return (
 		<div>
 			{/* <p>Backend status: {health.data.status}</p> */}
-			<p>Schools: {schoolCount}</p>
+			{/* <p>Schools: {schoolCount}</p> */}
 		</div>
 	);
 }
