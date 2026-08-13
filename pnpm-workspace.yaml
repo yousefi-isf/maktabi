@@ -1,4 +1,5 @@
 packages:
+  - "maktabi"
   - "backend"
   - "backend/attendance-gateway"
   - "backend/packages/*"

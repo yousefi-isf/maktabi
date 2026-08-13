@@ -1,16 +1,52 @@
 {
-    "workbench.colorCustomizations": {
-        "activityBar.background": "#875000",
-        "titleBar.activeBackground": "#BD7000",
-        "titleBar.activeForeground": "#FFFAF2",
-        "titleBar.inactiveBackground": "#875000",
-        "titleBar.inactiveForeground": "#FFFAF2",
-        "statusBar.background": "#875000",
-        "statusBar.foreground": "#FFFAF2",
-        "statusBar.debuggingBackground": "#875000",
-        "statusBar.debuggingForeground": "#FFFAF2",
-        "statusBar.noFolderBackground": "#875000",
-        "statusBar.noFolderForeground": "#FFFAF2"
-    },
-    "windowColors.baseColor": "#d88000"
+	"files.watcherExclude": {
+		"**/routeTree.gen.ts": true
+	},
+	"search.exclude": {
+		"**/routeTree.gen.ts": true
+	},
+	"files.readonlyInclude": {
+		"**/routeTree.gen.ts": true
+	},
+	"[javascript]": {
+		"editor.defaultFormatter": "biomejs.biome"
+	},
+	"[javascriptreact]": {
+		"editor.defaultFormatter": "biomejs.biome"
+	},
+	"[typescript]": {
+		"editor.defaultFormatter": "biomejs.biome"
+	},
+	"[typescriptreact]": {
+		"editor.defaultFormatter": "biomejs.biome"
+	},
+	"[json]": {
+		"editor.defaultFormatter": "biomejs.biome"
+	},
+	"[jsonc]": {
+		"editor.defaultFormatter": "biomejs.biome"
+	},
+	"[css]": {
+		"editor.defaultFormatter": "biomejs.biome"
+	},
+	"editor.codeActionsOnSave": {
+		"source.organizeImports.biome": "explicit"
+	},
+
+	"comment-divider.lineFiller": "―",
+	"comment-divider.mainHeaderFiller": "―",
+	"comment-divider.subheaderFiller": "―",
+	"workbench.colorCustomizations": {
+		"activityBar.background": "#875000",
+		"titleBar.activeBackground": "#BD7000",
+		"titleBar.activeForeground": "#FFFAF2",
+		"titleBar.inactiveBackground": "#875000",
+		"titleBar.inactiveForeground": "#FFFAF2",
+		"statusBar.background": "#875000",
+		"statusBar.foreground": "#FFFAF2",
+		"statusBar.debuggingBackground": "#875000",
+		"statusBar.debuggingForeground": "#FFFAF2",
+		"statusBar.noFolderBackground": "#875000",
+		"statusBar.noFolderForeground": "#FFFAF2"
+	}
 }
