@@ -27,7 +27,7 @@ export async function buildServer() {
     url: "/api/auth/*",
     async handler(request, reply) {
       try {
-        const url = new URL(request.url, env.BETTER_AUTH_URL);
+        const url = new URL(request.url, `http://${env.HOST}:${env.PORT}`);
         const headers = fromNodeHeaders(request.headers);
         headers.delete("content-length");
         const body =
@@ -82,7 +82,7 @@ async function main() {
 
   try {
     await app.listen({ port: env.PORT, host: env.HOST });
-    app.log.info(`API listening on ${env.BETTER_AUTH_URL}`);
+    app.log.info(`API listening on  http://${env.HOST}:${env.PORT}`);
   } catch (error) {
     app.log.error(error);
     process.exitCode = 1;

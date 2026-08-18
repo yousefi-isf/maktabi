@@ -188,6 +188,7 @@ model Role {
   userRoles       UserRole[]
   announcements   Announcement[]
 
+  @@unique([schoolId, name])
   @@map("role")
 }
 

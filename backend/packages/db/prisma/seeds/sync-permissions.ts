@@ -1,6 +1,6 @@
 
 import { prisma } from "@maktabi/db";
-import { ALL_PERMISSIONS } from "./permissions";
+import { ALL_PERMISSIONS } from "../../../../src/config/permissions";
 
 const PERMISSIONS_LOCK_KEY = 72736123;
 

@@ -12,15 +12,17 @@ export const ARGON = {
 };
 
 export const auth = betterAuth({
+	appName: env.APP_NAME,
+
 	database: prismaAdapter(prisma, { provider: "postgresql" }),
 	secret: env.BETTER_AUTH_SECRET,
-	baseURL: env.BETTER_AUTH_URL,
+	baseURL: `http://${env.HOST}:${env.PORT}`,
 	trustedOrigins: [env.CLIENT_ORIGIN],
 	advanced: {
 		useSecureCookies: env.NODE_ENV === "production",
 	},
-
 	emailAndPassword: {
+		minPasswordLength:4,
 		enabled: true,
 		disableSignUp: true,
 		password: {
@@ -29,7 +31,7 @@ export const auth = betterAuth({
 				verify(passwordHash, password, ARGON),
 		},
 	},
-
+	
 	user: {
 		modelName: "User",
 		fields: { name: "fullName" },

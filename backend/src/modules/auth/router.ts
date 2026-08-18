@@ -1,5 +1,5 @@
-import { TRPCError } from "@trpc/server";
 import { z } from "zod";
+import { appError } from "../../trpc/app-error.js";
 import { protectedProcedure, router, tenantProcedure } from "../../trpc/trpc.js";
 import { getAccessSummary, getActiveMembershipAccess } from "./access.js";
 
@@ -26,6 +26,7 @@ export const authRouter = router({
       currentSchool: {
         id: ctx.membership.school.id,
         name: ctx.membership.school.name,
+        district: ctx.membership.school.district,
       },
       schools: memberships.map(({ school, isDefault }) => ({
         ...school,
@@ -41,9 +42,9 @@ export const authRouter = router({
     .mutation(async ({ ctx, input }) => {
       const membership = await getActiveMembershipAccess(ctx.user.id, input.schoolId);
       if (!membership) {
-        throw new TRPCError({
+        throw appError({
           code: "FORBIDDEN",
-          message: "You do not have an active membership in that school",
+          appCode: "SCHOOL_MEMBERSHIP_REQUIRED",
         });
       }
 
@@ -52,9 +53,9 @@ export const authRouter = router({
         data: { activeSchoolId: input.schoolId },
       });
       if (updated.count !== 1) {
-        throw new TRPCError({
+        throw appError({
           code: "UNAUTHORIZED",
-          message: "The current session no longer exists",
+          appCode: "SESSION_EXPIRED",
         });
       }
 

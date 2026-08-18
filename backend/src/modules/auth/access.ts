@@ -1,4 +1,5 @@
 import { prisma } from "@maktabi/db";
+import { ALL_PERMISSIONS, PERMISSIONS } from "../../config/permissions.js";
 
 export async function getActiveMembershipAccess(
 	userId: string,
@@ -45,13 +46,14 @@ export function getAccessSummary(
 	const roles = [
 		...new Set(membership.userRoles.map(({ role }) => role.name)),
 	].sort();
-	const permissions = [
-		...new Set(
-			membership.userRoles.flatMap(({ role }) =>
-				role.rolePermissions.map(({ permission }) => permission.code),
-			),
+	const assignedPermissions = new Set(
+		membership.userRoles.flatMap(({ role }) =>
+			role.rolePermissions.map(({ permission }) => permission.code),
 		),
-	].sort();
+	);
+	const permissions = assignedPermissions.has(PERMISSIONS.SYSTEM.FULL_ACCESS)
+		? [...ALL_PERMISSIONS].sort()
+		: [...assignedPermissions].sort();
 
 	return { roles, permissions };
 }

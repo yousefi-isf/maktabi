@@ -51,7 +51,7 @@ export async function createSuperAdmin() {
 	});
 
 	const role = await prisma.role.create({
-		data: { name: "مدیر", schoolId: null, description: "اختیارات مدیریت" },
+		data: { name: "مدیر", schoolId: null, description: "اختیارات مدیریت", isSystem: true },
 	});
 
 	await prisma.rolePermission.create({

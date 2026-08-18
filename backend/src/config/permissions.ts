@@ -3,13 +3,18 @@ export const PERMISSIONS = {
 		FULL_ACCESS: "system.full_access",
 	},
 	IDENTITY: {
+		USER_LIST: "identity.user.list",
 		USER_CREATE: "identity.user.create",
 		USER_UPDATE: "identity.user.update",
 		USER_DELETE: "identity.user.delete",
 		USER_INVITE: "identity.user.invite",
+		ROLE_CREATE: "identity.role.create",
 		ROLE_ASSIGN: "identity.role.assign",
+		ROLE_LIST: "identity.role.list",
 	},
 	ACADEMIC: {
+		YEAR_CREATE: "academic.year.create",
+		YEAR_DELETE: "academic.year.delete",
 		EXAM_CREATE: "academic.exam.create",
 		EXAM_READ: "academic.exam.read",
 		EXAM_READ_OWN: "academic.exam.read.own",
@@ -24,8 +29,8 @@ export const PERMISSIONS = {
 type FlattenValues<T> = T extends string
 	? T
 	: T extends object
-		? FlattenValues<T[keyof T]>
-		: never;
+	? FlattenValues<T[keyof T]>
+	: never;
 export type PermissionCode = FlattenValues<typeof PERMISSIONS>;
 
 function flatten(obj: Record<string, unknown>): PermissionCode[] {

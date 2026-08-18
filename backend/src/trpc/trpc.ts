@@ -1,18 +1,42 @@
-import { initTRPC, TRPCError } from "@trpc/server";
+import { initTRPC } from "@trpc/server";
+import superjson from "superjson";
+import { z, ZodError } from "zod";
 import { getActiveMembershipAccess, getAccessSummary } from "../modules/auth/access.js";
+import { AppErrorCause, appError } from "./app-error.js";
 import type { Context } from "./context.js";
 
+z.config(z.locales.fa());
 
 const t = initTRPC.context<Context>().create({
-  // transformer: superjson,
+  transformer: superjson,
+  errorFormatter({ shape, error }) {
+    const cause = error.cause instanceof AppErrorCause ? error.cause : null;
+
+    return {
+      ...shape,
+      data: {
+        ...shape.data,
+        appCode: cause?.appCode ?? null,
+        params: cause?.params ?? null,
+        zodError:
+          error.code === "BAD_REQUEST" && error.cause instanceof ZodError
+            ? z.flattenError(error.cause)
+            : null,
+      },
+    };
+  },
 });
 
 export const router = t.router;
 export const publicProcedure = t.procedure;
 
+// just login
 export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
   if (!ctx.authSession) {
-    throw new TRPCError({ code: "UNAUTHORIZED" });
+    throw appError({
+      code: "UNAUTHORIZED",
+      appCode: "AUTHENTICATION_REQUIRED",
+    });
   }
 
   return next({
@@ -24,20 +48,22 @@ export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
   });
 });
 
+
+// tenant (چند مستاجری)
 export const tenantProcedure = protectedProcedure.use(async ({ ctx, next }) => {
   const activeSchoolId = ctx.session.activeSchoolId;
   if (!activeSchoolId) {
-    throw new TRPCError({
+    throw appError({
       code: "FORBIDDEN",
-      message: "No active school is selected",
+      appCode: "ACTIVE_SCHOOL_NOT_SELECTED",
     });
   }
 
   const membership = await getActiveMembershipAccess(ctx.user.id, activeSchoolId);
   if (!membership) {
-    throw new TRPCError({
+    throw appError({
       code: "FORBIDDEN",
-      message: "The active school membership is not valid",
+      appCode: "ACTIVE_SCHOOL_MEMBERSHIP_INVALID",
     });
   }
 
