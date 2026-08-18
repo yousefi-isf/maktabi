@@ -5,6 +5,8 @@ import { createTRPCClient, httpBatchLink } from "@trpc/client";
 import type { AppRouter } from "../../backend/src/trpc/router.js";
 import { TRPCProvider } from "./lib/trpc";
 import { routeTree } from "./routeTree.gen";
+import superjson from 'superjson';
+
 
 const apiBaseUrl = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
 
@@ -19,9 +21,21 @@ export function getRouter() {
 	});
 
 	const trpcClient = createTRPCClient<AppRouter>({
+		// links: [
+		// 	httpBatchLink({
+		// 		url: `${apiBaseUrl}/trpc`,
+		// 	}),
+		// ],
 		links: [
 			httpBatchLink({
-				url: `${apiBaseUrl}/trpc`,
+				url: 'http://${apiBaseUrl}/trpc',
+				transformer: superjson,
+				fetch(url, options) {
+					return fetch(url, {
+						...options,
+						credentials: 'include',
+					});
+				},
 			}),
 		],
 	});
