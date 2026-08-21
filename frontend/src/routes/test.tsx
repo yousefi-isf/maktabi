@@ -24,7 +24,7 @@ function RouteComponent() {
 	// }
 
 	return (
-		<div>
+		<div>test
 			{/* <p>Backend status: {health.data.status}</p> */}
 			{/* <p>Schools: {schoolCount}</p> */}
 		</div>

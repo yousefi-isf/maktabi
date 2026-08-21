@@ -1,9 +1,12 @@
 import {
-	createRootRoute,
+	createRootRouteWithContext,
 	HeadContent,
 	Outlet,
 	Scripts,
 } from "@tanstack/react-router";
+import type { TRPCClient } from "@trpc/client";
+import type { QueryClient } from "@tanstack/react-query";
+import type { AppRouter } from "../../../backend/src/trpc/router.js";
 import type { ReactNode } from "react";
 import { AppSidebar } from "@/components/app-sidebar";
 import Header from "@/components/header";
@@ -14,7 +17,12 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { DIR, LANG } from "@/lib/locale";
 import appCss from "../styles.css?url";
 
-export const Route = createRootRoute({
+export interface RouterContext {
+	trpcClient: TRPCClient<AppRouter>;
+	queryClient: QueryClient;
+}
+
+export const Route = createRootRouteWithContext<RouterContext>()({
 	head: () => ({
 		meta: [
 			{
@@ -36,8 +44,8 @@ export const Route = createRootRoute({
 		],
 	}),
 	shellComponent: RootDocument,
-	component: AppLayout,
 	notFoundComponent: NotFoundPage,
+	// component: AppLayout,
 });
 function AppLayout() {
 	return (

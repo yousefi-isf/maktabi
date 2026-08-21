@@ -28,7 +28,7 @@ export function getRouter() {
 		// ],
 		links: [
 			httpBatchLink({
-				url: 'http://${apiBaseUrl}/trpc',
+				url: `${apiBaseUrl}/trpc`,
 				transformer: superjson,
 				fetch(url, options) {
 					return fetch(url, {
@@ -45,6 +45,7 @@ export function getRouter() {
 		scrollRestoration: true,
 		defaultPreload: "intent",
 		defaultPreloadStaleTime: 0,
+		context: { trpcClient, queryClient },
 		Wrap: ({ children }) => (
 			<QueryClientProvider client={queryClient}>
 				<TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
