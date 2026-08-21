@@ -3,7 +3,7 @@ import { prisma } from "@maktabi/db";
 import { createSuperAdmin } from "./seeds/create-super-admin"
 import { syncPermissions } from "./seeds/sync-permissions"
 async function seed() {
-	await createSuperAdmin()
+	// await createSuperAdmin()
 	await syncPermissions()
 }
 

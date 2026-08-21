@@ -7,6 +7,7 @@ import { router, tenantProcedure } from "../../trpc/trpc.js";
 const CREATE_ROLE_PERMISSION: PermissionCode = "identity.role.create";
 const LIST_ROLES_PERMISSION: PermissionCode = "identity.role.list";
 
+/* -------------------------- Create input (JSON): -------------------------- */
 /**
  * {
  *   "json": {
@@ -16,6 +17,9 @@ const LIST_ROLES_PERMISSION: PermissionCode = "identity.role.list";
  *       "550e8400-e29b-41d4-a716-446655440000",
  *       "550e8400-e29b-41d4-a716-446655440001"
  *     ]
+ *   },
+ *   "meta": {
+ *     "v": 1
  *   }
  * }
  */

@@ -4,6 +4,7 @@ import helmet from "@fastify/helmet";
 import { prisma } from "@maktabi/db";
 import { fastifyTRPCPlugin } from "@trpc/server/adapters/fastify";
 import { fromNodeHeaders } from "better-auth/node";
+import type { FastifyInstance } from "fastify";
 import Fastify from "fastify";
 import { env } from "#env";
 import { auth } from "./modules/auth/auth.js";
@@ -77,14 +78,36 @@ export async function buildServer() {
   return app;
 }
 
+export async function validateDatabaseConnection() {
+  await prisma.$queryRaw`SELECT 1`;
+}
+
+export async function startServer(app: FastifyInstance) {
+  await app.listen({ port: env.PORT, host: env.HOST });
+  app.log.info(`API listening on http://${env.HOST}:${env.PORT}`);
+}
+
 async function main() {
   const app = await buildServer();
 
   try {
-    await app.listen({ port: env.PORT, host: env.HOST });
-    app.log.info(`API listening on  http://${env.HOST}:${env.PORT}`);
+    await validateDatabaseConnection();
   } catch (error) {
-    app.log.error(error);
+    app.log.error(
+      "Database connection failed. Check that PostgreSQL is running and DATABASE_URL is correct.",
+    );
+    app.log.debug({ err: error }, "Database connection details");
+    await app.close();
+    process.exitCode = 1;
+    return;
+  }
+
+  try {
+    await startServer(app);
+  } catch (error) {
+    app.log.error("API server failed to start.");
+    app.log.debug({ err: error }, "API server startup details");
+    await app.close();
     process.exitCode = 1;
   }
 }

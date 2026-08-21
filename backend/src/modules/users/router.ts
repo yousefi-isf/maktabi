@@ -9,6 +9,7 @@ const LIST_PERMISSION: PermissionCode = "identity.user.list";
 const CREATE_PERMISSION: PermissionCode = "identity.user.create";
 const INVITE_PERMISSION: PermissionCode = "identity.user.invite";
 
+/* -------------------------- Create input (JSON): -------------------------- */
 /**
  * {
  *   "json": {
@@ -19,6 +20,9 @@ const INVITE_PERMISSION: PermissionCode = "identity.user.invite";
  *     "schoolId": "550e8400-e29b-41d4-a716-446655440000",
  *     "roleId": "550e8400-e29b-41d4-a716-446655440001",
  *     "academicYearId": "550e8400-e29b-41d4-a716-446655440002"
+ *   },
+ *   "meta": {
+ *     "v": 1
  *   }
  * }
  */
@@ -32,6 +36,7 @@ const createInput = z.object({
 	academicYearId: z.uuid().optional(),
 });
 
+/* -------------------------- Invite input (JSON): -------------------------- */
 /**
  * {
  *   "json": {

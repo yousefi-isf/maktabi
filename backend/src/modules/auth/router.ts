@@ -3,6 +3,21 @@ import { appError } from "../../trpc/app-error.js";
 import { protectedProcedure, router, tenantProcedure } from "../../trpc/trpc.js";
 import { getAccessSummary, getActiveMembershipAccess } from "./access.js";
 
+/* -------------------------- Switch school input (JSON): -------------------------- */
+/**
+ * {
+ *   "json": {
+ *     "schoolId": "550e8400-e29b-41d4-a716-446655440000"
+ *   },
+ *   "meta": {
+ *     "v": 1
+ *   }
+ * }
+ */
+const switchSchoolInput = z.object({
+  schoolId: z.uuid(),
+});
+
 export const authRouter = router({
   me: tenantProcedure.query(async ({ ctx }) => {
     const memberships = await ctx.prisma.userSchool.findMany({
@@ -38,7 +53,7 @@ export const authRouter = router({
   }),
 
   switchSchool: protectedProcedure
-    .input(z.object({ schoolId: z.uuid() }))
+    .input(switchSchoolInput)
     .mutation(async ({ ctx, input }) => {
       const membership = await getActiveMembershipAccess(ctx.user.id, input.schoolId);
       if (!membership) {

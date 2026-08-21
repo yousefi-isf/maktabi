@@ -8,7 +8,7 @@ import { router, tenantProcedure } from "../../trpc/trpc.js";
 const CREATE_PERMISSION: PermissionCode = "academic.year.create";
 const DELETE_PERMISSION: PermissionCode = "academic.year.delete";
 
-/* ―――――――――――――――――――――――――― Create input (JSON): ―――――――――――――――――――――――――― */
+/* -------------------------- Create input (JSON): -------------------------- */
 /**
  * {
  *   "json": {
@@ -43,6 +43,9 @@ const createInput = z
  * {
  *   "json": {
  *     "id": "550e8400-e29b-41d4-a716-446655440000"
+ *   },
+ *   "meta": {
+ *     "v": 1
  *   }
  * }
  */

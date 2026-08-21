@@ -10,6 +10,10 @@ const APP_ERROR_MESSAGES = {
 	USER_SCHOOL_MISMATCH: "Users can only be created in the active school",
 	INVALID_ROLE: "The selected role is invalid",
 	ROLE_NAME_EXISTS: "A role with this name already exists",
+	PERMISSION_CODE_EXISTS: "A permission with this code already exists",
+	SCHOOL_NAME_EXISTS: "A school with this name already exists",
+	SCHOOL_ADDRESS_EXISTS: "A school with this address already exists",
+	SCHOOL_PHONE_EXISTS: "A school with this phone number already exists",
 	INVALID_ROLE_PERMISSIONS:
 		"One or more selected permissions are invalid or cannot be granted",
 	INVALID_ACADEMIC_YEAR: "The selected academic year is invalid",

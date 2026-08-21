@@ -1,6 +1,9 @@
 
 import { prisma } from "@maktabi/db";
-import { ALL_PERMISSIONS } from "../../../../src/config/permissions";
+import {
+  ALL_PERMISSIONS,
+  PERMISSION_DESCRIPTIONS,
+} from "../../../../src/config/permissions";
 
 const PERMISSIONS_LOCK_KEY = 72736123;
 
@@ -15,8 +18,18 @@ export async function syncPermissions() {
 
     if (toCreate.length > 0) {
       await tx.permission.createMany({
-        data: toCreate.map((code) => ({ code })),
+        data: toCreate.map((code) => ({
+          code,
+          description: PERMISSION_DESCRIPTIONS[code],
+        })),
         skipDuplicates: true,
+      });
+    }
+
+    for (const code of ALL_PERMISSIONS) {
+      await tx.permission.update({
+        where: { code },
+        data: { description: PERMISSION_DESCRIPTIONS[code] },
       });
     }
 

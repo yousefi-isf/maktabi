@@ -53,3 +53,25 @@
 - tRPC is mounted under `/trpc`; a plain `/health` route stays outside tRPC for simple uptime checks.
 - Always disconnect Prisma on shutdown via Fastify's `onClose` hook (`prisma.$disconnect()`).
 - New domain logic goes into `src/modules/<domain>/` and gets merged into the root router. `src/trpc/router.ts` stays a thin composition point — it shouldn't accumulate domain logic directly.
+
+## tRPC Input Documentation
+
+- Every endpoint that uses `.input(...)` must define a named input schema and place a request example immediately above it.
+- Use this comment format:
+```ts
+/* -------------------------- Create input (JSON): -------------------------- */
+/**
+ * {
+ *   "json": {
+ *     "field": "value"
+ *   },
+ *   "meta": {
+ *     "v": 1
+ *   }
+ * }
+ */
+const createInput = z.object({
+  field: z.string(),
+});
+```
+- Include `meta.values` for fields such as `Date` that need transformer metadata.
