@@ -8,3 +8,6 @@ allowBuilds:
   '@prisma/engines': true
   esbuild: true
   prisma: true
+overrides:
+  '@tanstack/react-router': 1.170.31
+  '@tanstack/router-core': 1.171.26
