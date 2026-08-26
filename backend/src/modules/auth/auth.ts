@@ -1,7 +1,7 @@
-import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "@maktabi/db";
 import { hash, verify } from "@node-rs/argon2";
 import { betterAuth } from "better-auth";
+import { prismaAdapter } from "better-auth/adapters/prisma";
 import { env } from "#env";
 
 export const ARGON = {
@@ -22,7 +22,7 @@ export const auth = betterAuth({
 		useSecureCookies: env.NODE_ENV === "production",
 	},
 	emailAndPassword: {
-		minPasswordLength:4,
+		minPasswordLength: 4,
 		enabled: true,
 		disableSignUp: true,
 		password: {
@@ -31,13 +31,14 @@ export const auth = betterAuth({
 				verify(passwordHash, password, ARGON),
 		},
 	},
-	
+
 	user: {
 		modelName: "User",
 		fields: { name: "fullName" },
 		additionalFields: {
 			nationalCode: { type: "string", required: true, input: true },
 			phone: { type: "string", required: false, input: true },
+			isSuperAdmin: { type: "boolean", required: true, input: false },
 		},
 	},
 	session: {
@@ -58,6 +59,7 @@ export const auth = betterAuth({
 					const user = await prisma.user.findFirst({
 						where: { id: session.userId, deletedAt: null },
 						select: {
+							isSuperAdmin: true,
 							userSchools: {
 								where: {
 									status: "active",
@@ -72,7 +74,17 @@ export const auth = betterAuth({
 					});
 
 					const membership = user?.userSchools[0];
-					if (!membership) return false;
+					if (!membership) {
+						if (user?.isSuperAdmin) {
+							return {
+								data: {
+									...session,
+									activeSchoolId: null,
+								},
+							};
+						}
+						return false;
+					}
 
 					return {
 						data: {

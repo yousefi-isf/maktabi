@@ -3,7 +3,7 @@ import { z } from "zod";
 import { env } from "#env";
 import type { PermissionCode } from "../../config/permissions.js";
 import { appError } from "../../trpc/app-error.js";
-import { router, tenantProcedure } from "../../trpc/trpc.js";
+import { platformProcedure, router, tenantProcedure } from "../../trpc/trpc.js";
 
 const LIST_PERMISSION: PermissionCode = "identity.user.list";
 const CREATE_PERMISSION: PermissionCode = "identity.user.create";
@@ -65,7 +65,16 @@ export const usersRouter = router({
 				params: { permission: LIST_PERMISSION },
 			});
 		}
-
+		// const users = await ctx.prisma.user.findMany({
+		// 	orderBy: { fullName: "asc" },
+		// 	select: {
+		// 		createdAt: true,
+		// 		email: true,
+		// 		fullName: true,
+		// 		id: true,
+		// 		nationalCode: true, phone: true, image: true,
+		// 	}
+		// })
 		const memberships = await ctx.prisma.userSchool.findMany({
 			where: {
 				schoolId: ctx.activeSchoolId,
@@ -108,7 +117,6 @@ export const usersRouter = router({
 				},
 			},
 		});
-
 		return memberships.map(({ user, userRoles, ...membership }) => ({
 			...user,
 			membership,
@@ -118,7 +126,7 @@ export const usersRouter = router({
 			})),
 		}));
 	}),
-
+	// list : platformProcedure.query(asy)
 	create: tenantProcedure
 		.input(createInput)
 		.mutation(async ({ ctx, input }) => {

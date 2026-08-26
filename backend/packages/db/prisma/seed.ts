@@ -1,10 +1,9 @@
-import consola from "consola";
 import { prisma } from "@maktabi/db";
-import { createSuperAdmin } from "./seeds/create-super-admin"
 import { syncPermissions } from "./seeds/sync-permissions"
+import { createSuperAdmin } from "./seeds/super-admin"
 async function seed() {
-	// await createSuperAdmin()
 	await syncPermissions()
+	await createSuperAdmin()
 }
 
 seed().finally(() => prisma.$disconnect());
