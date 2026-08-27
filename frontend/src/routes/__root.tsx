@@ -1,20 +1,17 @@
+import type { QueryClient } from "@tanstack/react-query";
 import {
 	createRootRouteWithContext,
 	HeadContent,
-	Outlet,
 	Scripts,
 } from "@tanstack/react-router";
 import type { TRPCClient } from "@trpc/client";
-import type { QueryClient } from "@tanstack/react-query";
-import type { AppRouter } from "../../../backend/src/trpc/router.js";
 import type { ReactNode } from "react";
-import { AppSidebar } from "@/components/app-sidebar";
-import Header from "@/components/header";
 import { NotFoundPage } from "@/components/not-found";
-import OutletContainer from "@/components/outlet-container";
 import { ThemeProvider } from "@/components/theme-provider";
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { Toaster } from "@/components/ui/toast";
+import { TooltipProvider } from "@/components/ui/tooltip.js";
 import { DIR, LANG } from "@/lib/locale";
+import type { AppRouter } from "../../../backend/src/trpc/router.js";
 import appCss from "../styles.css?url";
 
 export interface RouterContext {
@@ -45,21 +42,8 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 	}),
 	shellComponent: RootDocument,
 	notFoundComponent: NotFoundPage,
-	// component: AppLayout,
+
 });
-function AppLayout() {
-	return (
-		<SidebarProvider>
-			<AppSidebar />
-			<SidebarInset>
-				<Header />
-				<OutletContainer>
-					<Outlet />
-				</OutletContainer>
-			</SidebarInset>
-		</SidebarProvider>
-	);
-}
 function RootDocument({ children }: { children: ReactNode }) {
 	return (
 		<html lang={LANG} dir={DIR} suppressHydrationWarning>
@@ -68,7 +52,10 @@ function RootDocument({ children }: { children: ReactNode }) {
 			</head>
 			<body>
 				<ThemeProvider defaultTheme="system" storageKey="theme">
-					{children}
+					<TooltipProvider>
+						{children}
+					</TooltipProvider>
+					<Toaster />
 				</ThemeProvider>
 				<Scripts />
 			</body>

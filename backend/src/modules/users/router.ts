@@ -3,7 +3,11 @@ import { z } from "zod";
 import { env } from "#env";
 import type { PermissionCode } from "../../config/permissions.js";
 import { appError } from "../../trpc/app-error.js";
-import { platformProcedure, router, tenantProcedure } from "../../trpc/trpc.js";
+import {
+	router,
+	superAdminProcedure,
+	tenantProcedure,
+} from "../../trpc/trpc.js";
 
 const LIST_PERMISSION: PermissionCode = "identity.user.list";
 const CREATE_PERMISSION: PermissionCode = "identity.user.create";
@@ -17,7 +21,6 @@ const INVITE_PERMISSION: PermissionCode = "identity.user.invite";
  *     "fullName": "علی رضایی",
  *     "nationalCode": "0012345678",
  *     "phone": "09121234567",
- *     "schoolId": "550e8400-e29b-41d4-a716-446655440000",
  *     "roleId": "550e8400-e29b-41d4-a716-446655440001",
  *     "academicYearId": "550e8400-e29b-41d4-a716-446655440002"
  *   },
@@ -31,7 +34,6 @@ const createInput = z.object({
 	fullName: z.string().trim().min(1).max(200),
 	nationalCode: z.string().trim().min(1).max(32),
 	phone: z.string().trim().min(1).max(32).optional(),
-	schoolId: z.uuid(),
 	roleId: z.uuid(),
 	academicYearId: z.uuid().optional(),
 });
@@ -65,16 +67,6 @@ export const usersRouter = router({
 				params: { permission: LIST_PERMISSION },
 			});
 		}
-		// const users = await ctx.prisma.user.findMany({
-		// 	orderBy: { fullName: "asc" },
-		// 	select: {
-		// 		createdAt: true,
-		// 		email: true,
-		// 		fullName: true,
-		// 		id: true,
-		// 		nationalCode: true, phone: true, image: true,
-		// 	}
-		// })
 		const memberships = await ctx.prisma.userSchool.findMany({
 			where: {
 				schoolId: ctx.activeSchoolId,
@@ -126,7 +118,6 @@ export const usersRouter = router({
 			})),
 		}));
 	}),
-	// list : platformProcedure.query(asy)
 	create: tenantProcedure
 		.input(createInput)
 		.mutation(async ({ ctx, input }) => {
@@ -137,12 +128,6 @@ export const usersRouter = router({
 					params: { permission: CREATE_PERMISSION },
 				});
 			}
-			if (input.schoolId !== ctx.activeSchoolId) {
-				throw appError({
-					code: "FORBIDDEN",
-					appCode: "USER_SCHOOL_MISMATCH",
-				});
-			}
 
 			const email = input.email.trim().toLowerCase();
 
@@ -151,7 +136,7 @@ export const usersRouter = router({
 					where: {
 						id: input.roleId,
 						deletedAt: null,
-						OR: [{ schoolId: input.schoolId }, { schoolId: null }],
+						OR: [{ schoolId: ctx.activeSchoolId }, { schoolId: null }],
 					},
 					select: { id: true },
 				});
@@ -166,7 +151,7 @@ export const usersRouter = router({
 					const academicYear = await tx.academicYear.findFirst({
 						where: {
 							id: input.academicYearId,
-							schoolId: input.schoolId,
+							schoolId: ctx.activeSchoolId,
 							deletedAt: null,
 						},
 						select: { id: true },
@@ -223,7 +208,7 @@ export const usersRouter = router({
 				});
 				const currentMembership = await tx.userSchool.findUnique({
 					where: {
-						userId_schoolId: { userId: user.id, schoolId: input.schoolId },
+						userId_schoolId: { userId: user.id, schoolId: ctx.activeSchoolId },
 					},
 				});
 
@@ -241,7 +226,7 @@ export const usersRouter = router({
 					await tx.userSchool.create({
 						data: {
 							userId: user.id,
-							schoolId: input.schoolId,
+							schoolId: ctx.activeSchoolId,
 							joinedAt: new Date(),
 							isDefault: activeMembershipCount === 0,
 						},
@@ -251,7 +236,7 @@ export const usersRouter = router({
 				const existingRole = await tx.userRole.findFirst({
 					where: {
 						userId: user.id,
-						schoolId: input.schoolId,
+						schoolId: ctx.activeSchoolId,
 						roleId: input.roleId,
 						academicYearId: input.academicYearId ?? null,
 					},
@@ -261,7 +246,7 @@ export const usersRouter = router({
 					await tx.userRole.create({
 						data: {
 							userId: user.id,
-							schoolId: input.schoolId,
+							schoolId: ctx.activeSchoolId,
 							roleId: input.roleId,
 							academicYearId: input.academicYearId,
 						},
@@ -341,10 +326,60 @@ export const usersRouter = router({
 
 			const inviteUrl = new URL("/set-password", env.CLIENT_ORIGIN);
 			inviteUrl.searchParams.set("token", token);
+
+			const user = await ctx.prisma.user.findFirst({
+				where: {
+					id: input.userId,
+				}
+				,
+				select: {
+					id: true,
+					fullName: true,
+				}
+			})
+
 			return {
 				status: "invited" as const,
-				userId: input.userId,
+				user,
 				inviteUrl: inviteUrl.toString(),
 			};
 		}),
+
+	// platform-wide: all users across all schools (super admin only)
+	listAll: superAdminProcedure.query(async ({ ctx }) => {
+		const users = await ctx.prisma.user.findMany({
+			where: { deletedAt: null },
+			orderBy: { fullName: "asc" },
+			select: {
+				id: true,
+				fullName: true,
+				email: true,
+				nationalCode: true,
+				phone: true,
+				image: true,
+				emailVerified: true,
+				isSuperAdmin: true,
+				createdAt: true,
+				userSchools: {
+					where: {
+						status: "active",
+						deletedAt: null,
+						school: { deletedAt: null },
+					},
+					select: {
+						isDefault: true,
+						school: { select: { id: true, name: true } },
+					},
+				},
+			},
+		});
+
+		return users.map(({ userSchools, ...user }) => ({
+			...user,
+			schools: userSchools.map(({ school, isDefault }) => ({
+				...school,
+				isDefault,
+			})),
+		}));
+	}),
 });

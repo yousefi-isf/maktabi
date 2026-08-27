@@ -4,7 +4,6 @@ import type { PermissionCode } from "../../config/permissions.js";
 import { appError } from "../../trpc/app-error.js";
 import { router, tenantProcedure } from "../../trpc/trpc.js";
 
-
 const CREATE_PERMISSION: PermissionCode = "academic.year.create";
 const DELETE_PERMISSION: PermissionCode = "academic.year.delete";
 
@@ -67,12 +66,11 @@ export const academicYearsRouter = router({
 
 			try {
 				return await ctx.prisma.$transaction(async (tx) => {
-					const existingAcademicYear = await tx.academicYear.findUnique({
+					const existingAcademicYear = await tx.academicYear.findFirst({
 						where: {
-							schoolId_title: {
-								schoolId: ctx.activeSchoolId,
-								title: input.title,
-							},
+							schoolId: ctx.activeSchoolId,
+							title: input.title,
+							deletedAt: null,
 						},
 						select: { id: true },
 					});

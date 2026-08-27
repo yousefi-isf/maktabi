@@ -1,172 +1,55 @@
-"use client";
-
-import {
-	AudioLinesIcon,
-	BookOpenIcon,
-	BotIcon,
-	FrameIcon,
-	GalleryVerticalEndIcon,
-	MapIcon,
-	PieChartIcon,
-	Settings2Icon,
-	TerminalIcon,
-	TerminalSquareIcon,
-} from "lucide-react";
-import * as React from "react";
+import type { ComponentProps } from "react";
 import { NavMain } from "@/components/nav-main";
-import { NavProjects } from "@/components/nav-projects";
-import { NavUser } from "@/components/nav-user";
-import { TeamSwitcher } from "@/components/team-switcher";
 import {
 	Sidebar,
 	SidebarContent,
 	SidebarFooter,
 	SidebarHeader,
-	SidebarMenuButton,
+	SidebarMenu,
+	SidebarMenuItem,
 	SidebarRail,
 } from "@/components/ui/sidebar";
-import { ModeToggle } from "./mode-toggle";
+import { navigationItems } from "@/lib/navigation";
+import { type AuthMe, filterNavigation } from "@/lib/permissions";
+import Logout from "./logout";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { SchoolSwitcher } from "./school-switcher";
 
-const data = {
-	user: {
-		name: "shadcn",
-		email: "m@example.com",
-		avatar: "/avatars/shadcn.jpg",
-	},
-	teams: [
-		{
-			name: "Acme Inc",
-			logo: <GalleryVerticalEndIcon />,
-			plan: "Enterprise",
-		},
-		{
-			name: "Acme Corp.",
-			logo: <AudioLinesIcon />,
-			plan: "Startup",
-		},
-		{
-			name: "Evil Corp.",
-			logo: <TerminalIcon />,
-			plan: "Free",
-		},
-	],
-	navMain: [
-		{
-			title: "Playground",
-			url: "#",
-			icon: <TerminalSquareIcon />,
-			isActive: true,
-			items: [
-				{
-					title: "History",
-					url: "#",
-				},
-				{
-					title: "Starred",
-					url: "#",
-				},
-				{
-					title: "Settings",
-					url: "#",
-				},
-			],
-		},
-		{
-			title: "Models",
-			url: "#",
-			icon: <BotIcon />,
-			items: [
-				{
-					title: "Genesis",
-					url: "#",
-				},
-				{
-					title: "Explorer",
-					url: "#",
-				},
-				{
-					title: "Quantum",
-					url: "#",
-				},
-			],
-		},
-		{
-			title: "Documentation",
-			url: "#",
-			icon: <BookOpenIcon />,
-			items: [
-				{
-					title: "Introduction",
-					url: "#",
-				},
-				{
-					title: "Get Started",
-					url: "#",
-				},
-				{
-					title: "Tutorials",
-					url: "#",
-				},
-				{
-					title: "Changelog",
-					url: "#",
-				},
-			],
-		},
-		{
-			title: "Settings",
-			url: "#",
-			icon: <Settings2Icon />,
-			items: [
-				{
-					title: "General",
-					url: "#",
-				},
-				{
-					title: "Team",
-					url: "#",
-				},
-				{
-					title: "Billing",
-					url: "#",
-				},
-				{
-					title: "Limits",
-					url: "#",
-				},
-			],
-		},
-	],
-	projects: [
-		{
-			name: "Design Engineering",
-			url: "test",
-			icon: <FrameIcon />,
-		},
-		{
-			name: "Sales & Marketing",
-			url: "#",
-			icon: <PieChartIcon />,
-		},
-		{
-			name: "Travel",
-			url: "#",
-			icon: <MapIcon />,
-		},
-	],
+type AppSidebarProps = ComponentProps<typeof Sidebar> & {
+	me: AuthMe;
 };
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({ me, ...props }: AppSidebarProps) {
+	const visibleNavigation = filterNavigation(navigationItems, me.permissions);
+	console.log(me)
 	return (
 		<Sidebar collapsible="icon" {...props}>
 			<SidebarHeader>
-				<TeamSwitcher teams={data.teams} />
+				<SidebarMenu >
+					<SidebarMenuItem className="flex h-12 min-w-0 items-center gap-3 rounded-lg px-2 text-start transition-colors hover:bg-sidebar-accent group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0 group-data-[collapsible=icon]:px-0">
+						<Avatar className="shrink-0">
+							<AvatarImage
+								src="https://github.com/shadcn.png"
+								alt="@shadcn"
+							/>
+							<AvatarFallback>CN</AvatarFallback>
+						</Avatar>
+						<div className="grid min-w-0 max-w-52 flex-1 overflow-hidden whitespace-nowrap text-start text-sm leading-tight opacity-100 transition-[max-width,opacity] duration-200 ease-linear group-data-[collapsible=icon]:pointer-events-none group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0">
+							<span className="truncate font-medium">{me.user.name}</span>
+							<span className="truncate text-xs text-muted-foreground">{me.user.email}</span>
+						</div>
+					</SidebarMenuItem>
+					{/* <SidebarMenuItem className="flex h-12 min-w-0 items-center gap-3 rounded-lg px-2 text-start transition-colors hover:bg-sidebar-accent group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0 group-data-[collapsible=icon]:px-0"> */}
+					<SchoolSwitcher me={me} />
+					{/* </SidebarMenuItem> */}
+				</SidebarMenu>
 			</SidebarHeader>
 			<SidebarContent>
-				<NavMain items={data.navMain} />
+				<NavMain items={visibleNavigation} />
+
 			</SidebarContent>
 			<SidebarFooter>
-				<ModeToggle />
+				<Logout />
 			</SidebarFooter>
 			<SidebarRail />
 		</Sidebar>

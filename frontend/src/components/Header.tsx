@@ -1,5 +1,6 @@
 import { Link, useMatches } from "@tanstack/react-router";
 import { Fragment } from "react";
+import { ModeToggle } from "./mode-toggle";
 import {
 	Breadcrumb,
 	BreadcrumbItem,
@@ -18,12 +19,12 @@ function Header() {
 
 				return label
 					? [
-							{
-								id: match.id,
-								label,
-								pathname: match.pathname,
-							},
-						]
+						{
+							id: match.id,
+							label,
+							pathname: match.pathname,
+						},
+					]
 					: [];
 			}),
 	});
@@ -32,44 +33,46 @@ function Header() {
 	)
 		? matchedBreadcrumbs
 		: [
-				{
-					id: "home",
-					label: "خانه",
-					pathname: "/",
-				},
-				...matchedBreadcrumbs,
-			];
+			{
+				id: "home",
+				label: "خانه",
+				pathname: "/",
+			},
+			...matchedBreadcrumbs,
+		];
 
 	return (
-		<header className="flex h-16 shrink-0 w-full items-center gap-3 ps-2 transition-[width,height] ease-linear">
-			<SidebarTrigger />
+		<header className="flex h-13 shrink-0 w-full items-center gap-3 ps-2 p-2 transition-[width,height] ease-linear justify-between">
+			<div className="flex gap-2 items-center">
+				<SidebarTrigger />
+				<Breadcrumb>
+					<BreadcrumbList>
+						{breadcrumbs.map((breadcrumb, index) => {
+							const isCurrent = index === breadcrumbs.length - 1;
 
-			<Breadcrumb>
-				<BreadcrumbList>
-					{breadcrumbs.map((breadcrumb, index) => {
-						const isCurrent = index === breadcrumbs.length - 1;
-
-						return (
-							<Fragment key={breadcrumb.id}>
-								{index > 0 && (
-									<BreadcrumbSeparator className="hidden md:block" />
-								)}
-								<BreadcrumbItem
-									className={isCurrent ? undefined : "hidden md:inline-flex"}
-								>
-									{isCurrent ? (
-										<BreadcrumbPage>{breadcrumb.label}</BreadcrumbPage>
-									) : (
-										<BreadcrumbLink render={<Link to={breadcrumb.pathname} />}>
-											{breadcrumb.label}
-										</BreadcrumbLink>
+							return (
+								<Fragment key={breadcrumb.id}>
+									{index > 0 && (
+										<BreadcrumbSeparator className="hidden md:block" />
 									)}
-								</BreadcrumbItem>
-							</Fragment>
-						);
-					})}
-				</BreadcrumbList>
-			</Breadcrumb>
+									<BreadcrumbItem
+										className={isCurrent ? undefined : "hidden md:inline-flex"}
+									>
+										{isCurrent ? (
+											<BreadcrumbPage>{breadcrumb.label}</BreadcrumbPage>
+										) : (
+											<BreadcrumbLink render={<Link to={breadcrumb.pathname} />}>
+												{breadcrumb.label}
+											</BreadcrumbLink>
+										)}
+									</BreadcrumbItem>
+								</Fragment>
+							);
+						})}
+					</BreadcrumbList>
+				</Breadcrumb>
+			</div>
+			<ModeToggle />
 		</header>
 	);
 }

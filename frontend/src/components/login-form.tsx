@@ -1,5 +1,6 @@
+import { useRouter } from "@tanstack/react-router";
+import { useState } from "react";
 import z from "zod"
-
 import {
     Card,
     CardContent,
@@ -11,9 +12,12 @@ import {
     FieldDescription,
     FieldGroup,
 } from "@/components/ui/field"
+import { authClient } from "@/lib/auth-client";
+import { getAuthErrorMessage } from "@/lib/auth-error";
 import { cn } from "@/lib/utils"
 import { useAppForm } from "./form/form-context";
 import { ModeToggle } from "./mode-toggle"
+import { showErrorToast } from "@/lib/show-error-toast";
 
 const loginSchema = z.object({
     email: z.email("ایمیل معتبر وارد کنید"),
@@ -26,17 +30,31 @@ export function LoginForm({
     className,
     ...props
 }: React.ComponentProps<"div">) {
+    const router = useRouter()
+
+    const [error, setError] = useState<string | null>(null)
+
     const form = useAppForm({
         defaultValues: {
             email: "",
             password: "",
-        } as LoginValues,
+        } satisfies LoginValues,
         validators: {
-            // onChange: loginSchema,
             onSubmit: loginSchema,
         },
         onSubmit: async ({ value }) => {
-            console.log(value)
+            setError(null)
+            const { error } = await authClient.signIn.email({
+                email: value.email,
+                password: value.password,
+            })
+            if (error) {
+                setError(getAuthErrorMessage(error))
+                showErrorToast(getAuthErrorMessage(error))
+                return
+            }
+            router.invalidate()
+            router.navigate({ to: "/" })
         },
     })
 
@@ -80,6 +98,9 @@ export function LoginForm({
                                 <form.SubmitField submittingLabel="در حال ورود...">
                                     ورود
                                 </form.SubmitField>
+                                {error ? (
+                                    <p className="text-sm text-destructive text-center">{error}</p>
+                                ) : null}
                                 <Field>
                                     <FieldDescription className="text-center">
                                         حساب کاربری ندارید ؟{" "}

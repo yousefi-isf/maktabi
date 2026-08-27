@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useTRPC } from "@/lib/trpc";
 
-export const Route = createFileRoute("/test")({
+export const Route = createFileRoute("/_authenticated/test")({
 	staticData: {
 		breadcrumb: "آزمایش",
 	},
@@ -25,8 +25,7 @@ function RouteComponent() {
 
 	return (
 		<div>test
-			{/* <p>Backend status: {health.data.status}</p> */}
-			{/* <p>Schools: {schoolCount}</p> */}
+
 		</div>
 	);
 }
