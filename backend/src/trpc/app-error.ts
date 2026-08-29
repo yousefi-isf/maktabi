@@ -10,7 +10,7 @@ const APP_ERROR_MESSAGES = {
 	INVALID_ROLE: "The selected role is invalid",
 	ROLE_NAME_EXISTS: "A role with this name already exists",
 	PERMISSION_CODE_EXISTS: "A permission with this code already exists",
-	SCHOOL_NAME_EXISTS: "A school with this name already exists",
+	SCHOOL_NAME_EXISTS: "مدرسه ای با این نام از قبل موجود است",
 	SCHOOL_NOT_FOUND: "The selected school does not exist",
 	SCHOOL_ADDRESS_EXISTS: "A school with this address already exists",
 	SCHOOL_PHONE_EXISTS: "A school with this phone number already exists",
@@ -44,6 +44,7 @@ export class AppErrorCause extends Error {
 	constructor(
 		public readonly appCode: AppErrorCode,
 		public readonly params: AppErrorParams | null = null,
+		public readonly field: string | null = null,
 	) {
 		super(APP_ERROR_MESSAGES[appCode]);
 		this.name = "AppErrorCause";
@@ -54,14 +55,16 @@ type CreateAppErrorOptions = {
 	code: TRPC_ERROR_CODE_KEY;
 	appCode: AppErrorCode;
 	params?: AppErrorParams;
+	field?: string;
 };
 
 export function appError({
 	code,
 	appCode,
 	params,
+	field,
 }: CreateAppErrorOptions): TRPCError {
-	const cause = new AppErrorCause(appCode, params);
+	const cause = new AppErrorCause(appCode, params ,field ?? null);
 
 	return new TRPCError({
 		code,

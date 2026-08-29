@@ -11,7 +11,6 @@ export const SearchField = withFieldGroup({
     render: function Render({ group, placeholderMeta }) {
 
         return (
-
             <group.AppField name="q">
                 {(field) => <Input
                     placeholder={`جستجو ${placeholderMeta} ...`}

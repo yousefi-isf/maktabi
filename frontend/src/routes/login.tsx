@@ -1,8 +1,6 @@
-import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
-import { useEffect } from 'react'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 import { z } from 'zod'
 import { LoginForm } from '@/components/login-form';
-import { showErrorToast } from '@/lib/show-error-toast'
 
 const loginSearchSchema = z.object({
   notify: z.string().optional(),

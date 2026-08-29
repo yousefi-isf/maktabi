@@ -15,7 +15,33 @@ z.config(z.locales.fa());
 const t = initTRPC.context<Context>().create({
   transformer: superjson,
   errorFormatter({ shape, error }) {
+    // const cause = error.cause instanceof AppErrorCause ? error.cause : null;
+
+    // return {
+    //   ...shape,
+    //   data: {
+    //     ...shape.data,
+    //     appCode: cause?.appCode ?? null,
+    //     params: cause?.params ?? null,
+    //     zodError:
+    //       error.code === "BAD_REQUEST" && error.cause instanceof ZodError
+    //         ? z.flattenError(error.cause)
+    //         : null,
+    //   },
+    // };
     const cause = error.cause instanceof AppErrorCause ? error.cause : null;
+
+    const zodInputError =
+      error.code === "BAD_REQUEST" && error.cause instanceof ZodError
+        ? z.flattenError(error.cause)
+        : null;
+
+    const zodBusinessError = cause?.field
+      ? {
+        formErrors: [] as string[],
+        fieldErrors: { [cause.field]: [cause.message] },
+      }
+      : null;
 
     return {
       ...shape,
@@ -23,10 +49,8 @@ const t = initTRPC.context<Context>().create({
         ...shape.data,
         appCode: cause?.appCode ?? null,
         params: cause?.params ?? null,
-        zodError:
-          error.code === "BAD_REQUEST" && error.cause instanceof ZodError
-            ? z.flattenError(error.cause)
-            : null,
+        // هر دو نوع خطا از یک شکل واحد استفاده می‌کنن
+        zodError: zodInputError ?? zodBusinessError,
       },
     };
   },

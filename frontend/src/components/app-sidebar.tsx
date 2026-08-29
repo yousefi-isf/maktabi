@@ -21,7 +21,6 @@ type AppSidebarProps = ComponentProps<typeof Sidebar> & {
 
 export function AppSidebar({ me, ...props }: AppSidebarProps) {
 	const visibleNavigation = filterNavigation(navigationItems, me.permissions);
-	console.log(me)
 	return (
 		<Sidebar collapsible="icon" {...props}>
 			<SidebarHeader>

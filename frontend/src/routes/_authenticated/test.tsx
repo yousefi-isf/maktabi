@@ -1,6 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { useTRPC } from "@/lib/trpc";
 
 export const Route = createFileRoute("/_authenticated/test")({
 	staticData: {
@@ -10,8 +8,6 @@ export const Route = createFileRoute("/_authenticated/test")({
 });
 
 function RouteComponent() {
-	const trpc = useTRPC();
-
 	// const health = useQuery(trpc.health.queryOptions());
 	// const { data: schoolCount } = useQuery(trpc.schools.count.queryOptions());
 

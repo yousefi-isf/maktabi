@@ -31,25 +31,26 @@ export function NavMain({
 		<SidebarGroup>
 			<SidebarGroupLabel>عمومی</SidebarGroupLabel>
 			<SidebarMenu>
-				{items.map((item) => {
-					const isActive = item.items
-						? item.items.some((subItem) => isUrlActive(subItem.url))
+			{items.map((item) => {
+				const isActive =
+					"items" in item
+						? item.items.some((subItem) => "url" in subItem && isUrlActive(subItem.url))
 						: isUrlActive(item.url);
 
-					if (!item.items) {
-						return (
-							<SidebarMenuItem key={item.title} >
-								<SidebarMenuButton
-									isActive={isActive}
-									tooltip={item.title}
-									render={<Link to={item.url} />}
-								>
-									{item.icon}
-									<span>{item.title}</span>
-								</SidebarMenuButton>
-							</SidebarMenuItem>
-						);
-					}
+				if (!("items" in item)) {
+					return (
+						<SidebarMenuItem key={item.title} >
+							<SidebarMenuButton
+								isActive={isActive}
+								tooltip={item.title}
+								render={<Link to={item.url} />}
+							>
+								{item.icon}
+								<span>{item.title}</span>
+							</SidebarMenuButton>
+						</SidebarMenuItem>
+					);
+				}
 
 					return (
 						<Collapsible
@@ -67,17 +68,19 @@ export function NavMain({
 							</CollapsibleTrigger>
 							<CollapsibleContent>
 								<SidebarMenuSub>
-									{item.items.map((subItem) => (
+								{item.items.map((subItem) =>
+									"url" in subItem ? (
 										<SidebarMenuSubItem key={subItem.title}>
-										<SidebarMenuSubButton
-											isActive={isUrlActive(subItem.url)}
-											render={<Link to={subItem.url} />}
-										>
+											<SidebarMenuSubButton
+												isActive={isUrlActive(subItem.url)}
+												render={<Link to={subItem.url} />}
+											>
 												{subItem.icon}
 												<span>{subItem.title}</span>
 											</SidebarMenuSubButton>
 										</SidebarMenuSubItem>
-									))}
+									) : null,
+								)}
 								</SidebarMenuSub>
 							</CollapsibleContent>
 						</Collapsible>

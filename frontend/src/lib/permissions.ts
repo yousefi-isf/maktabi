@@ -15,15 +15,24 @@ export type PermissionRequirement =
 	| { allOf: readonly PermissionCode[] };
 
 type AppPath = FileRouteTypes["fullPaths"];
-export type PermissionNavItem = {
+
+export type NavLeafItem = {
 	title: string;
-	// url: string;
 	url: AppPath;
 	icon?: ReactNode;
 	isActive?: boolean;
 	required?: PermissionRequirement;
-	items?: readonly PermissionNavItem[];
 };
+
+export type NavGroupItem = {
+	title: string;
+	icon?: ReactNode;
+	isActive?: boolean;
+	required?: PermissionRequirement;
+	items: readonly PermissionNavItem[];
+};
+
+export type PermissionNavItem = NavLeafItem | NavGroupItem;
 
 function allows(
 	granted: ReadonlySet<PermissionCode>,
@@ -56,11 +65,12 @@ export function filterNavigation(
 	const granted = new Set(permissions);
 
 	const visit = (entries: readonly PermissionNavItem[]): PermissionNavItem[] =>
-		entries.flatMap((item) => {
+		entries.flatMap((item): PermissionNavItem[] => {
 			if (!allows(granted, item.required)) return [];
+			if (!("items" in item)) return [item];
 
-			const children = item.items ? visit(item.items) : undefined;
-			if (item.items && children?.length === 0) return [];
+			const children = visit(item.items);
+			if (children.length === 0) return [];
 
 			return [{ ...item, items: children }];
 		});

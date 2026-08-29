@@ -8,11 +8,13 @@ type PasswordFieldProps = Omit<
 > & {
     label?: React.ReactNode
     description?: React.ReactNode
+    orientation?: React.ComponentProps<typeof Field>["orientation"]
 }
 
 function PasswordField({
     label,
     description,
+    orientation,
     ...props
 }: PasswordFieldProps) {
     const field = useFieldContext<string>()
@@ -21,6 +23,7 @@ function PasswordField({
             data-invalid={
                 field.state.meta.errors.length > 0
             }
+            orientation={orientation}
         >
             {label && (
                 <FieldLabel htmlFor={field.name}>
@@ -32,10 +35,17 @@ function PasswordField({
                 id={field.name}
                 name={field.name}
                 value={field.state.value}
-                onChange={(e) =>
+                onChange={(e) => {
                     field.handleChange(
                         e.target.value
                     )
+                    if (field.state.meta.errorMap.onServer) {
+                        field.setMeta((prev) => ({
+                            ...prev,
+                            errorMap: { ...prev.errorMap, onServer: undefined },
+                        }))
+                    }
+                }
                 }
                 onBlur={field.handleBlur}
                 aria-invalid={

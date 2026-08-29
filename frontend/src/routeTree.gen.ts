@@ -13,9 +13,20 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as SetPasswordRouteImport } from './routes/set-password'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
-import { Route as AuthenticatedSchoolsRouteImport } from './routes/_authenticated/schools'
+import { Route as AuthenticatedAcademicYearsRouteImport } from './routes/_authenticated/academic-years'
+import { Route as AuthenticatedAttendanceRouteImport } from './routes/_authenticated/attendance'
+import { Route as AuthenticatedExamsRouteImport } from './routes/_authenticated/exams'
+import { Route as AuthenticatedHelpRouteImport } from './routes/_authenticated/help'
+import { Route as AuthenticatedPermissionsRouteImport } from './routes/_authenticated/permissions'
+import { Route as AuthenticatedRolesRouteImport } from './routes/_authenticated/roles'
 import { Route as AuthenticatedTestRouteImport } from './routes/_authenticated/test'
 import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/users'
+import { Route as AuthenticatedAcademicYearsCreateRouteImport } from './routes/_authenticated/academic-years.create'
+import { Route as AuthenticatedExamsCreateRouteImport } from './routes/_authenticated/exams.create'
+import { Route as AuthenticatedExamsPublishRouteImport } from './routes/_authenticated/exams.publish'
+import { Route as AuthenticatedSchoolsIndexRouteImport } from './routes/_authenticated/schools/index'
+import { Route as AuthenticatedSchoolsSchoolIdRouteImport } from './routes/_authenticated/schools/$schoolId'
+import { Route as AuthenticatedSchoolsDetailsRouteImport } from './routes/_authenticated/schools/details'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
@@ -36,9 +47,36 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedSchoolsRoute = AuthenticatedSchoolsRouteImport.update({
-  id: '/schools',
-  path: '/schools',
+const AuthenticatedAcademicYearsRoute =
+  AuthenticatedAcademicYearsRouteImport.update({
+    id: '/academic-years',
+    path: '/academic-years',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAttendanceRoute = AuthenticatedAttendanceRouteImport.update({
+  id: '/attendance',
+  path: '/attendance',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedExamsRoute = AuthenticatedExamsRouteImport.update({
+  id: '/exams',
+  path: '/exams',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedHelpRoute = AuthenticatedHelpRouteImport.update({
+  id: '/help',
+  path: '/help',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPermissionsRoute =
+  AuthenticatedPermissionsRouteImport.update({
+    id: '/permissions',
+    path: '/permissions',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedRolesRoute = AuthenticatedRolesRouteImport.update({
+  id: '/roles',
+  path: '/roles',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedTestRoute = AuthenticatedTestRouteImport.update({
@@ -51,47 +89,161 @@ const AuthenticatedUsersRoute = AuthenticatedUsersRouteImport.update({
   path: '/users',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAcademicYearsCreateRoute =
+  AuthenticatedAcademicYearsCreateRouteImport.update({
+    id: '/create',
+    path: '/create',
+    getParentRoute: () => AuthenticatedAcademicYearsRoute,
+  } as any)
+const AuthenticatedExamsCreateRoute =
+  AuthenticatedExamsCreateRouteImport.update({
+    id: '/create',
+    path: '/create',
+    getParentRoute: () => AuthenticatedExamsRoute,
+  } as any)
+const AuthenticatedExamsPublishRoute =
+  AuthenticatedExamsPublishRouteImport.update({
+    id: '/publish',
+    path: '/publish',
+    getParentRoute: () => AuthenticatedExamsRoute,
+  } as any)
+const AuthenticatedSchoolsIndexRoute =
+  AuthenticatedSchoolsIndexRouteImport.update({
+    id: '/schools/',
+    path: '/schools/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSchoolsSchoolIdRoute =
+  AuthenticatedSchoolsSchoolIdRouteImport.update({
+    id: '/schools/$schoolId',
+    path: '/schools/$schoolId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSchoolsDetailsRoute =
+  AuthenticatedSchoolsDetailsRouteImport.update({
+    id: '/schools/details',
+    path: '/schools/details',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/login': typeof LoginRoute
   '/set-password': typeof SetPasswordRoute
-  '/schools': typeof AuthenticatedSchoolsRoute
+  '/academic-years': typeof AuthenticatedAcademicYearsRouteWithChildren
+  '/attendance': typeof AuthenticatedAttendanceRoute
+  '/exams': typeof AuthenticatedExamsRouteWithChildren
+  '/help': typeof AuthenticatedHelpRoute
+  '/permissions': typeof AuthenticatedPermissionsRoute
+  '/roles': typeof AuthenticatedRolesRoute
   '/test': typeof AuthenticatedTestRoute
   '/users': typeof AuthenticatedUsersRoute
+  '/academic-years/create': typeof AuthenticatedAcademicYearsCreateRoute
+  '/exams/create': typeof AuthenticatedExamsCreateRoute
+  '/exams/publish': typeof AuthenticatedExamsPublishRoute
+  '/schools/$schoolId': typeof AuthenticatedSchoolsSchoolIdRoute
+  '/schools/details': typeof AuthenticatedSchoolsDetailsRoute
+  '/schools/': typeof AuthenticatedSchoolsIndexRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/set-password': typeof SetPasswordRoute
-  '/schools': typeof AuthenticatedSchoolsRoute
+  '/academic-years': typeof AuthenticatedAcademicYearsRouteWithChildren
+  '/attendance': typeof AuthenticatedAttendanceRoute
+  '/exams': typeof AuthenticatedExamsRouteWithChildren
+  '/help': typeof AuthenticatedHelpRoute
+  '/permissions': typeof AuthenticatedPermissionsRoute
+  '/roles': typeof AuthenticatedRolesRoute
   '/test': typeof AuthenticatedTestRoute
   '/users': typeof AuthenticatedUsersRoute
   '/': typeof AuthenticatedIndexRoute
+  '/academic-years/create': typeof AuthenticatedAcademicYearsCreateRoute
+  '/exams/create': typeof AuthenticatedExamsCreateRoute
+  '/exams/publish': typeof AuthenticatedExamsPublishRoute
+  '/schools/$schoolId': typeof AuthenticatedSchoolsSchoolIdRoute
+  '/schools/details': typeof AuthenticatedSchoolsDetailsRoute
+  '/schools': typeof AuthenticatedSchoolsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/login': typeof LoginRoute
   '/set-password': typeof SetPasswordRoute
-  '/_authenticated/schools': typeof AuthenticatedSchoolsRoute
+  '/_authenticated/academic-years': typeof AuthenticatedAcademicYearsRouteWithChildren
+  '/_authenticated/attendance': typeof AuthenticatedAttendanceRoute
+  '/_authenticated/exams': typeof AuthenticatedExamsRouteWithChildren
+  '/_authenticated/help': typeof AuthenticatedHelpRoute
+  '/_authenticated/permissions': typeof AuthenticatedPermissionsRoute
+  '/_authenticated/roles': typeof AuthenticatedRolesRoute
   '/_authenticated/test': typeof AuthenticatedTestRoute
   '/_authenticated/users': typeof AuthenticatedUsersRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/academic-years/create': typeof AuthenticatedAcademicYearsCreateRoute
+  '/_authenticated/exams/create': typeof AuthenticatedExamsCreateRoute
+  '/_authenticated/exams/publish': typeof AuthenticatedExamsPublishRoute
+  '/_authenticated/schools/$schoolId': typeof AuthenticatedSchoolsSchoolIdRoute
+  '/_authenticated/schools/details': typeof AuthenticatedSchoolsDetailsRoute
+  '/_authenticated/schools/': typeof AuthenticatedSchoolsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/set-password' | '/schools' | '/test' | '/users'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/set-password'
+    | '/academic-years'
+    | '/attendance'
+    | '/exams'
+    | '/help'
+    | '/permissions'
+    | '/roles'
+    | '/test'
+    | '/users'
+    | '/academic-years/create'
+    | '/exams/create'
+    | '/exams/publish'
+    | '/schools/$schoolId'
+    | '/schools/details'
+    | '/schools/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/login' | '/set-password' | '/schools' | '/test' | '/users' | '/'
+  to:
+    | '/login'
+    | '/set-password'
+    | '/academic-years'
+    | '/attendance'
+    | '/exams'
+    | '/help'
+    | '/permissions'
+    | '/roles'
+    | '/test'
+    | '/users'
+    | '/'
+    | '/academic-years/create'
+    | '/exams/create'
+    | '/exams/publish'
+    | '/schools/$schoolId'
+    | '/schools/details'
+    | '/schools'
   id:
     | '__root__'
     | '/_authenticated'
     | '/login'
     | '/set-password'
-    | '/_authenticated/schools'
+    | '/_authenticated/academic-years'
+    | '/_authenticated/attendance'
+    | '/_authenticated/exams'
+    | '/_authenticated/help'
+    | '/_authenticated/permissions'
+    | '/_authenticated/roles'
     | '/_authenticated/test'
     | '/_authenticated/users'
     | '/_authenticated/'
+    | '/_authenticated/academic-years/create'
+    | '/_authenticated/exams/create'
+    | '/_authenticated/exams/publish'
+    | '/_authenticated/schools/$schoolId'
+    | '/_authenticated/schools/details'
+    | '/_authenticated/schools/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -130,11 +282,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/schools': {
-      id: '/_authenticated/schools'
-      path: '/schools'
-      fullPath: '/schools'
-      preLoaderRoute: typeof AuthenticatedSchoolsRouteImport
+    '/_authenticated/academic-years': {
+      id: '/_authenticated/academic-years'
+      path: '/academic-years'
+      fullPath: '/academic-years'
+      preLoaderRoute: typeof AuthenticatedAcademicYearsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/attendance': {
+      id: '/_authenticated/attendance'
+      path: '/attendance'
+      fullPath: '/attendance'
+      preLoaderRoute: typeof AuthenticatedAttendanceRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/exams': {
+      id: '/_authenticated/exams'
+      path: '/exams'
+      fullPath: '/exams'
+      preLoaderRoute: typeof AuthenticatedExamsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/help': {
+      id: '/_authenticated/help'
+      path: '/help'
+      fullPath: '/help'
+      preLoaderRoute: typeof AuthenticatedHelpRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/permissions': {
+      id: '/_authenticated/permissions'
+      path: '/permissions'
+      fullPath: '/permissions'
+      preLoaderRoute: typeof AuthenticatedPermissionsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/roles': {
+      id: '/_authenticated/roles'
+      path: '/roles'
+      fullPath: '/roles'
+      preLoaderRoute: typeof AuthenticatedRolesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/test': {
@@ -151,21 +338,107 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedUsersRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/academic-years/create': {
+      id: '/_authenticated/academic-years/create'
+      path: '/create'
+      fullPath: '/academic-years/create'
+      preLoaderRoute: typeof AuthenticatedAcademicYearsCreateRouteImport
+      parentRoute: typeof AuthenticatedAcademicYearsRoute
+    }
+    '/_authenticated/exams/create': {
+      id: '/_authenticated/exams/create'
+      path: '/create'
+      fullPath: '/exams/create'
+      preLoaderRoute: typeof AuthenticatedExamsCreateRouteImport
+      parentRoute: typeof AuthenticatedExamsRoute
+    }
+    '/_authenticated/exams/publish': {
+      id: '/_authenticated/exams/publish'
+      path: '/publish'
+      fullPath: '/exams/publish'
+      preLoaderRoute: typeof AuthenticatedExamsPublishRouteImport
+      parentRoute: typeof AuthenticatedExamsRoute
+    }
+    '/_authenticated/schools/': {
+      id: '/_authenticated/schools/'
+      path: '/schools'
+      fullPath: '/schools/'
+      preLoaderRoute: typeof AuthenticatedSchoolsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/schools/$schoolId': {
+      id: '/_authenticated/schools/$schoolId'
+      path: '/schools/$schoolId'
+      fullPath: '/schools/$schoolId'
+      preLoaderRoute: typeof AuthenticatedSchoolsSchoolIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/schools/details': {
+      id: '/_authenticated/schools/details'
+      path: '/schools/details'
+      fullPath: '/schools/details'
+      preLoaderRoute: typeof AuthenticatedSchoolsDetailsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
+interface AuthenticatedAcademicYearsRouteChildren {
+  AuthenticatedAcademicYearsCreateRoute: typeof AuthenticatedAcademicYearsCreateRoute
+}
+
+const AuthenticatedAcademicYearsRouteChildren: AuthenticatedAcademicYearsRouteChildren =
+  {
+    AuthenticatedAcademicYearsCreateRoute:
+      AuthenticatedAcademicYearsCreateRoute,
+  }
+
+const AuthenticatedAcademicYearsRouteWithChildren =
+  AuthenticatedAcademicYearsRoute._addFileChildren(
+    AuthenticatedAcademicYearsRouteChildren,
+  )
+
+interface AuthenticatedExamsRouteChildren {
+  AuthenticatedExamsCreateRoute: typeof AuthenticatedExamsCreateRoute
+  AuthenticatedExamsPublishRoute: typeof AuthenticatedExamsPublishRoute
+}
+
+const AuthenticatedExamsRouteChildren: AuthenticatedExamsRouteChildren = {
+  AuthenticatedExamsCreateRoute: AuthenticatedExamsCreateRoute,
+  AuthenticatedExamsPublishRoute: AuthenticatedExamsPublishRoute,
+}
+
+const AuthenticatedExamsRouteWithChildren =
+  AuthenticatedExamsRoute._addFileChildren(AuthenticatedExamsRouteChildren)
+
 interface AuthenticatedRouteRouteChildren {
-  AuthenticatedSchoolsRoute: typeof AuthenticatedSchoolsRoute
+  AuthenticatedAcademicYearsRoute: typeof AuthenticatedAcademicYearsRouteWithChildren
+  AuthenticatedAttendanceRoute: typeof AuthenticatedAttendanceRoute
+  AuthenticatedExamsRoute: typeof AuthenticatedExamsRouteWithChildren
+  AuthenticatedHelpRoute: typeof AuthenticatedHelpRoute
+  AuthenticatedPermissionsRoute: typeof AuthenticatedPermissionsRoute
+  AuthenticatedRolesRoute: typeof AuthenticatedRolesRoute
   AuthenticatedTestRoute: typeof AuthenticatedTestRoute
   AuthenticatedUsersRoute: typeof AuthenticatedUsersRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedSchoolsSchoolIdRoute: typeof AuthenticatedSchoolsSchoolIdRoute
+  AuthenticatedSchoolsDetailsRoute: typeof AuthenticatedSchoolsDetailsRoute
+  AuthenticatedSchoolsIndexRoute: typeof AuthenticatedSchoolsIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedSchoolsRoute: AuthenticatedSchoolsRoute,
+  AuthenticatedAcademicYearsRoute: AuthenticatedAcademicYearsRouteWithChildren,
+  AuthenticatedAttendanceRoute: AuthenticatedAttendanceRoute,
+  AuthenticatedExamsRoute: AuthenticatedExamsRouteWithChildren,
+  AuthenticatedHelpRoute: AuthenticatedHelpRoute,
+  AuthenticatedPermissionsRoute: AuthenticatedPermissionsRoute,
+  AuthenticatedRolesRoute: AuthenticatedRolesRoute,
   AuthenticatedTestRoute: AuthenticatedTestRoute,
   AuthenticatedUsersRoute: AuthenticatedUsersRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedSchoolsSchoolIdRoute: AuthenticatedSchoolsSchoolIdRoute,
+  AuthenticatedSchoolsDetailsRoute: AuthenticatedSchoolsDetailsRoute,
+  AuthenticatedSchoolsIndexRoute: AuthenticatedSchoolsIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

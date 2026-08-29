@@ -13,9 +13,9 @@ import type { PermissionNavItem } from "./permissions";
 
 export const navigationItems = [
 	{
-		title: "خانه",
+		title: "پیشخوان",
 		url: "/",
-		icon: <House />
+		// icon: <House />
 	},
 	{
 		title: "مدیریت",

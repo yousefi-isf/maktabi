@@ -1,3 +1,4 @@
+
 import type { QueryClient } from "@tanstack/react-query";
 import {
 	createRootRouteWithContext,
@@ -8,6 +9,7 @@ import type { TRPCClient } from "@trpc/client";
 import type { ReactNode } from "react";
 import { NotFoundPage } from "@/components/not-found";
 import { ThemeProvider } from "@/components/theme-provider";
+import { DirectionProvider } from "@/components/ui/direction.js";
 import { Toaster } from "@/components/ui/toast";
 import { TooltipProvider } from "@/components/ui/tooltip.js";
 import { DIR, LANG } from "@/lib/locale";
@@ -52,10 +54,13 @@ function RootDocument({ children }: { children: ReactNode }) {
 			</head>
 			<body>
 				<ThemeProvider defaultTheme="system" storageKey="theme">
-					<TooltipProvider>
-						{children}
-					</TooltipProvider>
-					<Toaster />
+					<DirectionProvider direction={DIR}>
+						<TooltipProvider>
+							{children}
+						</TooltipProvider>
+
+						<Toaster />
+					</DirectionProvider>
 				</ThemeProvider>
 				<Scripts />
 			</body>

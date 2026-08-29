@@ -5,7 +5,6 @@ import { FieldGroup } from '@/components/ui/field';
 import { useAppForm } from '@/components/form/form-context';
 import { authClient } from '@/lib/auth-client';
 import { showAuthErrorToast, showSuccessToast } from '@/lib/show-error-toast';
-import { getTRPCErrorMessage, type LocalizableTRPCError } from '@/lib/trpc-error';
 
 
 const setPasswordSchema = z.object({
