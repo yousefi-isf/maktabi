@@ -1,10 +1,13 @@
 import { academicYearsRouter } from "../modules/academic-years/router.js";
+import { fieldsOfStudyRouter } from "../modules/fields-of-study/router.js";
 import { authRouter } from "../modules/auth/router.js";
 import { permissionsRouter } from "../modules/permissions/router.js";
 import { rolesRouter } from "../modules/roles/router.js";
 import { schoolsRouter } from "../modules/schools/router.js";
 import { usersRouter } from "../modules/users/router.js";
-import { publicProcedure, router } from "./trpc.js";
+import { studentsRouter } from "../modules/students/router.js";
+import { reportCardImporterRouter } from "../modules/importers/report-card/router.js";
+import { createCallerFactory, publicProcedure, router } from "./trpc.js";
 
 export const appRouter = router({
   health: publicProcedure.query(() => ({
@@ -13,10 +16,14 @@ export const appRouter = router({
   })),
   auth: authRouter,
   academicYears: academicYearsRouter,
+  fieldsOfStudy: fieldsOfStudyRouter,
   users: usersRouter,
+  students: studentsRouter,
   roles: rolesRouter,
   permissions: permissionsRouter,
   schools: schoolsRouter,
+  reportCards: reportCardImporterRouter,
 });
 
 export type AppRouter = typeof appRouter;
+export const createCaller = createCallerFactory(appRouter);

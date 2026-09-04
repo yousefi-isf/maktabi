@@ -34,6 +34,12 @@ const APP_ERROR_MESSAGES = {
 	ACADEMIC_YEAR_NOT_FOUND: "The academic year was not found",
 	ACADEMIC_YEAR_IN_USE:
 		"The academic year cannot be deleted because it has related records",
+	FIELD_OF_STUDY_TITLE_EXISTS: "A field of study with this title already exists",
+	FIELD_OF_STUDY_NOT_FOUND: "The field of study was not found",
+	FIELD_OF_STUDY_IN_USE: "The field of study cannot be deleted because it is in use",
+	USER_IN_USE: "The user cannot be deleted because it has related records",
+	USER_NOT_FOUND: "The user was not found",
+	CANNOT_DELETE_SELF: "شما نمی‌توانید حساب کاربری خود را حذف کنید",
 	// INVALID_EMAIL_OR_PASSWORD : "ایمیل یا رمز عبور نامعتبر است",
 } as const;
 
@@ -64,7 +70,7 @@ export function appError({
 	params,
 	field,
 }: CreateAppErrorOptions): TRPCError {
-	const cause = new AppErrorCause(appCode, params ,field ?? null);
+	const cause = new AppErrorCause(appCode, params, field ?? null);
 
 	return new TRPCError({
 		code,

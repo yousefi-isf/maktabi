@@ -1,4 +1,5 @@
 import { createFormHook, createFormHookContexts } from "@tanstack/react-form";
+import AsyncField from "./async-field";
 import PasswordField from "./password-field";
 import SelectField from "./select-field";
 import SubmitField from "./submit-field";
@@ -18,6 +19,7 @@ export const {
 		TextField,
 		SelectField,
 		PasswordField,
+		AsyncField,
 	},
 	formComponents: {
 		SubmitField,

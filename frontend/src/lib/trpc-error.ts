@@ -37,10 +37,18 @@ const ERROR_MESSAGES = {
 	ACADEMIC_YEAR_NOT_FOUND: () => "سال تحصیلی مورد نظر پیدا نشد.",
 	ACADEMIC_YEAR_IN_USE: () =>
 		"این سال تحصیلی به دلیل وجود رکوردهای وابسته قابل حذف نیست.",
-	INVITE_NOT_FOUND: () =>"% ساخت رمز منقضی یا نامعتبر است",
+	INVITE_NOT_FOUND: () => "% ساخت رمز منقضی یا نامعتبر است",
 	SCHOOL_IN_USE: () => "مدرسه در حال استفاده است ...",
 	SCHOOL_NOT_FOUND: () => "مدرسه ای یافت نشد",
-	SUPER_ADMIN_REQUIRED: () => "نیاز به سطح دسترسی مدیر کل است"
+	USER_IN_USE: () => "کاربر در حال استفاده است",
+	USER_NOT_FOUND: () => "کاربری یافت نشد",
+	CANNOT_DELETE_SELF: () => "امکان حذف حساب کاربری خود وجود ندارد",
+	SUPER_ADMIN_REQUIRED: () => "نیاز به سطح دسترسی مدیر کل است",
+	FIELD_OF_STUDY_TITLE_EXISTS: (params) =>
+		`رشته تحصیلی با عنوان «${readParam(params, "title")}» قبلاً ثبت شده است.`,
+	FIELD_OF_STUDY_NOT_FOUND: () => "رشته تحصیلی مورد نظر یافت نشد.",
+	FIELD_OF_STUDY_IN_USE: () =>
+		"این رشته تحصیلی به دلیل داشتن کلاس یا برنامه درسی وابسته قابل حذف نیست.",
 } satisfies Record<AppErrorCode, ErrorMessageResolver>;
 
 export type LocalizableTRPCError = {

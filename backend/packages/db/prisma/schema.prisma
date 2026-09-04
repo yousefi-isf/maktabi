@@ -24,6 +24,11 @@ enum Branch {
   vocational
 }
 
+enum Gender {
+  male
+  female
+}
+
 // poodemani vs modular
 enum SubjectType {
   theoretical
@@ -34,6 +39,14 @@ enum ExamType {
   continuous
   term_final
   national_final
+  modular_continuous
+  modular_competency
+}
+
+enum CompetencyLevel {
+  not_achieved
+  achieved
+  beyond_expectation
 }
 
 enum EnrollmentStatus {
@@ -311,6 +324,10 @@ model User {
   nationalCode String    @unique @map("national_code")
   email        String    @unique
   phone        String?
+  fatherName   String?   @map("father_name")
+  birthDate    DateTime? @map("birth_date") @db.Date
+  birthPlace   String?   @map("birth_place")
+  gender       Gender?
   deletedAt    DateTime? @map("deleted_at") @db.Timestamptz
 
   userSchools   UserSchool[]
@@ -537,6 +554,7 @@ model Subject {
   @@map("subject")
 }
 
+// کلاس های درس
 model Curriculum {
   id               String    @id @default(uuid())
   schoolId         String    @map("school_id")
@@ -568,6 +586,7 @@ model SubjectModule {
   schoolId   String    @map("school_id")
   subjectId  String    @map("subject_id")
   title      String
+  code       String?
   orderIndex Int       @map("order_index")
   weight     Decimal   @db.Decimal(4, 2)
   createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz
@@ -664,15 +683,16 @@ model Exam {
 }
 
 model Score {
-  id        String    @id @default(uuid())
-  schoolId  String    @map("school_id")
-  examId    String    @map("exam_id")
-  studentId String    @map("student_id")
-  score     Decimal?  @db.Decimal(4, 2) // null when isAbsent — absence is NOT the same as 0
-  isAbsent  Boolean   @default(false) @map("is_absent")
-  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
-  deletedAt DateTime? @map("deleted_at") @db.Timestamptz
+  id              String           @id @default(uuid())
+  schoolId        String           @map("school_id")
+  examId          String           @map("exam_id")
+  studentId       String           @map("student_id")
+  score           Decimal?         @db.Decimal(4, 2) // null when isAbsent — absence is NOT the same as 0
+  competencyLevel CompetencyLevel? @map("competency_level")
+  isAbsent        Boolean          @default(false) @map("is_absent")
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt       DateTime?        @map("deleted_at") @db.Timestamptz
 
   school  School  @relation(fields: [schoolId], references: [id])
   exam    Exam    @relation(fields: [examId], references: [id])

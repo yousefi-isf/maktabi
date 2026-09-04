@@ -9,6 +9,7 @@
     "build": "pnpm --dir packages/db build && tsc",
     "start": "node --env-file=.env dist/server.js",
     "db:seed": "pnpm --filter @maktabi/db exec prisma db seed",
+    "db:seed:principal": "tsx --env-file=.env packages/db/prisma/run-sarami-principal.ts",
     "db:generate": "pnpm --filter @maktabi/db exec prisma generate",
     "db:reset": "pnpm --filter @maktabi/db exec prisma migrate reset",
     "db:migrate:dev": "pnpm --filter @maktabi/db exec prisma migrate dev",
@@ -34,6 +35,7 @@
     "better-auth": "^1.6.26",
     "dotenv": "^16.6.1",
     "fastify": "^5.12.1",
+    "unpdf": "^1.8.1",
     "zod": "^4.4.3"
   },
   "devDependencies": {

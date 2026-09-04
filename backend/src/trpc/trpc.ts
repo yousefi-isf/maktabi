@@ -58,6 +58,7 @@ const t = initTRPC.context<Context>().create({
 
 export const router = t.router;
 export const publicProcedure = t.procedure;
+export const createCallerFactory = t.createCallerFactory;
 
 // just login
 export const protectedProcedure = t.procedure.use(({ ctx, next }) => {

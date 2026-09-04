@@ -24,33 +24,41 @@ export function NavMain({
 }) {
 	const pathname = useRouterState({ select: (s) => s.location.pathname });
 
-	const isUrlActive = (url: string) =>
-		pathname === url || pathname.startsWith(`${url}/`);
+	const isUrlActive = (url: string) => {
+		if (!url) return false;
+		const cleanUrl = url.replace(/\/+$/, "") || "/";
+		const cleanPath = pathname.replace(/\/+$/, "") || "/";
+
+		if (cleanUrl === "/") {
+			return cleanPath === "/";
+		}
+		return cleanPath === cleanUrl || cleanPath.startsWith(`${cleanUrl}/`);
+	};
 
 	return (
 		<SidebarGroup>
 			<SidebarGroupLabel>عمومی</SidebarGroupLabel>
 			<SidebarMenu>
-			{items.map((item) => {
-				const isActive =
-					"items" in item
-						? item.items.some((subItem) => "url" in subItem && isUrlActive(subItem.url))
-						: isUrlActive(item.url);
+				{items.map((item) => {
+					const isActive =
+						"items" in item
+							? item.items.some((subItem) => "url" in subItem && isUrlActive(subItem.url))
+							: isUrlActive(item.url);
 
-				if (!("items" in item)) {
-					return (
-						<SidebarMenuItem key={item.title} >
-							<SidebarMenuButton
-								isActive={isActive}
-								tooltip={item.title}
-								render={<Link to={item.url} />}
-							>
-								{item.icon}
-								<span>{item.title}</span>
-							</SidebarMenuButton>
-						</SidebarMenuItem>
-					);
-				}
+					if (!("items" in item)) {
+						return (
+							<SidebarMenuItem key={item.title}>
+								<SidebarMenuButton
+									isActive={isActive}
+									tooltip={item.title}
+									render={<Link to={item.url} />}
+								>
+									{item.icon}
+									<span>{item.title}</span>
+								</SidebarMenuButton>
+							</SidebarMenuItem>
+						);
+					}
 
 					return (
 						<Collapsible
@@ -60,7 +68,7 @@ export function NavMain({
 							render={<SidebarMenuItem />}
 						>
 							<CollapsibleTrigger
-								render={<SidebarMenuButton tooltip={item.title} />}
+								render={<SidebarMenuButton isActive={isActive} tooltip={item.title} />}
 							>
 								{item.icon}
 								<span>{item.title}</span>
@@ -68,19 +76,19 @@ export function NavMain({
 							</CollapsibleTrigger>
 							<CollapsibleContent>
 								<SidebarMenuSub>
-								{item.items.map((subItem) =>
-									"url" in subItem ? (
-										<SidebarMenuSubItem key={subItem.title}>
-											<SidebarMenuSubButton
-												isActive={isUrlActive(subItem.url)}
-												render={<Link to={subItem.url} />}
-											>
-												{subItem.icon}
-												<span>{subItem.title}</span>
-											</SidebarMenuSubButton>
-										</SidebarMenuSubItem>
-									) : null,
-								)}
+									{item.items.map((subItem) =>
+										"url" in subItem ? (
+											<SidebarMenuSubItem key={subItem.title}>
+												<SidebarMenuSubButton
+													isActive={isUrlActive(subItem.url)}
+													render={<Link to={subItem.url} />}
+												>
+													{subItem.icon}
+													<span>{subItem.title}</span>
+												</SidebarMenuSubButton>
+											</SidebarMenuSubItem>
+										) : null,
+									)}
 								</SidebarMenuSub>
 							</CollapsibleContent>
 						</Collapsible>

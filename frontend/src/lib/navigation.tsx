@@ -2,7 +2,7 @@ import {
 	BookOpenIcon,
 	BotIcon,
 	FrameIcon,
-	House,
+	GraduationCap,
 	School,
 	Settings2Icon,
 	UserKey,
@@ -15,7 +15,6 @@ export const navigationItems = [
 	{
 		title: "پیشخوان",
 		url: "/",
-		// icon: <House />
 	},
 	{
 		title: "مدیریت",
@@ -23,33 +22,27 @@ export const navigationItems = [
 		items: [
 			{
 				title: "مدارس",
-				url: "/schools",
-				required: "identity.school.list",
-				icon: <School />
+				url: "/schools/",
+				required: "system.full_access",
+				icon: <School />,
 			},
 			{
 				title: "کاربران",
-				url: "/users",
-				required: "identity.user.list",
-				icon: <Users />
+				url: "/allusers/",
+				required: "system.full_access",
+				icon: <Users />,
 			},
-			// {
-			// 	title: "دعوت کاربر",
-			// 	url: "/users/invite",
-			// 	required: "identity.user.invite",
-
-			// },
 			{
 				title: "نقش‌ها",
 				url: "/roles",
 				required: "identity.role.list",
-				icon: <UserShield />
+				icon: <UserShield />,
 			},
 			{
 				title: "مجوزها",
 				url: "/permissions",
 				required: "identity.permission.list",
-				icon: <UserKey />
+				icon: <UserKey />,
 			},
 		],
 	},
@@ -65,9 +58,28 @@ export const navigationItems = [
 				},
 			},
 			{
-				title: "ایجاد سال تحصیلی",
-				url: "/academic-years/create",
-				required: "academic.year.create",
+				title: "دانش آموزان",
+				url: "/students/",
+				required: {
+					anyOf: [
+						"identity.student.list",
+						"identity.student.create",
+						"identity.student.delete",
+						"identity.student.update",
+					],
+				},
+			},
+			{
+				title: "رشته‌های تحصیلی",
+				url: "/fieldofstudy/",
+				required: {
+					anyOf: [
+						"academic.field.list",
+						"academic.field.create",
+						"academic.field.delete",
+						"academic.field.update",
+					],
+				},
 			},
 			{
 				title: "امتحانات",
@@ -79,16 +91,6 @@ export const navigationItems = [
 						"academic.exam.create",
 					],
 				},
-			},
-			{
-				title: "ایجاد امتحان",
-				url: "/exams/create",
-				required: "academic.exam.create",
-			},
-			{
-				title: "انتشار امتحان",
-				url: "/exams/publish",
-				required: "academic.exam.publish",
 			},
 		],
 	},

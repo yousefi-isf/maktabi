@@ -3,14 +3,21 @@
   "private": true,
   "version": "0.0.1",
   "type": "module",
+  "main": "./dist/src/client.js",
+  "module": "./dist/src/client.js",
+  "types": "./src/client.ts",
   "exports": {
     ".": {
       "types": "./src/client.ts",
-      "import": "./dist/src/client.js"
+      "development": "./src/client.ts",
+      "import": "./dist/src/client.js",
+      "default": "./dist/src/client.js"
     },
     "./client": {
       "types": "./generated/prisma/client.ts",
-      "import": "./dist/generated/prisma/client.js"
+      "development": "./generated/prisma/client.ts",
+      "import": "./dist/generated/prisma/client.js",
+      "default": "./dist/generated/prisma/client.js"
     }
   },
   "scripts": {
