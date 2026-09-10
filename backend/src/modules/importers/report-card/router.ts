@@ -28,14 +28,14 @@ export const reportCardImporterRouter = router({
       const hasPermission =
         ctx.user.isSuperAdmin ||
         ctx.permissions.includes(PERMISSIONS.SYSTEM.FULL_ACCESS) ||
-        ctx.permissions.includes(PERMISSIONS.IDENTITY.STUDENT_LIST) ||
-        ctx.permissions.includes(PERMISSIONS.IDENTITY.STUDENT_CREATE);
+        ctx.permissions.includes(PERMISSIONS.IMPORTER.REPORT_CARD_PREVIEW) ||
+        ctx.permissions.includes(PERMISSIONS.IMPORTER.REPORT_CARD_EXECUTE);
 
       if (!hasPermission) {
         throw appError({
           code: "FORBIDDEN",
           appCode: "MISSING_PERMISSION",
-          params: { permission: PERMISSIONS.IDENTITY.STUDENT_LIST },
+          params: { permission: PERMISSIONS.IMPORTER.REPORT_CARD_PREVIEW },
         });
       }
 
@@ -85,13 +85,13 @@ export const reportCardImporterRouter = router({
       const hasPermission =
         ctx.user.isSuperAdmin ||
         ctx.permissions.includes(PERMISSIONS.SYSTEM.FULL_ACCESS) ||
-        ctx.permissions.includes(PERMISSIONS.IDENTITY.STUDENT_CREATE);
+        ctx.permissions.includes(PERMISSIONS.IMPORTER.REPORT_CARD_EXECUTE);
 
       if (!hasPermission) {
         throw appError({
           code: "FORBIDDEN",
           appCode: "MISSING_PERMISSION",
-          params: { permission: PERMISSIONS.IDENTITY.STUDENT_CREATE },
+          params: { permission: PERMISSIONS.IMPORTER.REPORT_CARD_EXECUTE },
         });
       }
 
@@ -129,13 +129,13 @@ export const reportCardImporterRouter = router({
       const hasPermission =
         ctx.user.isSuperAdmin ||
         ctx.permissions.includes(PERMISSIONS.SYSTEM.FULL_ACCESS) ||
-        ctx.permissions.includes(PERMISSIONS.IDENTITY.STUDENT_CREATE);
+        ctx.permissions.includes(PERMISSIONS.IMPORTER.REPORT_CARD_EXECUTE);
 
       if (!hasPermission) {
         throw appError({
           code: "FORBIDDEN",
           appCode: "MISSING_PERMISSION",
-          params: { permission: PERMISSIONS.IDENTITY.STUDENT_CREATE },
+          params: { permission: PERMISSIONS.IMPORTER.REPORT_CARD_EXECUTE },
         });
       }
 

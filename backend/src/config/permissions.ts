@@ -41,6 +41,7 @@ export const PERMISSIONS = {
 		TERM_LIST: "academic.term.list",
 
 		GRADE_CREATE: "academic.grade.create",
+		GRADE_UPDATE: "academic.grade.update",
 		GRADE_LIST: "academic.grade.list",
 
 		FIELD_CREATE: "academic.field.create",
@@ -91,7 +92,11 @@ export const PERMISSIONS = {
 		ANNOUNCEMENT_CREATE: "communication.announcement.create",
 		ANNOUNCEMENT_DELETE: "communication.announcement.delete",
 		ANNOUNCEMENT_READ: "communication.announcement.read",
-	}
+	},
+	IMPORTER: {
+		REPORT_CARD_PREVIEW: "importer.report_card.preview",
+		REPORT_CARD_EXECUTE: "importer.report_card.execute",
+	},
 } as const;
 
 type FlattenValues<T> = T extends string
@@ -130,6 +135,7 @@ export const PERMISSION_DESCRIPTIONS = {
 	"academic.term.update": "Update terms",
 	"academic.term.list": "View terms",
 	"academic.grade.create": "Create grade levels",
+	"academic.grade.update": "Update grade levels",
 	"academic.grade.list": "View grade levels",
 	"academic.field.create": "Create fields of study",
 	"academic.field.update": "Update fields of study",
@@ -168,6 +174,9 @@ export const PERMISSION_DESCRIPTIONS = {
 	"communication.announcement.create": "Create announcements",
 	"communication.announcement.delete": "Delete announcements",
 	"communication.announcement.read": "View announcements",
+
+	"importer.report_card.preview": "Preview and parse report card PDF files",
+	"importer.report_card.execute": "Import report cards and batch create school data",
 } satisfies Record<PermissionCode, string>;
 
 function flatten(obj: Record<string, unknown>): PermissionCode[] {

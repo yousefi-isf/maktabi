@@ -513,16 +513,22 @@ model SchoolClass {
 }
 
 model Enrollment {
-  id             String           @id @default(uuid())
-  schoolId       String           @map("school_id")
-  academicYearId String           @map("academic_year_id")
-  studentId      String           @map("student_id")
-  classId        String           @map("class_id")
-  status         EnrollmentStatus @default(active)
-  enrolledAt     DateTime         @map("enrolled_at") @db.Timestamptz
-  createdAt      DateTime         @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt      DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
-  deletedAt      DateTime?        @map("deleted_at") @db.Timestamptz
+  id               String           @id @default(uuid())
+  schoolId         String           @map("school_id")
+  academicYearId   String           @map("academic_year_id")
+  studentId        String           @map("student_id")
+  classId          String           @map("class_id")
+  status           EnrollmentStatus @default(active)
+  enrolledAt       DateTime         @map("enrolled_at") @db.Timestamptz
+  gpa              Decimal?         @db.Decimal(4, 2)
+  continuousGpa    Decimal?         @map("continuous_gpa") @db.Decimal(4, 2)
+  finalGpa         Decimal?         @map("final_gpa") @db.Decimal(4, 2)
+  totalUnitsPassed Decimal?         @map("total_units_passed") @db.Decimal(4, 2)
+  totalUnitsTaken  Decimal?         @map("total_units_taken") @db.Decimal(4, 2)
+  totalScoreSum    Decimal?         @map("total_score_sum") @db.Decimal(6, 2)
+  createdAt        DateTime         @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt        DateTime?        @map("deleted_at") @db.Timestamptz
 
   school       School       @relation(fields: [schoolId], references: [id])
   academicYear AcademicYear @relation(fields: [academicYearId], references: [id])

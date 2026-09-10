@@ -1,9 +1,11 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import type { RowSelectionState } from '@tanstack/react-table';
 import { useState } from 'react';
+import { FileUp, Trophy } from 'lucide-react';
 import { BulkDeleteButton, DataTableSearch, DataTableToolbar } from '@/components/data-table';
 import type { PaginationState } from '@/components/serachable-data-table';
+import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/ui/data-table';
 import { CreateStudentDialog, columns } from '@/features/students';
 import { guardPermission } from '@/lib/route-guards';
@@ -100,6 +102,22 @@ function RouteComponent() {
 				</div>
 
 				<div className="flex items-center gap-2">
+					<Button
+						variant="outline"
+						render={<Link to="/students/rankings" />}
+						className="flex items-center gap-2"
+					>
+						<Trophy className="w-4 h-4 text-amber-600" />
+						رتبه‌بندی دانش‌آموزان
+					</Button>
+					<Button
+						variant="outline"
+						render={<Link to="/students/import" />}
+						className="flex items-center gap-2"
+					>
+						<FileUp className="w-4 h-4" />
+						بارگذاری کارنامه
+					</Button>
 					<CreateStudentDialog />
 					<BulkDeleteButton
 						disabled={isNotSelected}

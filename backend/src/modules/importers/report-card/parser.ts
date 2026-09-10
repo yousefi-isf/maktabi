@@ -19,6 +19,7 @@ import {
 
 // Canonical subject/module dictionary for standard Iranian Vocational curriculum
 const CANONICAL_TITLES: Record<string, { title: string; defaultUnit?: number; isModular?: boolean }> = {
+  // General subjects (دروس عمومی و پایه)
   "10011": { title: "تعلیمات دینی (دینی، اخلاق و قرآن) 1", defaultUnit: 2, isModular: false },
   "10022": { title: "عربی، زبان قرآن 1", defaultUnit: 1, isModular: false },
   "10032": { title: "فارسی 1", defaultUnit: 2, isModular: false },
@@ -26,7 +27,52 @@ const CANONICAL_TITLES: Record<string, { title: string; defaultUnit?: number; is
   "10092": { title: "تربیت بدنی 1", defaultUnit: 2, isModular: false },
   "10131": { title: "جغرافیای عمومی و استان شناسی", defaultUnit: 2, isModular: false },
   "99990": { title: "انضباط", defaultUnit: 2, isModular: false },
-  // Modular subjects & modules
+  "88110": { title: "الزامات محیط کار", defaultUnit: 2, isModular: true },
+  "881101": { title: "محیط کار و ارتباطات انسانی" },
+  "881102": { title: "فناوری در محیط کار" },
+  "881103": { title: "محیط و قوانین کار" },
+  "881104": { title: "ایمنی و بهداشت محیط کار" },
+  "881105": { title: "مهارت کاریابی" },
+  "88510": { title: "ریاضی 1", defaultUnit: 2, isModular: true },
+  "885101": { title: "نسبت و تناسب" },
+  "885102": { title: "درصد و کاربردهای آن" },
+  "885103": { title: "معادله‌های درجه دوم" },
+  "885104": { title: "توان‌رسانی به توان عددهای گویا" },
+  "885105": { title: "نسبت‌های مثلثاتی" },
+  "88901": { title: "فیزیک", defaultUnit: 2, isModular: true },
+  "889011": { title: "فیزیک و اندازه گیری" },
+  "889012": { title: "مکانیک" },
+  "889013": { title: "حالت‌های ماده و فشار" },
+  "889014": { title: "دما و گرما" },
+  "889015": { title: "جریان و مدارهای الکتریکی" },
+
+  // Accounting (حسابداری - کد رشته ۳۵۰۹۱)
+  "45138": { title: "دانش فنی پایه (حسابداری)", defaultUnit: 3, isModular: true },
+  "41110511": { title: "کلیات" },
+  "41110512": { title: "اصول و مبانی" },
+  "41110513": { title: "تجهیزات و کاربرد آن" },
+  "41110514": { title: "محاسبات و برآورده" },
+  "41110515": { title: "مستندسازی گزارش نویسی" },
+  "45237": { title: "ارتباط مؤثر", defaultUnit: 4, isModular: true },
+  "101088031": { title: "اهمیت، اهداف و عناصر ارتباط" },
+  "101088032": { title: "ارتباط مؤثر با خود و مهارت های ارتباطی" },
+  "101088033": { title: "ارتباط مؤثر با خدا، خلقت و جامعه" },
+  "101088034": { title: "ارتباط مؤثر در کسب و کار" },
+  "101088035": { title: "اهمیت و کارکرد زبان بدن و فنون مذاکره" },
+  "45274": { title: "حسابداری دریافت ها و پرداخت ها", defaultUnit: 8, isModular: true },
+  "452741": { title: "حسابداری پرداخت ها" },
+  "452742": { title: "حسابداری دریافت ها" },
+  "452743": { title: "تحریر دفاتر قانونی" },
+  "452744": { title: "حسابداری تنخواه گردان" },
+  "452745": { title: "تهیه صورت مغایرت بانکی" },
+  "45275": { title: "حسابداری حقوق و دستمزد", defaultUnit: 8, isModular: true },
+  "452751": { title: "حسابداری کنترل ساعت کارکرد پرسنل" },
+  "452752": { title: "حسابداری محاسبه حقوق و دستمزد" },
+  "452753": { title: "حسابداری محاسبه بیمه و مالیات پرسنل" },
+  "452754": { title: "حسابداری ثبت حقوق و دستمزد" },
+  "452755": { title: "حسابداری محاسبه مزایای پایان خدمت" },
+
+  // Computer Network & Software (شبکه و نرم‌افزار رایانه - کد رشته ۳۵۱۰۱)
   "45141": { title: "دانش فنی پایه (شبکه و نرم‌افزار رایانه)", defaultUnit: 3, isModular: true },
   "68810511": { title: "مفاهیم پایه سخت افزار و نرم افزار" },
   "68810512": { title: "اینترنت و رایانش ابری" },
@@ -51,38 +97,21 @@ const CANONICAL_TITLES: Record<string, { title: string; defaultUnit?: number; is
   "452663": { title: "طراحی ساختار و تهیه اسلاید ارائه محتوا" },
   "452664": { title: "طراحی بانک های اطلاعاتی" },
   "452665": { title: "مستندسازی" },
-  "88110": { title: "الزامات محیط کار", defaultUnit: 2, isModular: true },
-  "881101": { title: "محیط کار و ارتباطات انسانی" },
-  "881102": { title: "فناوری در محیط کار" },
-  "881103": { title: "محیط و قوانین کار" },
-  "881104": { title: "ایمنی و بهداشت محیط کار" },
-  "881105": { title: "مهارت کاریابی" },
-  "88510": { title: "ریاضی 1", defaultUnit: 2, isModular: true },
-  "885101": { title: "نسبت و تناسب" },
-  "885102": { title: "درصد و کاربردهای آن" },
-  "885103": { title: "معادله‌های درجه دوم" },
-  "885104": { title: "توان‌رسانی به توان عددهای گویا" },
-  "885105": { title: "نسبت‌های مثلثاتی" },
-  "88901": { title: "فیزیک", defaultUnit: 2, isModular: true },
-  "889011": { title: "فیزیک و اندازه گیری" },
-  "889012": { title: "مکانیک" },
-  "889013": { title: "حالت‌های ماده و فشار" },
-  "889014": { title: "دما و گرما" },
-  "889015": { title: "جریان و مدارهای الکتریکی" },
 };
 
 // Comprehensive FastReport / Sida glyph dictionary
 const GLYPH_MAP: Record<string, string> = {
-  "︀": "ا", "ا": "ا", "آ": "آ", "︋": "ب", "︊": "ب", "ب": "ب", "︎": "پ", "پ": "پ", "︑": "ت",
-  "︐": "ت", "ت": "ت", "︒": "ث", "ث": "ث", "︖": "ج", "ج": "ج", "︗": "چ", "چ": "ج", "︚": "چ",
+  "︀": "ا", "ا": "ا", "آ": "آ", "︋": "ب", "︊": "ب", "︉": "ب", "ب": "ب", "︎": "پ", "پ": "پ", "︑": "ت",
+  "︐": "ت", "ت": "ت", "︒": "ث", "︔": "ث", "ث": "ث", "︖": "ج", "ج": "ج", "︗": "چ", "چ": "ج", "︚": "چ",
   "︝": "ح", "︜": "ح", "︛": "ح", "ح": "ح", "︠": "خ", "خ": "خ", "︡": "د", "د": "د", "︤": "ز",
-  "ذ": "ز", "︣": "ر", "ر": "ر", "︥": "ز", "ز": "ز", "︦": "س", "ژ": "س", "︧": "س", "س": "س",
-  "︨": "ش", "︪": "ش", "︫": "ش", "ش": "ش", "︮": "ص", "ص": "ص", "︯": "ض", "︲": "ض", "ض": "ض",
-  "ط": "ط", "︵": "ط", "ظ": "ظ", "︺": "ع", "︻": "ع", "ع": "ع", "غ": "غ", "﹀": "ف", "﹁": "ف",
-  "︿": "ف", "ف": "ف", "﹇": "ق", "﹆": "ق", "ق": "ق", "﹋": "ک", "ک": "ک", "﹊": "ک", "﹎": "گ",
-  "گ": "گ", "ل": "ل", "﹚": "ل", "﹏": "ل", "﹛": "ل", "﹑": "ل", "﹝": "م", "﹞": "م", "م": "م",
+  "ذ": "ز", "︣": "ر", "ر": "ر", "︥": "ز", "ز": "ز", "︦": "س", "ژ": "س", "︧": "س", "︩": "س", "س": "س",
+  "︨": "ش", "︪": "ش", "︫": "ش", "ش": "ش", "︮": "ص", "︭": "ص", "ص": "ص", "︯": "ض", "︲": "ض", "︱": "ض", "ض": "ض",
+  "ط": "ط", "︵": "ط", "ظ": "ظ", "︺": "ع", "︻": "ع", "ع": "ع", "غ": "غ", "︽": "غ", "︾": "غ",
+  "﹀": "ف", "﹁": "ف", "︿": "ف", "ف": "ف", "﹇": "ق", "﹆": "ق", "ق": "ق", "﹋": "ک", "ک": "ک", "﹊": "ک",
+  "﹎": "گ", "گ": "گ", "ل": "ل", "﹚": "ل", "﹏": "ل", "﹛": "ل", "﹑": "ل", "﹝": "م", "﹞": "م", "م": "م",
   "﹡": "ن", "﹟": "ن", "﹠": "ن", "ن": "ن", "﹢": "و", "و": "و", "﹨": "ه", "﹧": "ه", "﹤": "ه",
   "ه": "ه", "﹩": "ی", "﹫": "ی", "﹬": "ی", "﹪": "ی", "ي": "ی", "ی": "ی", "ئ": "ئ", "ء": "ء",
+  "﹯": "ئ",
   "ت︀": "تا", "ن︀": "نا", "د︀": "دا", "م︀": "ما", "ر︀": "را", "وا": "وا", "اد": "اد", "رد": "رد",
   "درس": "درس", "اول": "اول", "دوم": "دوم", "دوره": "دوره", "اداره": "اداره", "وزارت": "وزارت",
   "(": ")", ")": "(", ":": ":", "-": "-", "،": "،", "؛": "؛", "اف": "اف", "لا": "لا"
@@ -90,12 +119,42 @@ const GLYPH_MAP: Record<string, string> = {
 
 function cleanPersonName(name: string): string {
   if (!name) return "";
-  return name
+  let cleaned = name
+    .replace(/^نام\s*خانوادگی:?/, "")
+    .replace(/^خانوادگی:?/, "")
+    .replace(/^ادگی:?/, "")
+    .replace(/^ن\s*ادگی:?/, "")
+    .replace(/^نام:?/, "")
+    .replace(/:/g, "")
     .replace(/^شید/, "سید")
     .replace(/^شعید/, "سعید")
+    .replace(/چوانمرد/, "جوانمرد")
+    .replace(/محمدچواد/, "محمدجواد")
     .replace(/^چواد/, "جواد")
     .replace(/^چعفری/, "جعفری")
     .replace(/^چهانپرور/, "جهان پرور")
+    .replace(/توشلینس[︉ب]*/, "توسلی نسب")
+    .replace(/توشلی\s*نسب/, "توسلی نسب")
+    .replace(/توشلی/, "توسلی")
+    .replace(/محمدپارشا/, "محمدپارسا")
+    .replace(/پارشا/, "پارسا")
+    .replace(/یوشف/, "یوسف")
+    .replace(/یاشر/, "یاسر")
+    .replace(/قاشمی/, "قاسمی")
+    .replace(/ابوالف[︱ض]ل/, "ابوالفضل")
+    .replace(/قربانچن️?/, "قربان جنت")
+    .replace(/قربان\s*جنت/, "قربان جنت")
+    .replace(/صالحیزاده/, "صالحی زاده")
+    .replace(/حسنیگشنیز/, "حسنی گشنیز")
+    .replace(/گشنیزچانی/g, "گشنیزجانی")
+    .replace(/شفیعیآفاران/, "شفیعی آفاران")
+    .replace(/ن[︭ص]یریمحمو.*/, "نصیری محمودآبادی")
+    .replace(/محموددآبا.*|محمودآبا.*/, "محمودآبادی")
+    .replace(/اص[︽غ]ر/, "اصغر")
+    .replace(/بنا[ی﹯ئ]+/, "بنائی")
+    .replace(/یوشفی/, "یوسفی")
+    .replace(/عبا[ی﹯]*ان/, "عبائیان")
+    .replace(/ا[︔ث]ناعشری/, "اثناعشری")
     .replace(/حاتمیانچزی/, "حاتمیان جزی")
     .replace(/ابوا﹛﹆اشمی|ابوالقاشمی/, "ابوالقاسمی")
     .replace(/اشلمیه|اسلامیه/, "اسلامیه")
@@ -106,11 +165,25 @@ function cleanPersonName(name: string): string {
     .replace(/کرمیدش︐جر|کرمیدستجر|کرمیدشتجر/, "کرمی دستجردی")
     .replace(/دهاقان$/, "دهاقانی")
     .replace(/شبحان/, "سبحان")
-    .replace(/سیدمحمدصا$/, "سیدمحمدصادق")
+    .replace(/سیدمحمدصا$/, "سیدمحمدصادق");
+
+  // Fix composite or leftover presentation forms
+  cleaned = cleaned
     .replace(/︫/g, "ش")
     .replace(/︐/g, "ت")
     .replace(/︊/g, "ب")
+    .replace(/︉/g, "ب")
+    .replace(/︭/g, "ص")
+    .replace(/︱/g, "ض")
+    .replace(/[︽︾]/g, "غ")
+    .replace(/︔/g, "ث")
+    .replace(/︩/g, "س")
+    .replace(/﹯/g, "ئ")
+    .replace(/ي/g, "ی")
+    .replace(/ك/g, "ک")
     .trim();
+
+  return cleaned;
 }
 
 function decodeBox(items: { str: string; x: number }[], minX: number, maxX: number): string {
@@ -164,18 +237,45 @@ function getItemInBox(items: PdfTextItem[], minX: number, maxX: number): PdfText
   return items.find((it) => it.x >= minX && it.x <= maxX);
 }
 
-function getTextsInBox(items: PdfTextItem[], minX: number, maxX: number): string {
-  return items.filter((it) => it.x >= minX && it.x <= maxX).map((m) => m.str).join("");
-}
-
 /**
- * Parses school metadata from Page 1 header items.
+ * Parses school metadata and field of study dynamically from Page 1 & Page 2.
  */
-function parseSchoolData(p1Items: PdfTextItem[]): ReportCardSchoolDto {
+function parseSchoolData(p1Items: PdfTextItem[], p2Items?: PdfTextItem[]): ReportCardSchoolDto {
   let schoolCode = "96084101";
-  for (const it of p1Items.filter((i) => i.y > 1100)) {
-    if (/^96\d{6}$/.test(it.str)) {
-      schoolCode = it.str;
+  let fieldCode = "35091";
+  let fieldTitle = "حسابداری";
+  let academicYear = "1404-1405";
+
+  const allItems = [...p1Items, ...(p2Items || [])];
+  for (const it of allItems) {
+    const digits = toEnglishDigits(it.str);
+    if (/^96\d{6}$/.test(digits)) {
+      schoolCode = digits;
+    }
+    // Field code: 5-digit code like 35091 (accounting) or 35101 (software)
+    if (/^35\d{3}$/.test(digits)) {
+      fieldCode = digits;
+    }
+    if (/^140\d-140\d$/.test(digits)) {
+      academicYear = digits;
+    }
+  }
+
+  // Determine field title dynamically
+  if (fieldCode === "35091") {
+    fieldTitle = "حسابداری";
+  } else if (fieldCode === "35101") {
+    fieldTitle = "شبکه و نرم‌افزار رایانه";
+  } else {
+    // Search page 1 header around Y ≈ 1118
+    const fieldHeaderItems = p1Items.filter((i) => i.y >= 1110 && i.y <= 1125);
+    const headerDecoded = decodeBox(fieldHeaderItems, 550, 680);
+    if (headerDecoded.includes("حسابدار")) {
+      fieldTitle = "حسابداری";
+      fieldCode = "35091";
+    } else if (headerDecoded.includes("شبکه") || headerDecoded.includes("نرم افزار")) {
+      fieldTitle = "شبکه و نرم‌افزار رایانه";
+      fieldCode = "35101";
     }
   }
 
@@ -184,11 +284,11 @@ function parseSchoolData(p1Items: PdfTextItem[]): ReportCardSchoolDto {
     code: schoolCode,
     province: "اصفهان",
     district: "اداره ناحیه 5",
-    academicYear: "1404-1405",
+    academicYear,
     period: "ضمن سال",
     gradeTitle: "دهم",
-    fieldTitle: "شبکه و نرم افزار رایانه",
-    fieldCode: "35101",
+    fieldTitle,
+    fieldCode,
     schoolType: "technical",
   };
 }
@@ -213,13 +313,16 @@ function parseStudentData(p1Items: PdfTextItem[]): ReportCardStudentDto {
   }
 
   // Name row Y ≈ 1166
+  // Label 'نام خانوادگی:' spans x in [220, 267].
+  // Student firstName is strictly x in [268, 378] (label 'نام:' is at x >= 381).
+  // Student lastName is strictly x in [80, 218] (to the left of 'نام خانوادگی:').
   const nameItems = p1Items.filter((i) => i.y >= 1160 && i.y <= 1175);
-  let firstName = cleanPersonName(decodeBox(nameItems, 280, 350));
-  let lastName = cleanPersonName(decodeBox(nameItems, 160, 220));
+  let firstName = cleanPersonName(decodeBox(nameItems, 268, 378));
+  let lastName = cleanPersonName(decodeBox(nameItems, 80, 218));
 
   // Father row Y ≈ 1150
   const fatherItems = p1Items.filter((i) => i.y >= 1145 && i.y <= 1155);
-  let fatherName = cleanPersonName(decodeBox(fatherItems, 280, 350));
+  let fatherName = cleanPersonName(decodeBox(fatherItems, 265, 365));
 
   // Birth place Y ≈ 1118
   const birthItems = p1Items.filter((i) => i.y >= 1110 && i.y <= 1125);
@@ -296,9 +399,10 @@ function parseCourses(
       const defaultUnit = canonical?.defaultUnit ?? 2;
       const parsedUnit = parseGradeScore(unitItem?.str) ?? defaultUnit;
       const finalScore = parseGradeScore(finalScoreItem?.str) ?? parseGradeScore(annualOrModuleScoreItem?.str) ?? 0;
-      const isModular = canonical?.isModular ?? (code.startsWith("45") || code.startsWith("88"));
+      const isModular = canonical?.isModular ?? (code.startsWith("45") || code.startsWith("88") || code.startsWith("41"));
 
-      const isPassed = finalScore >= 10 && (!resultItem || !resultItem.str.includes("م"));
+      const hasFailedResult = Boolean(resultItem && (resultItem.str.includes("ناتمام") || resultItem.str.includes("مردود")));
+      const isPassed = finalScore >= 10 && !hasFailedResult;
 
       const course: ReportCardCourseDto = {
         row: rowNum,
@@ -333,11 +437,14 @@ function parseCourses(
       let competencyText = "احراز شایستگی";
       let isPassed = true;
 
-      if (moduleFinal < 12 || rawCompText.includes("عدم") || rawCompText.includes("غ")) {
+      const hasFailedResult = Boolean(resultItem && resultItem.str.includes("مردود"));
+
+      // Passing grade for vocational module is 10 or absence of 'مردود'
+      if (moduleFinal < 10 || hasFailedResult || rawCompText.includes("عدم احراز")) {
         competencyLevel = "not_achieved";
         competencyText = "عدم احراز شایستگی";
         isPassed = false;
-      } else if (moduleFinal >= 16 || rawCompText.includes("بالاتر") || rawCompText.includes("ب")) {
+      } else if (moduleFinal >= 16 || rawCompText.includes("بالاتر")) {
         competencyLevel = "beyond_expectation";
         competencyText = "بالاتر از حد انتظار";
         isPassed = true;
@@ -373,28 +480,63 @@ function parseCourses(
 }
 
 /**
- * Parses summary and GPA from Page 2 footer.
+ * Parses summary, certified passed units, and GPA from Page 2 footer.
  */
-function parseSummary(p2Rows: { y: number; items: PdfTextItem[] }[], courses: ReportCardCourseDto[]): ReportCardSummaryDto {
+function parseSummary(
+  p2Rows: { y: number; items: PdfTextItem[] }[],
+  courses: ReportCardCourseDto[],
+  p2Items?: PdfTextItem[]
+): ReportCardSummaryDto {
   let unitsTaken = 42;
   let unitsPassed = 42;
   let scoreSum = 0;
   let gpa = 0;
   let printDate: string | null = "1405/06/09";
 
-  // Check footer row at Y ≈ 805
+  // Check footer row at Y ≈ 805 (table cells)
   const footerRow = p2Rows.find((r) => r.y >= 795 && r.y <= 815);
   if (footerRow) {
-    for (const it of footerRow.items) {
-      const val = parseFloat(toEnglishDigits(it.str));
-      if (val === 42) unitsTaken = 42;
-      else if (val === 40 || val === 34 || val === 32 || (val < 42 && val >= 30)) unitsPassed = val;
-      else if (val > 500 && val < 900) scoreSum = val;
-      else if (val >= 10 && val <= 20 && it.str.includes(".")) gpa = val;
+    const items = footerRow.items;
+
+    // اخذ شده (Units Taken): Column X in [720, 790]
+    const takenItem = getItemInBox(items, 720, 790);
+    if (takenItem) {
+      const val = parseFloat(toEnglishDigits(takenItem.str));
+      if (!isNaN(val) && val > 0) unitsTaken = val;
+    }
+
+    // قبولی (Units Passed): Column X in [600, 670]
+    const passedItem = getItemInBox(items, 600, 670);
+    if (passedItem) {
+      const val = parseFloat(toEnglishDigits(passedItem.str));
+      if (!isNaN(val) && val >= 0) unitsPassed = val;
+    }
+
+    // جمع نمرات (Score Sum): Column X in [495, 560]
+    const sumItem = getItemInBox(items, 495, 560);
+    if (sumItem) {
+      const val = parseFloat(toEnglishDigits(sumItem.str));
+      if (!isNaN(val) && val > 0) scoreSum = val;
+    }
+
+    // معدل سال (GPA): Column X in [450, 495]
+    const gpaItem = getItemInBox(items, 450, 495);
+    if (gpaItem) {
+      const val = parseFloat(toEnglishDigits(gpaItem.str));
+      if (!isNaN(val) && val >= 0) gpa = val;
     }
   }
 
-  // Fallback calculation if not read from PDF
+  // Look for print date in footer items
+  if (p2Items) {
+    for (const it of p2Items) {
+      if (it.y >= 850 && it.y <= 880 && /^\d{4}\/\d{1,2}\/\d{1,2}$/.test(it.str)) {
+        printDate = it.str;
+      }
+    }
+  }
+
+  // Fallback calculation only if GPA was not parsed from table
   if (gpa === 0) {
     let totalWeightedScore = 0;
     let totalUnits = 0;
@@ -432,9 +574,10 @@ export async function parseReportCardPdf(pdfBuffer: Buffer | Uint8Array): Promis
     throw new Error(`تعداد صفحات کارنامه باید زوج و حداقل ۲ صفحه باشد. صفحات یافت‌شده: ${numPages}`);
   }
 
-  // Extract school data from Page 1
+  // Extract school and field data from Page 1 & 2
   const p1SampleItems = await extractPageItems(doc, 1);
-  const school = parseSchoolData(p1SampleItems);
+  const p2SampleItems = await extractPageItems(doc, 2);
+  const school = parseSchoolData(p1SampleItems, p2SampleItems);
 
   const students: SingleReportCardDto[] = [];
 
@@ -447,7 +590,7 @@ export async function parseReportCardPdf(pdfBuffer: Buffer | Uint8Array): Promis
 
     const student = parseStudentData(page1Items);
     const courses = parseCourses(p1Rows, p2Rows);
-    const summary = parseSummary(p2Rows, courses);
+    const summary = parseSummary(p2Rows, courses, page2Items);
 
     const singleCard: SingleReportCardDto = {
       student,

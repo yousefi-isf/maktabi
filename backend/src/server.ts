@@ -12,7 +12,10 @@ import { createContext } from "./trpc/context.js";
 import { appRouter } from "./trpc/router.js";
 
 export async function buildServer() {
-  const app = Fastify({ logger: true });
+  const app = Fastify({
+    logger: true,
+    bodyLimit: 50 * 1024 * 1024, // 50MB limit to support large PDF base64 payloads
+  });
 
   await app.register(cors, {
     origin: env.CLIENT_ORIGIN,

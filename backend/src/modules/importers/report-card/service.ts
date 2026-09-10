@@ -526,6 +526,50 @@ export async function importReportCards(
       });
     }
 
+    // Calculate continuousGpa and finalGpa for this student card
+    let cardContWeight = 0;
+    let cardFinalWeight = 0;
+    let cardContSum = 0;
+    let cardFinalSum = 0;
+
+    for (const c of studentCard.courses) {
+      if (!c.isModular) {
+        const hasT1Cont = typeof c.t1Continuous === "number";
+        const hasT2Cont = typeof c.t2Continuous === "number";
+        let cScore = 0;
+        if (hasT1Cont && hasT2Cont) cScore = ((c.t1Continuous as number) + (c.t2Continuous as number)) / 2;
+        else if (hasT2Cont) cScore = c.t2Continuous as number;
+        else if (hasT1Cont) cScore = c.t1Continuous as number;
+
+        const hasT1Final = typeof c.t1Final === "number";
+        const hasT2Final = typeof c.t2Final === "number";
+        let fScore = 0;
+        if (hasT1Final && hasT2Final) fScore = ((c.t1Final as number) + 2 * (c.t2Final as number)) / 3;
+        else if (hasT2Final) fScore = c.t2Final as number;
+        else if (hasT1Final) fScore = c.t1Final as number;
+
+        cardContSum += cScore * c.unit;
+        cardContWeight += c.unit;
+        cardFinalSum += fScore * c.unit;
+        cardFinalWeight += c.unit;
+      } else {
+        const modWeight = c.unit / 5;
+        for (const m of c.modules) {
+          if (m.moduleContinuous !== null && m.moduleContinuous !== undefined) {
+            cardContSum += (m.moduleContinuous * 4) * modWeight;
+            cardContWeight += modWeight;
+          }
+          if (m.moduleFinalScore !== null && m.moduleFinalScore !== undefined) {
+            cardFinalSum += m.moduleFinalScore * modWeight;
+            cardFinalWeight += modWeight;
+          }
+        }
+      }
+    }
+
+    const cardContinuousGpa = cardContWeight > 0 ? Math.round((cardContSum / cardContWeight) * 100) / 100 : 0;
+    const cardFinalGpa = cardFinalWeight > 0 ? Math.round((cardFinalSum / cardFinalWeight) * 100) / 100 : 0;
+
     // Safe find-and-update Enrollment
     const existingEnrollment = await prisma.enrollment.findFirst({
       where: {
@@ -543,12 +587,26 @@ export async function importReportCards(
           classId: schoolClass.id,
           status: "active",
           enrolledAt: new Date("2025-09-23T00:00:00.000Z"),
+          gpa: new Prisma.Decimal(studentCard.summary.gpa),
+          continuousGpa: new Prisma.Decimal(cardContinuousGpa),
+          finalGpa: new Prisma.Decimal(cardFinalGpa),
+          totalUnitsPassed: new Prisma.Decimal(studentCard.summary.totalUnitsPassed),
+          totalUnitsTaken: new Prisma.Decimal(studentCard.summary.totalUnitsTaken),
+          totalScoreSum: new Prisma.Decimal(studentCard.summary.totalScoreSum),
         },
       });
-    } else if (existingEnrollment.classId !== schoolClass.id) {
+    } else {
       await prisma.enrollment.update({
         where: { id: existingEnrollment.id },
-        data: { classId: schoolClass.id },
+        data: {
+          classId: schoolClass.id,
+          gpa: new Prisma.Decimal(studentCard.summary.gpa),
+          continuousGpa: new Prisma.Decimal(cardContinuousGpa),
+          finalGpa: new Prisma.Decimal(cardFinalGpa),
+          totalUnitsPassed: new Prisma.Decimal(studentCard.summary.totalUnitsPassed),
+          totalUnitsTaken: new Prisma.Decimal(studentCard.summary.totalUnitsTaken),
+          totalScoreSum: new Prisma.Decimal(studentCard.summary.totalScoreSum),
+        },
       });
     }
 

@@ -31,6 +31,8 @@ import { Route as AuthenticatedSchoolsIndexRouteImport } from './routes/_authent
 import { Route as AuthenticatedSchoolsSchoolIdRouteImport } from './routes/_authenticated/schools/$schoolId'
 import { Route as AuthenticatedStudentsIndexRouteImport } from './routes/_authenticated/students/index'
 import { Route as AuthenticatedStudentsStudentIdRouteImport } from './routes/_authenticated/students/$studentId'
+import { Route as AuthenticatedStudentsImportRouteImport } from './routes/_authenticated/students/import'
+import { Route as AuthenticatedStudentsRankingsRouteImport } from './routes/_authenticated/students/rankings'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
@@ -154,6 +156,18 @@ const AuthenticatedStudentsStudentIdRoute =
     path: '/students/$studentId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedStudentsImportRoute =
+  AuthenticatedStudentsImportRouteImport.update({
+    id: '/students/import',
+    path: '/students/import',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedStudentsRankingsRoute =
+  AuthenticatedStudentsRankingsRouteImport.update({
+    id: '/students/rankings',
+    path: '/students/rankings',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
@@ -173,6 +187,8 @@ export interface FileRoutesByFullPath {
   '/fieldofstudy/$fieldofstudyId': typeof AuthenticatedFieldofstudyFieldofstudyIdRoute
   '/schools/$schoolId': typeof AuthenticatedSchoolsSchoolIdRoute
   '/students/$studentId': typeof AuthenticatedStudentsStudentIdRoute
+  '/students/import': typeof AuthenticatedStudentsImportRoute
+  '/students/rankings': typeof AuthenticatedStudentsRankingsRoute
   '/allusers/': typeof AuthenticatedAllusersIndexRoute
   '/fieldofstudy/': typeof AuthenticatedFieldofstudyIndexRoute
   '/schools/': typeof AuthenticatedSchoolsIndexRoute
@@ -196,6 +212,8 @@ export interface FileRoutesByTo {
   '/fieldofstudy/$fieldofstudyId': typeof AuthenticatedFieldofstudyFieldofstudyIdRoute
   '/schools/$schoolId': typeof AuthenticatedSchoolsSchoolIdRoute
   '/students/$studentId': typeof AuthenticatedStudentsStudentIdRoute
+  '/students/import': typeof AuthenticatedStudentsImportRoute
+  '/students/rankings': typeof AuthenticatedStudentsRankingsRoute
   '/allusers': typeof AuthenticatedAllusersIndexRoute
   '/fieldofstudy': typeof AuthenticatedFieldofstudyIndexRoute
   '/schools': typeof AuthenticatedSchoolsIndexRoute
@@ -221,6 +239,8 @@ export interface FileRoutesById {
   '/_authenticated/fieldofstudy/$fieldofstudyId': typeof AuthenticatedFieldofstudyFieldofstudyIdRoute
   '/_authenticated/schools/$schoolId': typeof AuthenticatedSchoolsSchoolIdRoute
   '/_authenticated/students/$studentId': typeof AuthenticatedStudentsStudentIdRoute
+  '/_authenticated/students/import': typeof AuthenticatedStudentsImportRoute
+  '/_authenticated/students/rankings': typeof AuthenticatedStudentsRankingsRoute
   '/_authenticated/allusers/': typeof AuthenticatedAllusersIndexRoute
   '/_authenticated/fieldofstudy/': typeof AuthenticatedFieldofstudyIndexRoute
   '/_authenticated/schools/': typeof AuthenticatedSchoolsIndexRoute
@@ -246,6 +266,8 @@ export interface FileRouteTypes {
     | '/fieldofstudy/$fieldofstudyId'
     | '/schools/$schoolId'
     | '/students/$studentId'
+    | '/students/import'
+    | '/students/rankings'
     | '/allusers/'
     | '/fieldofstudy/'
     | '/schools/'
@@ -269,6 +291,8 @@ export interface FileRouteTypes {
     | '/fieldofstudy/$fieldofstudyId'
     | '/schools/$schoolId'
     | '/students/$studentId'
+    | '/students/import'
+    | '/students/rankings'
     | '/allusers'
     | '/fieldofstudy'
     | '/schools'
@@ -293,6 +317,8 @@ export interface FileRouteTypes {
     | '/_authenticated/fieldofstudy/$fieldofstudyId'
     | '/_authenticated/schools/$schoolId'
     | '/_authenticated/students/$studentId'
+    | '/_authenticated/students/import'
+    | '/_authenticated/students/rankings'
     | '/_authenticated/allusers/'
     | '/_authenticated/fieldofstudy/'
     | '/_authenticated/schools/'
@@ -461,6 +487,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedStudentsStudentIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/students/import': {
+      id: '/_authenticated/students/import'
+      path: '/students/import'
+      fullPath: '/students/import'
+      preLoaderRoute: typeof AuthenticatedStudentsImportRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/students/rankings': {
+      id: '/_authenticated/students/rankings'
+      path: '/students/rankings'
+      fullPath: '/students/rankings'
+      preLoaderRoute: typeof AuthenticatedStudentsRankingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -505,6 +545,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedFieldofstudyFieldofstudyIdRoute: typeof AuthenticatedFieldofstudyFieldofstudyIdRoute
   AuthenticatedSchoolsSchoolIdRoute: typeof AuthenticatedSchoolsSchoolIdRoute
   AuthenticatedStudentsStudentIdRoute: typeof AuthenticatedStudentsStudentIdRoute
+  AuthenticatedStudentsImportRoute: typeof AuthenticatedStudentsImportRoute
+  AuthenticatedStudentsRankingsRoute: typeof AuthenticatedStudentsRankingsRoute
   AuthenticatedAllusersIndexRoute: typeof AuthenticatedAllusersIndexRoute
   AuthenticatedFieldofstudyIndexRoute: typeof AuthenticatedFieldofstudyIndexRoute
   AuthenticatedSchoolsIndexRoute: typeof AuthenticatedSchoolsIndexRoute
@@ -525,6 +567,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedFieldofstudyFieldofstudyIdRoute,
   AuthenticatedSchoolsSchoolIdRoute: AuthenticatedSchoolsSchoolIdRoute,
   AuthenticatedStudentsStudentIdRoute: AuthenticatedStudentsStudentIdRoute,
+  AuthenticatedStudentsImportRoute: AuthenticatedStudentsImportRoute,
+  AuthenticatedStudentsRankingsRoute: AuthenticatedStudentsRankingsRoute,
   AuthenticatedAllusersIndexRoute: AuthenticatedAllusersIndexRoute,
   AuthenticatedFieldofstudyIndexRoute: AuthenticatedFieldofstudyIndexRoute,
   AuthenticatedSchoolsIndexRoute: AuthenticatedSchoolsIndexRoute,

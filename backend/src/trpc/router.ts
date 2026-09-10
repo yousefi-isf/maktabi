@@ -7,6 +7,7 @@ import { schoolsRouter } from "../modules/schools/router.js";
 import { usersRouter } from "../modules/users/router.js";
 import { studentsRouter } from "../modules/students/router.js";
 import { reportCardImporterRouter } from "../modules/importers/report-card/router.js";
+import { rankingsRouter } from "../modules/rankings/router.js";
 import { createCallerFactory, publicProcedure, router } from "./trpc.js";
 
 export const appRouter = router({
@@ -23,6 +24,7 @@ export const appRouter = router({
   permissions: permissionsRouter,
   schools: schoolsRouter,
   reportCards: reportCardImporterRouter,
+  rankings: rankingsRouter,
 });
 
 export type AppRouter = typeof appRouter;

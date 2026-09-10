@@ -2,12 +2,13 @@ import {
 	BookOpenIcon,
 	BotIcon,
 	FrameIcon,
-	GraduationCap,
 	School,
 	Settings2Icon,
 	UserKey,
 	UserShield,
 	Users,
+	FileUp,
+	Trophy,
 } from "lucide-react";
 import type { PermissionNavItem } from "./permissions";
 
@@ -68,6 +69,28 @@ export const navigationItems = [
 						"identity.student.update",
 					],
 				},
+			},
+			{
+				title: "بارگذاری کارنامه",
+				url: "/students/import",
+				required: {
+					anyOf: [
+						"importer.report_card.preview",
+						"importer.report_card.execute",
+					],
+				},
+				icon: <FileUp />,
+			},
+			{
+				title: "رتبه‌بندی دانش‌آموزان",
+				url: "/students/rankings",
+				required: {
+					anyOf: [
+						"identity.student.list",
+						"assessment.score.read",
+					],
+				},
+				icon: <Trophy />,
 			},
 			{
 				title: "رشته‌های تحصیلی",
