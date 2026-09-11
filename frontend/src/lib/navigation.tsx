@@ -1,14 +1,14 @@
 import {
 	BookOpenIcon,
 	BotIcon,
+	FileUp,
 	FrameIcon,
 	School,
 	Settings2Icon,
+	Trophy,
 	UserKey,
 	UserShield,
 	Users,
-	FileUp,
-	Trophy,
 } from "lucide-react";
 import type { PermissionNavItem } from "./permissions";
 
@@ -23,13 +23,13 @@ export const navigationItems = [
 		items: [
 			{
 				title: "مدارس",
-				url: "/schools/",
+				url: "/schools",
 				required: "system.full_access",
 				icon: <School />,
 			},
 			{
 				title: "کاربران",
-				url: "/allusers/",
+				url: "/allusers",
 				required: "system.full_access",
 				icon: <Users />,
 			},
@@ -60,7 +60,7 @@ export const navigationItems = [
 			},
 			{
 				title: "دانش آموزان",
-				url: "/students/",
+				url: "/students",
 				required: {
 					anyOf: [
 						"identity.student.list",
@@ -72,7 +72,7 @@ export const navigationItems = [
 			},
 			{
 				title: "بارگذاری کارنامه",
-				url: "/students/import",
+				url: "/import",
 				required: {
 					anyOf: [
 						"importer.report_card.preview",
@@ -83,7 +83,7 @@ export const navigationItems = [
 			},
 			{
 				title: "رتبه‌بندی دانش‌آموزان",
-				url: "/students/rankings",
+				url: "/rankings",
 				required: {
 					anyOf: [
 						"identity.student.list",
@@ -94,7 +94,7 @@ export const navigationItems = [
 			},
 			{
 				title: "رشته‌های تحصیلی",
-				url: "/fieldofstudy/",
+				url: "/fieldofstudy",
 				required: {
 					anyOf: [
 						"academic.field.list",

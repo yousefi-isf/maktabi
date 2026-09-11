@@ -1,8 +1,8 @@
-﻿import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 import { ReportCardImporterView } from '@/features/report-card-importer';
 import { guardPermission } from '@/lib/route-guards';
 
-export const Route = createFileRoute('/_authenticated/students/import')({
+export const Route = createFileRoute('/_authenticated/import')({
 	beforeLoad: guardPermission({
 		anyOf: [
 			'importer.report_card.preview',
@@ -16,3 +16,4 @@ export const Route = createFileRoute('/_authenticated/students/import')({
 function RouteComponent() {
 	return <ReportCardImporterView />;
 }
+

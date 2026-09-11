@@ -17,7 +17,9 @@ import { Route as AuthenticatedAcademicYearsRouteImport } from './routes/_authen
 import { Route as AuthenticatedAttendanceRouteImport } from './routes/_authenticated/attendance'
 import { Route as AuthenticatedExamsRouteImport } from './routes/_authenticated/exams'
 import { Route as AuthenticatedHelpRouteImport } from './routes/_authenticated/help'
+import { Route as AuthenticatedImportRouteImport } from './routes/_authenticated/import'
 import { Route as AuthenticatedPermissionsRouteImport } from './routes/_authenticated/permissions'
+import { Route as AuthenticatedRankingsRouteImport } from './routes/_authenticated/rankings'
 import { Route as AuthenticatedRolesRouteImport } from './routes/_authenticated/roles'
 import { Route as AuthenticatedTestRouteImport } from './routes/_authenticated/test'
 import { Route as AuthenticatedAcademicYearsCreateRouteImport } from './routes/_authenticated/academic-years.create'
@@ -31,8 +33,6 @@ import { Route as AuthenticatedSchoolsIndexRouteImport } from './routes/_authent
 import { Route as AuthenticatedSchoolsSchoolIdRouteImport } from './routes/_authenticated/schools/$schoolId'
 import { Route as AuthenticatedStudentsIndexRouteImport } from './routes/_authenticated/students/index'
 import { Route as AuthenticatedStudentsStudentIdRouteImport } from './routes/_authenticated/students/$studentId'
-import { Route as AuthenticatedStudentsImportRouteImport } from './routes/_authenticated/students/import'
-import { Route as AuthenticatedStudentsRankingsRouteImport } from './routes/_authenticated/students/rankings'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
@@ -74,12 +74,22 @@ const AuthenticatedHelpRoute = AuthenticatedHelpRouteImport.update({
   path: '/help',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedImportRoute = AuthenticatedImportRouteImport.update({
+  id: '/import',
+  path: '/import',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedPermissionsRoute =
   AuthenticatedPermissionsRouteImport.update({
     id: '/permissions',
     path: '/permissions',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedRankingsRoute = AuthenticatedRankingsRouteImport.update({
+  id: '/rankings',
+  path: '/rankings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedRolesRoute = AuthenticatedRolesRouteImport.update({
   id: '/roles',
   path: '/roles',
@@ -156,18 +166,6 @@ const AuthenticatedStudentsStudentIdRoute =
     path: '/students/$studentId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedStudentsImportRoute =
-  AuthenticatedStudentsImportRouteImport.update({
-    id: '/students/import',
-    path: '/students/import',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedStudentsRankingsRoute =
-  AuthenticatedStudentsRankingsRouteImport.update({
-    id: '/students/rankings',
-    path: '/students/rankings',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
@@ -177,7 +175,9 @@ export interface FileRoutesByFullPath {
   '/attendance': typeof AuthenticatedAttendanceRoute
   '/exams': typeof AuthenticatedExamsRouteWithChildren
   '/help': typeof AuthenticatedHelpRoute
+  '/import': typeof AuthenticatedImportRoute
   '/permissions': typeof AuthenticatedPermissionsRoute
+  '/rankings': typeof AuthenticatedRankingsRoute
   '/roles': typeof AuthenticatedRolesRoute
   '/test': typeof AuthenticatedTestRoute
   '/academic-years/create': typeof AuthenticatedAcademicYearsCreateRoute
@@ -187,8 +187,6 @@ export interface FileRoutesByFullPath {
   '/fieldofstudy/$fieldofstudyId': typeof AuthenticatedFieldofstudyFieldofstudyIdRoute
   '/schools/$schoolId': typeof AuthenticatedSchoolsSchoolIdRoute
   '/students/$studentId': typeof AuthenticatedStudentsStudentIdRoute
-  '/students/import': typeof AuthenticatedStudentsImportRoute
-  '/students/rankings': typeof AuthenticatedStudentsRankingsRoute
   '/allusers/': typeof AuthenticatedAllusersIndexRoute
   '/fieldofstudy/': typeof AuthenticatedFieldofstudyIndexRoute
   '/schools/': typeof AuthenticatedSchoolsIndexRoute
@@ -201,7 +199,9 @@ export interface FileRoutesByTo {
   '/attendance': typeof AuthenticatedAttendanceRoute
   '/exams': typeof AuthenticatedExamsRouteWithChildren
   '/help': typeof AuthenticatedHelpRoute
+  '/import': typeof AuthenticatedImportRoute
   '/permissions': typeof AuthenticatedPermissionsRoute
+  '/rankings': typeof AuthenticatedRankingsRoute
   '/roles': typeof AuthenticatedRolesRoute
   '/test': typeof AuthenticatedTestRoute
   '/': typeof AuthenticatedIndexRoute
@@ -212,8 +212,6 @@ export interface FileRoutesByTo {
   '/fieldofstudy/$fieldofstudyId': typeof AuthenticatedFieldofstudyFieldofstudyIdRoute
   '/schools/$schoolId': typeof AuthenticatedSchoolsSchoolIdRoute
   '/students/$studentId': typeof AuthenticatedStudentsStudentIdRoute
-  '/students/import': typeof AuthenticatedStudentsImportRoute
-  '/students/rankings': typeof AuthenticatedStudentsRankingsRoute
   '/allusers': typeof AuthenticatedAllusersIndexRoute
   '/fieldofstudy': typeof AuthenticatedFieldofstudyIndexRoute
   '/schools': typeof AuthenticatedSchoolsIndexRoute
@@ -228,7 +226,9 @@ export interface FileRoutesById {
   '/_authenticated/attendance': typeof AuthenticatedAttendanceRoute
   '/_authenticated/exams': typeof AuthenticatedExamsRouteWithChildren
   '/_authenticated/help': typeof AuthenticatedHelpRoute
+  '/_authenticated/import': typeof AuthenticatedImportRoute
   '/_authenticated/permissions': typeof AuthenticatedPermissionsRoute
+  '/_authenticated/rankings': typeof AuthenticatedRankingsRoute
   '/_authenticated/roles': typeof AuthenticatedRolesRoute
   '/_authenticated/test': typeof AuthenticatedTestRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
@@ -239,8 +239,6 @@ export interface FileRoutesById {
   '/_authenticated/fieldofstudy/$fieldofstudyId': typeof AuthenticatedFieldofstudyFieldofstudyIdRoute
   '/_authenticated/schools/$schoolId': typeof AuthenticatedSchoolsSchoolIdRoute
   '/_authenticated/students/$studentId': typeof AuthenticatedStudentsStudentIdRoute
-  '/_authenticated/students/import': typeof AuthenticatedStudentsImportRoute
-  '/_authenticated/students/rankings': typeof AuthenticatedStudentsRankingsRoute
   '/_authenticated/allusers/': typeof AuthenticatedAllusersIndexRoute
   '/_authenticated/fieldofstudy/': typeof AuthenticatedFieldofstudyIndexRoute
   '/_authenticated/schools/': typeof AuthenticatedSchoolsIndexRoute
@@ -256,7 +254,9 @@ export interface FileRouteTypes {
     | '/attendance'
     | '/exams'
     | '/help'
+    | '/import'
     | '/permissions'
+    | '/rankings'
     | '/roles'
     | '/test'
     | '/academic-years/create'
@@ -266,8 +266,6 @@ export interface FileRouteTypes {
     | '/fieldofstudy/$fieldofstudyId'
     | '/schools/$schoolId'
     | '/students/$studentId'
-    | '/students/import'
-    | '/students/rankings'
     | '/allusers/'
     | '/fieldofstudy/'
     | '/schools/'
@@ -280,7 +278,9 @@ export interface FileRouteTypes {
     | '/attendance'
     | '/exams'
     | '/help'
+    | '/import'
     | '/permissions'
+    | '/rankings'
     | '/roles'
     | '/test'
     | '/'
@@ -291,8 +291,6 @@ export interface FileRouteTypes {
     | '/fieldofstudy/$fieldofstudyId'
     | '/schools/$schoolId'
     | '/students/$studentId'
-    | '/students/import'
-    | '/students/rankings'
     | '/allusers'
     | '/fieldofstudy'
     | '/schools'
@@ -306,7 +304,9 @@ export interface FileRouteTypes {
     | '/_authenticated/attendance'
     | '/_authenticated/exams'
     | '/_authenticated/help'
+    | '/_authenticated/import'
     | '/_authenticated/permissions'
+    | '/_authenticated/rankings'
     | '/_authenticated/roles'
     | '/_authenticated/test'
     | '/_authenticated/'
@@ -317,8 +317,6 @@ export interface FileRouteTypes {
     | '/_authenticated/fieldofstudy/$fieldofstudyId'
     | '/_authenticated/schools/$schoolId'
     | '/_authenticated/students/$studentId'
-    | '/_authenticated/students/import'
-    | '/_authenticated/students/rankings'
     | '/_authenticated/allusers/'
     | '/_authenticated/fieldofstudy/'
     | '/_authenticated/schools/'
@@ -389,11 +387,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHelpRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/import': {
+      id: '/_authenticated/import'
+      path: '/import'
+      fullPath: '/import'
+      preLoaderRoute: typeof AuthenticatedImportRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/permissions': {
       id: '/_authenticated/permissions'
       path: '/permissions'
       fullPath: '/permissions'
       preLoaderRoute: typeof AuthenticatedPermissionsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/rankings': {
+      id: '/_authenticated/rankings'
+      path: '/rankings'
+      fullPath: '/rankings'
+      preLoaderRoute: typeof AuthenticatedRankingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/roles': {
@@ -487,20 +499,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedStudentsStudentIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/students/import': {
-      id: '/_authenticated/students/import'
-      path: '/students/import'
-      fullPath: '/students/import'
-      preLoaderRoute: typeof AuthenticatedStudentsImportRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/students/rankings': {
-      id: '/_authenticated/students/rankings'
-      path: '/students/rankings'
-      fullPath: '/students/rankings'
-      preLoaderRoute: typeof AuthenticatedStudentsRankingsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
   }
 }
 
@@ -537,7 +535,9 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAttendanceRoute: typeof AuthenticatedAttendanceRoute
   AuthenticatedExamsRoute: typeof AuthenticatedExamsRouteWithChildren
   AuthenticatedHelpRoute: typeof AuthenticatedHelpRoute
+  AuthenticatedImportRoute: typeof AuthenticatedImportRoute
   AuthenticatedPermissionsRoute: typeof AuthenticatedPermissionsRoute
+  AuthenticatedRankingsRoute: typeof AuthenticatedRankingsRoute
   AuthenticatedRolesRoute: typeof AuthenticatedRolesRoute
   AuthenticatedTestRoute: typeof AuthenticatedTestRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
@@ -545,8 +545,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedFieldofstudyFieldofstudyIdRoute: typeof AuthenticatedFieldofstudyFieldofstudyIdRoute
   AuthenticatedSchoolsSchoolIdRoute: typeof AuthenticatedSchoolsSchoolIdRoute
   AuthenticatedStudentsStudentIdRoute: typeof AuthenticatedStudentsStudentIdRoute
-  AuthenticatedStudentsImportRoute: typeof AuthenticatedStudentsImportRoute
-  AuthenticatedStudentsRankingsRoute: typeof AuthenticatedStudentsRankingsRoute
   AuthenticatedAllusersIndexRoute: typeof AuthenticatedAllusersIndexRoute
   AuthenticatedFieldofstudyIndexRoute: typeof AuthenticatedFieldofstudyIndexRoute
   AuthenticatedSchoolsIndexRoute: typeof AuthenticatedSchoolsIndexRoute
@@ -558,7 +556,9 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAttendanceRoute: AuthenticatedAttendanceRoute,
   AuthenticatedExamsRoute: AuthenticatedExamsRouteWithChildren,
   AuthenticatedHelpRoute: AuthenticatedHelpRoute,
+  AuthenticatedImportRoute: AuthenticatedImportRoute,
   AuthenticatedPermissionsRoute: AuthenticatedPermissionsRoute,
+  AuthenticatedRankingsRoute: AuthenticatedRankingsRoute,
   AuthenticatedRolesRoute: AuthenticatedRolesRoute,
   AuthenticatedTestRoute: AuthenticatedTestRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
@@ -567,8 +567,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedFieldofstudyFieldofstudyIdRoute,
   AuthenticatedSchoolsSchoolIdRoute: AuthenticatedSchoolsSchoolIdRoute,
   AuthenticatedStudentsStudentIdRoute: AuthenticatedStudentsStudentIdRoute,
-  AuthenticatedStudentsImportRoute: AuthenticatedStudentsImportRoute,
-  AuthenticatedStudentsRankingsRoute: AuthenticatedStudentsRankingsRoute,
   AuthenticatedAllusersIndexRoute: AuthenticatedAllusersIndexRoute,
   AuthenticatedFieldofstudyIndexRoute: AuthenticatedFieldofstudyIndexRoute,
   AuthenticatedSchoolsIndexRoute: AuthenticatedSchoolsIndexRoute,

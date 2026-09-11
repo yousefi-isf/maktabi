@@ -1,8 +1,8 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import type { RowSelectionState } from '@tanstack/react-table';
-import { useState } from 'react';
 import { FileUp, Trophy } from 'lucide-react';
+import { useState } from 'react';
 import { BulkDeleteButton, DataTableSearch, DataTableToolbar } from '@/components/data-table';
 import type { PaginationState } from '@/components/serachable-data-table';
 import { Button } from '@/components/ui/button';
@@ -104,7 +104,7 @@ function RouteComponent() {
 				<div className="flex items-center gap-2">
 					<Button
 						variant="outline"
-						render={<Link to="/students/rankings" />}
+						render={<Link to="/rankings" />}
 						className="flex items-center gap-2"
 					>
 						<Trophy className="w-4 h-4 text-amber-600" />
@@ -112,7 +112,7 @@ function RouteComponent() {
 					</Button>
 					<Button
 						variant="outline"
-						render={<Link to="/students/import" />}
+						render={<Link to="/import" />}
 						className="flex items-center gap-2"
 					>
 						<FileUp className="w-4 h-4" />

@@ -12,7 +12,7 @@ import { guardPermission } from '@/lib/route-guards';
 import { showSuccessToast, showTRPCErrorToast } from '@/lib/show-error-toast';
 import { useTRPC } from '@/lib/trpc';
 
-export const Route = createFileRoute('/_authenticated/students/rankings')({
+export const Route = createFileRoute('/_authenticated/rankings')({
 	beforeLoad: guardPermission({
 		anyOf: [
 			'identity.student.list',
