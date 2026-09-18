@@ -8,7 +8,7 @@ import { showAuthErrorToast, showSuccessToast } from '@/lib/show-error-toast';
 
 
 const setPasswordSchema = z.object({
-  token: z.string().min(1).optional(),
+  token: z.string({ required_error: "توکن الزامی است", invalid_type_error: "توکن نامعتبر است" }).min(1, "توکن الزامی است").optional(),
 })
 export const Route = createFileRoute('/set-password')({
   component: RouteComponent,
@@ -35,8 +35,8 @@ export const Route = createFileRoute('/set-password')({
 })
 
 const formSchema = z.object({
-  password: z.string().min(8, 'رمز عبور باید حداقل ۸ کاراکتر باشد'),
-  confirmPassword: z.string().min(8, 'رمز عبور باید حداقل ۸ کاراکتر باشد'),
+  password: z.string({ required_error: "رمز عبور الزامی است", invalid_type_error: "رمز عبور نامعتبر است" }).min(8, 'رمز عبور باید حداقل ۸ کاراکتر باشد'),
+  confirmPassword: z.string({ required_error: "تکرار رمز عبور الزامی است", invalid_type_error: "تکرار رمز عبور نامعتبر است" }).min(8, 'رمز عبور باید حداقل ۸ کاراکتر باشد'),
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'رمزهای عبور یکسان نیستند',
   path: ['confirmPassword'],

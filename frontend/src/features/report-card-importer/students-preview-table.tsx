@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import {
 	Table,
 	TableBody,
@@ -16,9 +16,10 @@ import type { ReportCardPreviewData, SingleStudentReportCard } from './types';
 interface StudentsPreviewTableProps {
 	students: ReportCardPreviewData['students'];
 	batch: ReportCardPreviewData['batch'];
+	onUpdateBatch?: (batch: ReportCardPreviewData['batch']) => void;
 }
 
-export function StudentsPreviewTable({ students, batch }: StudentsPreviewTableProps) {
+export function StudentsPreviewTable({ students, batch, onUpdateBatch }: StudentsPreviewTableProps) {
 	const [selectedStudent, setSelectedStudent] = useState<SingleStudentReportCard | null>(null);
 	const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -35,10 +36,10 @@ export function StudentsPreviewTable({ students, batch }: StudentsPreviewTablePr
 			<Card>
 				<CardHeader className="pb-3 border-b flex flex-row items-center justify-between">
 					<CardTitle className="text-base font-medium">
-						لیست کارنامه‌های استخراج‌شده ({students.length} دانش‌آموز)
+						لیست دانش آموزان ({students.length} دانش‌آموز)
 					</CardTitle>
 					<span className="text-xs text-muted-foreground">
-						برای مشاهده ریزنمرات دروس و پودمان‌ها، دکمه «ریز نمرات» را انتخاب نمایید
+						با کلیک روی دکمه کارنامه، جزئیات دروس و نمرات هر شخص قابل مشاهده است
 					</span>
 				</CardHeader>
 				<CardContent className="p-0">
@@ -65,8 +66,27 @@ export function StudentsPreviewTable({ students, batch }: StudentsPreviewTablePr
 										<TableCell className="text-center font-mono text-xs text-muted-foreground">
 											{idx + 1}
 										</TableCell>
-										<TableCell className="font-medium">
-											{s.fullName}
+										<TableCell className="font-medium p-1">
+											<input
+												type="text"
+												className="w-full h-8 px-2 text-sm bg-transparent border-b border-transparent hover:border-border focus:border-primary focus:outline-none transition-colors"
+												defaultValue={s.fullName}
+												onBlur={(e) => {
+													const val = e.target.value.trim();
+													if (!val || !onUpdateBatch) return;
+													
+													const newBatch = { ...batch };
+													const studentIndex = newBatch.students.findIndex(bs => bs.student.nationalCode === s.nationalCode);
+													if (studentIndex >= 0) {
+														const parts = val.split(' ');
+														const lastName = parts.length > 1 ? parts.pop() || '' : '';
+														const firstName = parts.join(' ') || val;
+														newBatch.students[studentIndex].student.firstName = firstName;
+														newBatch.students[studentIndex].student.lastName = lastName;
+														onUpdateBatch(newBatch);
+													}
+												}}
+											/>
 										</TableCell>
 										<TableCell className="font-mono text-xs">
 											{s.nationalCode}
@@ -98,7 +118,7 @@ export function StudentsPreviewTable({ students, batch }: StudentsPreviewTablePr
 												</span>
 											) : (
 												<span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-600">
-													ناتمام ({s.unitsTaken - s.unitsPassed} واحد مانده)
+													ناقص ({s.unitsTaken - s.unitsPassed} واحد مانده)
 												</span>
 											)}
 										</TableCell>
@@ -110,7 +130,7 @@ export function StudentsPreviewTable({ students, batch }: StudentsPreviewTablePr
 												className="h-7 text-xs px-2.5 flex items-center gap-1 hover:bg-primary hover:text-primary-foreground transition-colors cursor-pointer"
 											>
 												<FileText className="w-3.5 h-3.5" />
-												<span>ریز نمرات</span>
+												<span>نمایش کارنامه</span>
 											</Button>
 										</TableCell>
 									</TableRow>

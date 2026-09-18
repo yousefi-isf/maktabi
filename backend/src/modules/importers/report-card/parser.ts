@@ -16,102 +16,41 @@ import {
   type ReportCardModuleDto,
   type ReportCardSummaryDto,
 } from "./dto.js";
-
-// Canonical subject/module dictionary for standard Iranian Vocational curriculum
-const CANONICAL_TITLES: Record<string, { title: string; defaultUnit?: number; isModular?: boolean }> = {
-  // General subjects (دروس عمومی و پایه)
-  "10011": { title: "تعلیمات دینی (دینی، اخلاق و قرآن) 1", defaultUnit: 2, isModular: false },
-  "10022": { title: "عربی، زبان قرآن 1", defaultUnit: 1, isModular: false },
-  "10032": { title: "فارسی 1", defaultUnit: 2, isModular: false },
-  "10082": { title: "زبان خارجی 1", defaultUnit: 2, isModular: false },
-  "10092": { title: "تربیت بدنی 1", defaultUnit: 2, isModular: false },
-  "10131": { title: "جغرافیای عمومی و استان شناسی", defaultUnit: 2, isModular: false },
-  "99990": { title: "انضباط", defaultUnit: 2, isModular: false },
-  "88110": { title: "الزامات محیط کار", defaultUnit: 2, isModular: true },
-  "881101": { title: "محیط کار و ارتباطات انسانی" },
-  "881102": { title: "فناوری در محیط کار" },
-  "881103": { title: "محیط و قوانین کار" },
-  "881104": { title: "ایمنی و بهداشت محیط کار" },
-  "881105": { title: "مهارت کاریابی" },
-  "88510": { title: "ریاضی 1", defaultUnit: 2, isModular: true },
-  "885101": { title: "نسبت و تناسب" },
-  "885102": { title: "درصد و کاربردهای آن" },
-  "885103": { title: "معادله‌های درجه دوم" },
-  "885104": { title: "توان‌رسانی به توان عددهای گویا" },
-  "885105": { title: "نسبت‌های مثلثاتی" },
-  "88901": { title: "فیزیک", defaultUnit: 2, isModular: true },
-  "889011": { title: "فیزیک و اندازه گیری" },
-  "889012": { title: "مکانیک" },
-  "889013": { title: "حالت‌های ماده و فشار" },
-  "889014": { title: "دما و گرما" },
-  "889015": { title: "جریان و مدارهای الکتریکی" },
-
-  // Accounting (حسابداری - کد رشته ۳۵۰۹۱)
-  "45138": { title: "دانش فنی پایه (حسابداری)", defaultUnit: 3, isModular: true },
-  "41110511": { title: "کلیات" },
-  "41110512": { title: "اصول و مبانی" },
-  "41110513": { title: "تجهیزات و کاربرد آن" },
-  "41110514": { title: "محاسبات و برآورده" },
-  "41110515": { title: "مستندسازی گزارش نویسی" },
-  "45237": { title: "ارتباط مؤثر", defaultUnit: 4, isModular: true },
-  "101088031": { title: "اهمیت، اهداف و عناصر ارتباط" },
-  "101088032": { title: "ارتباط مؤثر با خود و مهارت های ارتباطی" },
-  "101088033": { title: "ارتباط مؤثر با خدا، خلقت و جامعه" },
-  "101088034": { title: "ارتباط مؤثر در کسب و کار" },
-  "101088035": { title: "اهمیت و کارکرد زبان بدن و فنون مذاکره" },
-  "45274": { title: "حسابداری دریافت ها و پرداخت ها", defaultUnit: 8, isModular: true },
-  "452741": { title: "حسابداری پرداخت ها" },
-  "452742": { title: "حسابداری دریافت ها" },
-  "452743": { title: "تحریر دفاتر قانونی" },
-  "452744": { title: "حسابداری تنخواه گردان" },
-  "452745": { title: "تهیه صورت مغایرت بانکی" },
-  "45275": { title: "حسابداری حقوق و دستمزد", defaultUnit: 8, isModular: true },
-  "452751": { title: "حسابداری کنترل ساعت کارکرد پرسنل" },
-  "452752": { title: "حسابداری محاسبه حقوق و دستمزد" },
-  "452753": { title: "حسابداری محاسبه بیمه و مالیات پرسنل" },
-  "452754": { title: "حسابداری ثبت حقوق و دستمزد" },
-  "452755": { title: "حسابداری محاسبه مزایای پایان خدمت" },
-
-  // Computer Network & Software (شبکه و نرم‌افزار رایانه - کد رشته ۳۵۱۰۱)
-  "45141": { title: "دانش فنی پایه (شبکه و نرم‌افزار رایانه)", defaultUnit: 3, isModular: true },
-  "68810511": { title: "مفاهیم پایه سخت افزار و نرم افزار" },
-  "68810512": { title: "اینترنت و رایانش ابری" },
-  "68810513": { title: "حل مسئله، الگوریتم و فلوچارت" },
-  "68810514": { title: "هوش مصنوعی و کاربردهای آن" },
-  "68810515": { title: "امنیت داده و اطلاعات" },
-  "45145": { title: "نقشه کشی فنی رایانه ای", defaultUnit: 4, isModular: true },
-  "880101": { title: "ترسیم با دست آزاد" },
-  "880102": { title: "تجزیه و تحلیل نما و حجم" },
-  "880103": { title: "ترسیم سه نما و حجم" },
-  "880104": { title: "ترسیم با رایانه" },
-  "880105": { title: "نقشه‌کشی رایانه‌ای" },
-  "45265": { title: "نگهداری سیستم های رایانه ای", defaultUnit: 8, isModular: true },
-  "452651": { title: "نصب سیستم عامل ویندوز 11" },
-  "452652": { title: "نصب سیستم عامل لینوکس" },
-  "452653": { title: "نصب سیستم عامل اندروید" },
-  "452654": { title: "نصب و پیکربندی سیستم عامل مک" },
-  "452655": { title: "ارزیابی فنی سخت افزار" },
-  "45266": { title: "ارائه دهنده خدمات رایانه ای", defaultUnit: 8, isModular: true },
-  "452661": { title: "تایپ و صفحه آرایی متن سفارشی" },
-  "452662": { title: "ساخت بانک داده در صفحه گسترده" },
-  "452663": { title: "طراحی ساختار و تهیه اسلاید ارائه محتوا" },
-  "452664": { title: "طراحی بانک های اطلاعاتی" },
-  "452665": { title: "مستندسازی" },
-};
-
+function debugRowGaps(items: PdfTextItem[]) {
+  const sorted = [...items].sort((a, b) => b.x - a.x);
+  for (let i = 1; i < sorted.length; i++) {
+    const prev = sorted[i - 1];
+    const cur = sorted[i];
+    const gap = (prev.x - prev.width) - cur.x;
+    console.log(`"${prev.str}" -> "${cur.str}" | gap = ${gap}`);
+  }
+}
+function debugBoxGaps(items: PdfTextItem[], minX: number, maxX: number) {
+  const inBox = items.filter((i) => i.x >= minX && i.x <= maxX);
+  const sorted = [...inBox].sort((a, b) => b.x - a.x);
+  for (let i = 1; i < sorted.length; i++) {
+    const prev = sorted[i - 1];
+    const cur = sorted[i];
+    const prevLeftEdge = prev.x - prev.width; // لبه‌ی چپ (پایانی) حرف قبلی چون RTL
+    const gap = prevLeftEdge - cur.x;
+    console.log(
+      `"${prev.str}"(x=${prev.x}, w=${prev.width.toFixed(2)}) -> "${cur.str}"(x=${cur.x}) | gap = ${gap.toFixed(2)}`
+    );
+  }
+}
 // Comprehensive FastReport / Sida glyph dictionary
 const GLYPH_MAP: Record<string, string> = {
   "︀": "ا", "ا": "ا", "آ": "آ", "︋": "ب", "︊": "ب", "︉": "ب", "ب": "ب", "︎": "پ", "پ": "پ", "︑": "ت",
-  "︐": "ت", "ت": "ت", "︒": "ث", "︔": "ث", "ث": "ث", "︖": "ج", "ج": "ج", "︗": "چ", "چ": "ج", "︚": "چ",
-  "︝": "ح", "︜": "ح", "︛": "ح", "ح": "ح", "︠": "خ", "خ": "خ", "︡": "د", "د": "د", "︤": "ز",
-  "ذ": "ز", "︣": "ر", "ر": "ر", "︥": "ز", "ز": "ز", "︦": "س", "ژ": "س", "︧": "س", "︩": "س", "س": "س",
-  "︨": "ش", "︪": "ش", "︫": "ش", "ش": "ش", "︮": "ص", "︭": "ص", "ص": "ص", "︯": "ض", "︲": "ض", "︱": "ض", "ض": "ض",
-  "ط": "ط", "︵": "ط", "ظ": "ظ", "︺": "ع", "︻": "ع", "ع": "ع", "غ": "غ", "︽": "غ", "︾": "غ",
+  "︐": "ت", "ت": "ت", "︒": "ث", "︔": "ث", "ث": "ث", "︖": "ج", "ج": "ج", "︗": "ج", "چ": "چ", "︚": "چ",
+  "︝": "ح", "︜": "ح", "︛": "ح", "ح": "ح", "︠": "خ", "︟": "خ", "خ": "خ", "︡": "د", "د": "د", "︤": "ذ", "︢": "ذ",
+  "ذ": "ذ", "︣": "ر", "ر": "ر", "︥": "ز", "ز": "ز", "︦": "س", "ژ": "ژ", "︧": "س", "︨": "س", "︩": "س", "س": "س",
+  "︪": "ش", "︫": "ش", "ش": "ش", "︮": "ص", "︭": "ص", "ص": "ص", "︯": "ض", "︲": "ض", "︱": "ض", "ض": "ض",
+  "ط": "ط", "︵": "ط", "︳": "ط", "︴": "ط", "ظ": "ظ", "︺": "ع", "︻": "ع", "ع": "ع", "غ": "غ", "︽": "غ", "︾": "غ",
   "﹀": "ف", "﹁": "ف", "︿": "ف", "ف": "ف", "﹇": "ق", "﹆": "ق", "ق": "ق", "﹋": "ک", "ک": "ک", "﹊": "ک",
-  "﹎": "گ", "گ": "گ", "ل": "ل", "﹚": "ل", "﹏": "ل", "﹛": "ل", "﹑": "ل", "﹝": "م", "﹞": "م", "م": "م",
+  "﹎": "گ", "گ": "گ", "ل": "ل", "﹚": "ل", "﹏": "ل", "﹛": "ل", "﹑": "ل", "﹝": "م", "﹞": "م", "﹜": "م", "م": "م",
   "﹡": "ن", "﹟": "ن", "﹠": "ن", "ن": "ن", "﹢": "و", "و": "و", "﹨": "ه", "﹧": "ه", "﹤": "ه",
   "ه": "ه", "﹩": "ی", "﹫": "ی", "﹬": "ی", "﹪": "ی", "ي": "ی", "ی": "ی", "ئ": "ئ", "ء": "ء",
-  "﹯": "ئ",
+  "﹯": "ئ", "﹣": "ؤ",
   "ت︀": "تا", "ن︀": "نا", "د︀": "دا", "م︀": "ما", "ر︀": "را", "وا": "وا", "اد": "اد", "رد": "رد",
   "درس": "درس", "اول": "اول", "دوم": "دوم", "دوره": "دوره", "اداره": "اداره", "وزارت": "وزارت",
   "(": ")", ")": "(", ":": ":", "-": "-", "،": "،", "؛": "؛", "اف": "اف", "لا": "لا"
@@ -126,61 +65,6 @@ function cleanPersonName(name: string): string {
     .replace(/^ن\s*ادگی:?/, "")
     .replace(/^نام:?/, "")
     .replace(/:/g, "")
-    .replace(/^شید/, "سید")
-    .replace(/^شعید/, "سعید")
-    .replace(/چوانمرد/, "جوانمرد")
-    .replace(/محمدچواد/, "محمدجواد")
-    .replace(/^چواد/, "جواد")
-    .replace(/^چعفری/, "جعفری")
-    .replace(/^چهانپرور/, "جهان پرور")
-    .replace(/توشلینس[︉ب]*/, "توسلی نسب")
-    .replace(/توشلی\s*نسب/, "توسلی نسب")
-    .replace(/توشلی/, "توسلی")
-    .replace(/محمدپارشا/, "محمدپارسا")
-    .replace(/پارشا/, "پارسا")
-    .replace(/یوشف/, "یوسف")
-    .replace(/یاشر/, "یاسر")
-    .replace(/قاشمی/, "قاسمی")
-    .replace(/ابوالف[︱ض]ل/, "ابوالفضل")
-    .replace(/قربانچن️?/, "قربان جنت")
-    .replace(/قربان\s*جنت/, "قربان جنت")
-    .replace(/صالحیزاده/, "صالحی زاده")
-    .replace(/حسنیگشنیز/, "حسنی گشنیز")
-    .replace(/گشنیزچانی/g, "گشنیزجانی")
-    .replace(/شفیعیآفاران/, "شفیعی آفاران")
-    .replace(/ن[︭ص]یریمحمو.*/, "نصیری محمودآبادی")
-    .replace(/محموددآبا.*|محمودآبا.*/, "محمودآبادی")
-    .replace(/اص[︽غ]ر/, "اصغر")
-    .replace(/بنا[ی﹯ئ]+/, "بنائی")
-    .replace(/یوشفی/, "یوسفی")
-    .replace(/عبا[ی﹯]*ان/, "عبائیان")
-    .replace(/ا[︔ث]ناعشری/, "اثناعشری")
-    .replace(/حاتمیانچزی/, "حاتمیان جزی")
-    .replace(/ابوا﹛﹆اشمی|ابوالقاشمی/, "ابوالقاسمی")
-    .replace(/اشلمیه|اسلامیه/, "اسلامیه")
-    .replace(/علیزاده آزر/, "علیزاده آذر")
-    .replace(/خورشندیبر/, "خورسندی بروزاد")
-    .replace(/آقاکوچکیفر/, "آقاکوچکی فروشانی")
-    .replace(/حمیدی اصفها$/, "حمیدی اصفهانی")
-    .replace(/کرمیدش︐جر|کرمیدستجر|کرمیدشتجر/, "کرمی دستجردی")
-    .replace(/دهاقان$/, "دهاقانی")
-    .replace(/شبحان/, "سبحان")
-    .replace(/سیدمحمدصا$/, "سیدمحمدصادق");
-
-  // Fix composite or leftover presentation forms
-  cleaned = cleaned
-    .replace(/︫/g, "ش")
-    .replace(/︐/g, "ت")
-    .replace(/︊/g, "ب")
-    .replace(/︉/g, "ب")
-    .replace(/︭/g, "ص")
-    .replace(/︱/g, "ض")
-    .replace(/[︽︾]/g, "غ")
-    .replace(/︔/g, "ث")
-    .replace(/︩/g, "س")
-    .replace(/﹯/g, "ئ")
-    .replace(/ي/g, "ی")
-    .replace(/ك/g, "ک")
     .trim();
 
   return cleaned;
@@ -201,6 +85,7 @@ interface PdfTextItem {
   str: string;
   x: number;
   y: number;
+  width: number;
 }
 
 async function extractPageItems(doc: any, pageNum: number): Promise<PdfTextItem[]> {
@@ -209,10 +94,12 @@ async function extractPageItems(doc: any, pageNum: number): Promise<PdfTextItem[
   const items: PdfTextItem[] = [];
   for (const item of content.items) {
     if ("str" in item && item.str.trim()) {
+      const raw = item as any;
       items.push({
         str: item.str.trim(),
         x: Math.round(item.transform[4]),
         y: Math.round(item.transform[5]),
+        width: typeof raw.width === "number" ? raw.width : 0,
       });
     }
   }
@@ -234,26 +121,25 @@ function groupRows(items: PdfTextItem[], tolerance = 4): { y: number; items: Pdf
 }
 
 function getItemInBox(items: PdfTextItem[], minX: number, maxX: number): PdfTextItem | undefined {
-  return items.find((it) => it.x >= minX && it.x <= maxX);
+  return items.find((it) => it.x >= minX && it.x <= maxX && it.str.trim() !== "");
 }
 
 /**
  * Parses school metadata and field of study dynamically from Page 1 & Page 2.
  */
 function parseSchoolData(p1Items: PdfTextItem[], p2Items?: PdfTextItem[]): ReportCardSchoolDto {
-  let schoolCode = "96084101";
-  let fieldCode = "35091";
-  let fieldTitle = "حسابداری";
-  let academicYear = "1404-1405";
+  let schoolCode = "00000000";
+  let fieldCode = "00000";
+  let academicYear = "1400-1401";
 
   const allItems = [...p1Items, ...(p2Items || [])];
   for (const it of allItems) {
     const digits = toEnglishDigits(it.str);
-    if (/^96\d{6}$/.test(digits)) {
+    if (/^\d{8}$/.test(digits) && (digits.startsWith("96") || digits.startsWith("10") || digits.startsWith("11"))) {
       schoolCode = digits;
     }
-    // Field code: 5-digit code like 35091 (accounting) or 35101 (software)
-    if (/^35\d{3}$/.test(digits)) {
+    // Field code: 5-digit code
+    if (/^\d{5}$/.test(digits) && !digits.startsWith("13")) {
       fieldCode = digits;
     }
     if (/^140\d-140\d$/.test(digits)) {
@@ -261,32 +147,46 @@ function parseSchoolData(p1Items: PdfTextItem[], p2Items?: PdfTextItem[]): Repor
     }
   }
 
-  // Determine field title dynamically
-  if (fieldCode === "35091") {
-    fieldTitle = "حسابداری";
-  } else if (fieldCode === "35101") {
-    fieldTitle = "شبکه و نرم‌افزار رایانه";
-  } else {
-    // Search page 1 header around Y ≈ 1118
-    const fieldHeaderItems = p1Items.filter((i) => i.y >= 1110 && i.y <= 1125);
-    const headerDecoded = decodeBox(fieldHeaderItems, 550, 680);
-    if (headerDecoded.includes("حسابدار")) {
-      fieldTitle = "حسابداری";
-      fieldCode = "35091";
-    } else if (headerDecoded.includes("شبکه") || headerDecoded.includes("نرم افزار")) {
-      fieldTitle = "شبکه و نرم‌افزار رایانه";
-      fieldCode = "35101";
-    }
-  }
+  // Province & District (Y ≈ 1166)
+  const row1166Items = p1Items.filter((i) => i.y >= 1160 && i.y <= 1175);
+  let province = decodeBox(row1166Items, 550, 680).replace(/^استان:?\s*/, "").trim() || "اصفهان";
+  let district = decodeBox(row1166Items, 400, 560).replace(/^منطقه:?\s*/, "").trim() || "اداره ناحیه 5";
+
+  // Field Title & School Name (Y ≈ 1118)
+  const row1118Items = p1Items.filter((i) => i.y >= 1110 && i.y <= 1125);
+  let fieldTitle = decodeBox(row1118Items, 550, 680).replace(/^رشته:?\s*/, "").trim();
+  let schoolName = decodeBox(row1118Items, 400, 560).replace(/^مدرسه:?\s*/, "").trim();
+
+  // Fix common missing spaces in extracted text
+  // schoolName = schoolName.replace(/حاجحسین/, "حاج حسین ").replace(/صرامی/, "صرامی");
+  // district = district.replace(/ادارهناحیه/, "اداره ناحیه ");
+  // province = province.replace(/اصفهان/, "اصفهان");
+  // if (fieldTitle === "شبکهونرمافزاررایانه") fieldTitle = "شبکه و نرم افزار رایانه";
+
+  // // If decoding somehow missed the field title but we have the code
+  // if (!fieldTitle) {
+  //   if (fieldCode === "35091") fieldTitle = "حسابداری";
+  //   else if (fieldCode === "35101") fieldTitle = "شبکه و نرم‌افزار رایانه";
+  //   else fieldTitle = "نامشخص";
+  // }
+
+  // Grade Title - پایه (Y ≈ 1150, alongside school code)
+  // "کد:96084101  پایه:دهم  نام پدر:..."
+  // "دهم" = د(X=487) ه(X=482) م(X=476) → X in [474, 490]
+  const row1150Items = p1Items.filter((i) => i.y >= 1144 && i.y <= 1157);
+  let gradeTitle = decodeBox(row1150Items, 474, 492).replace(/^پایه:?\s*/, "").trim();
+  // if (!gradeTitle) gradeTitle = "دهم"; // fallback
+
+  if (!schoolName) schoolName = "نامشخص";
 
   return {
-    name: "حاج حسین صرامی",
+    name: schoolName,
     code: schoolCode,
-    province: "اصفهان",
-    district: "اداره ناحیه 5",
+    province,
+    district,
     academicYear,
     period: "ضمن سال",
-    gradeTitle: "دهم",
+    gradeTitle,
     fieldTitle,
     fieldCode,
     schoolType: "technical",
@@ -317,6 +217,7 @@ function parseStudentData(p1Items: PdfTextItem[]): ReportCardStudentDto {
   // Student firstName is strictly x in [268, 378] (label 'نام:' is at x >= 381).
   // Student lastName is strictly x in [80, 218] (to the left of 'نام خانوادگی:').
   const nameItems = p1Items.filter((i) => i.y >= 1160 && i.y <= 1175);
+  // debugBoxGaps(nameItems, 80, 218);
   let firstName = cleanPersonName(decodeBox(nameItems, 268, 378));
   let lastName = cleanPersonName(decodeBox(nameItems, 80, 218));
 
@@ -388,18 +289,13 @@ function parseCourses(
     const annualOrModuleScoreItem = getItemInBox(items, 140, 175);
     const resultItem = getItemInBox(items, 80, 130);
 
-    const canonical = CANONICAL_TITLES[code];
-    let title = canonical?.title;
-    if (!title) {
-      title = decodeBox(items, 550, 725).replace(/^--/, "").trim() || `درس ${code}`;
-    }
+    const title = decodeBox(items, 550, 725).replace(/^--/, "").trim() || `درس ${code}`;
 
     if (!isModule) {
       // Main subject
-      const defaultUnit = canonical?.defaultUnit ?? 2;
-      const parsedUnit = parseGradeScore(unitItem?.str) ?? defaultUnit;
+      const parsedUnit = parseGradeScore(unitItem?.str) ?? 2;
       const finalScore = parseGradeScore(finalScoreItem?.str) ?? parseGradeScore(annualOrModuleScoreItem?.str) ?? 0;
-      const isModular = canonical?.isModular ?? (code.startsWith("45") || code.startsWith("88") || code.startsWith("41"));
+      const isModular = code.startsWith("45") || code.startsWith("88") || code.startsWith("41");
 
       const hasFailedResult = Boolean(resultItem && (resultItem.str.includes("ناتمام") || resultItem.str.includes("مردود")));
       const isPassed = finalScore >= 10 && !hasFailedResult;
@@ -584,6 +480,9 @@ export async function parseReportCardPdf(pdfBuffer: Buffer | Uint8Array): Promis
   for (let p = 1; p <= numPages; p += 2) {
     const page1Items = await extractPageItems(doc, p);
     const page2Items = await extractPageItems(doc, p + 1);
+
+    // const row1118Items = page1Items.filter((i) => i.y >= 1110 && i.y <= 1125);
+    // debugBoxGaps(row1118Items, 550, 680); // مثلاً باکس fieldTitle
 
     const p1Rows = groupRows(page1Items);
     const p2Rows = groupRows(page2Items);

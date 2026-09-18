@@ -3,7 +3,7 @@ import { createRouter as createTanStackRouter } from "@tanstack/react-router";
 import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query";
 import { createIsomorphicFn } from "@tanstack/react-start";
 import { getRequestHeader } from "@tanstack/react-start/server";
-import { createTRPCClient, httpBatchLink } from "@trpc/client";
+import { createTRPCClient, httpBatchLink, splitLink, unstable_httpSubscriptionLink } from "@trpc/client";
 import type { AppRouter } from "../../backend/src/trpc/router.js";
 import { TRPCProvider } from "./lib/trpc";
 import { showTRPCErrorToast } from "./lib/show-error-toast";
@@ -46,18 +46,30 @@ export function getRouter() {
 
 	const trpcClient = createTRPCClient<AppRouter>({
 		links: [
-			httpBatchLink({
-				url: `${apiBaseUrl}/trpc`,
-				transformer: superjson,
-				fetch(url, options) {
-					const headers = new Headers(options?.headers);
-					if (cookieHeader) headers.set("cookie", cookieHeader);
-					return fetch(url, {
-						...options,
-						credentials: 'include',
-						headers,
-					});
-				},
+			splitLink({
+				condition: (op) => op.type === 'subscription',
+				true: unstable_httpSubscriptionLink({
+					url: `${apiBaseUrl}/trpc`,
+					transformer: superjson,
+					EventSource: typeof window !== 'undefined' ? class extends EventSource {
+						constructor(url: string | URL, eventSourceInitDict?: EventSourceInit) {
+							super(url, { ...eventSourceInitDict, withCredentials: true });
+						}
+					} : undefined,
+				}),
+				false: httpBatchLink({
+					url: `${apiBaseUrl}/trpc`,
+					transformer: superjson,
+					fetch(url, options) {
+						const headers = new Headers(options?.headers);
+						if (cookieHeader) headers.set("cookie", cookieHeader);
+						return fetch(url, {
+							...options,
+							credentials: 'include',
+							headers,
+						});
+					},
+				}),
 			}),
 		],
 	});

@@ -21,6 +21,7 @@ export type NavLeafItem = {
 	url: AppPath;
 	icon?: ReactNode;
 	isActive?: boolean;
+	exact?: boolean;
 	required?: PermissionRequirement;
 };
 

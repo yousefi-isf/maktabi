@@ -203,12 +203,16 @@ export function ReportCardImporterView() {
 						<StudentsPreviewTable
 							students={previewData.students}
 							batch={previewData.batch}
+							onUpdateBatch={(newBatch) => setPreviewData({ ...previewData, batch: newBatch })}
 						/>
 					)}
 
 					{/* Tab Content 2: Courses */}
 					{previewTab === 'courses' && (
-						<CoursesPreviewTable batch={previewData.batch} />
+						<CoursesPreviewTable 
+							batch={previewData.batch}
+							onUpdateBatch={(newBatch) => setPreviewData({ ...previewData, batch: newBatch })}
+						/>
 					)}
 
 					{/* Tab Content 3: Scores Matrix */}

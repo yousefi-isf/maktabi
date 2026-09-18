@@ -1,8 +1,17 @@
 import {
+	Activity,
+	Book,
 	BookOpenIcon,
 	BotIcon,
+	CalendarDays,
+	ClipboardList,
+	Clock,
 	FileUp,
 	FrameIcon,
+	GraduationCap,
+	LayoutDashboard,
+	Library,
+	Presentation,
 	School,
 	Settings2Icon,
 	Trophy,
@@ -16,6 +25,7 @@ export const navigationItems = [
 	{
 		title: "پیشخوان",
 		url: "/",
+		icon: <LayoutDashboard />,
 	},
 	{
 		title: "مدیریت",
@@ -54,13 +64,20 @@ export const navigationItems = [
 			{
 				title: "سال‌های تحصیلی",
 				url: "/academic-years",
+				icon: <CalendarDays />,
 				required: {
-					anyOf: ["academic.year.create", "academic.year.delete"],
+					anyOf: [
+						"academic.year.list",
+						"academic.year.create",
+						"academic.year.update",
+						"academic.year.delete",
+					],
 				},
 			},
 			{
 				title: "دانش آموزان",
 				url: "/students",
+				icon: <GraduationCap />,
 				required: {
 					anyOf: [
 						"identity.student.list",
@@ -95,6 +112,7 @@ export const navigationItems = [
 			{
 				title: "رشته‌های تحصیلی",
 				url: "/fieldofstudy",
+				icon: <Library />,
 				required: {
 					anyOf: [
 						"academic.field.list",
@@ -105,8 +123,47 @@ export const navigationItems = [
 				},
 			},
 			{
+				title: "پایه‌های تحصیلی",
+				url: "/grade-levels",
+				icon: <GraduationCap />,
+				required: {
+					anyOf: [
+						"academic.grade.list",
+						"academic.grade.create",
+						"academic.grade.update",
+					],
+				},
+			},
+			{
+				title: "کلاس‌ها",
+				url: "/classes",
+				icon: <Presentation />,
+				required: {
+					anyOf: [
+						"academic.class.list",
+						"academic.class.create",
+						"academic.class.delete",
+						"academic.class.update",
+					],
+				},
+			},
+			{
+				title: "دروس",
+				url: "/subjects",
+				icon: <Book />,
+				required: {
+					anyOf: [
+						"academic.subject.list",
+						"academic.subject.create",
+						"academic.subject.delete",
+						"academic.subject.update",
+					],
+				},
+			},
+			{
 				title: "امتحانات",
 				url: "/exams",
+				icon: <ClipboardList />,
 				required: {
 					anyOf: [
 						"academic.exam.read",
@@ -119,11 +176,26 @@ export const navigationItems = [
 	},
 	{
 		title: "حضور و غیاب",
-		url: "/attendance",
 		icon: <FrameIcon />,
-		required: {
-			anyOf: ["attendance.record.read", "attendance.record.read.own"],
-		},
+		items: [
+			{
+				title: "داشبورد زنده",
+				url: "/attendance",
+				exact: true,
+				icon: <Activity />,
+				required: {
+					anyOf: ["attendance.record.read", "attendance.record.read.own"],
+				},
+			},
+			{
+				title: "تاریخچه ترددها",
+				url: "/attendance/history",
+				icon: <Clock />,
+				required: {
+					anyOf: ["attendance.record.read", "attendance.record.read.own"],
+				},
+			},
+		],
 	},
 	{
 		title: "راهنما",

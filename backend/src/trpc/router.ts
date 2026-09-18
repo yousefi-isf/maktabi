@@ -1,5 +1,6 @@
 import { academicYearsRouter } from "../modules/academic-years/router.js";
 import { fieldsOfStudyRouter } from "../modules/fields-of-study/router.js";
+import { gradeLevelsRouter } from "../modules/grade-levels/router.js";
 import { authRouter } from "../modules/auth/router.js";
 import { permissionsRouter } from "../modules/permissions/router.js";
 import { rolesRouter } from "../modules/roles/router.js";
@@ -8,6 +9,9 @@ import { usersRouter } from "../modules/users/router.js";
 import { studentsRouter } from "../modules/students/router.js";
 import { reportCardImporterRouter } from "../modules/importers/report-card/router.js";
 import { rankingsRouter } from "../modules/rankings/router.js";
+import { attendanceRouter } from "../modules/attendance/router.js";
+import { classesRouter } from "../modules/classes/router.js";
+import { subjectsRouter } from "../modules/subjects/router.js";
 import { createCallerFactory, publicProcedure, router } from "./trpc.js";
 
 export const appRouter = router({
@@ -18,11 +22,15 @@ export const appRouter = router({
   auth: authRouter,
   academicYears: academicYearsRouter,
   fieldsOfStudy: fieldsOfStudyRouter,
+  gradeLevels: gradeLevelsRouter,
+  classes: classesRouter,
+  subjects: subjectsRouter,
   users: usersRouter,
   students: studentsRouter,
   roles: rolesRouter,
   permissions: permissionsRouter,
   schools: schoolsRouter,
+  attendance: attendanceRouter,
   reportCards: reportCardImporterRouter,
   rankings: rankingsRouter,
 });

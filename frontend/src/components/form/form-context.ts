@@ -4,6 +4,7 @@ import PasswordField from "./password-field";
 import SelectField from "./select-field";
 import SubmitField from "./submit-field";
 import TextField from "./text-field";
+import NumberField from "./number-field";
 
 export const { fieldContext, formContext, useFieldContext, useFormContext } =
 	createFormHookContexts();
@@ -17,6 +18,7 @@ export const {
 } = createFormHook({
 	fieldComponents: {
 		TextField,
+		NumberField,
 		SelectField,
 		PasswordField,
 		AsyncField,

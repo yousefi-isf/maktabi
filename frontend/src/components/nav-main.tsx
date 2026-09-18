@@ -24,13 +24,16 @@ export function NavMain({
 }) {
 	const pathname = useRouterState({ select: (s) => s.location.pathname });
 
-	const isUrlActive = (url: string) => {
+	const isUrlActive = (url: string, exact?: boolean) => {
 		if (!url) return false;
 		const cleanUrl = url.replace(/\/+$/, "") || "/";
 		const cleanPath = pathname.replace(/\/+$/, "") || "/";
 
 		if (cleanUrl === "/") {
 			return cleanPath === "/";
+		}
+		if (exact) {
+			return cleanPath === cleanUrl;
 		}
 		return cleanPath === cleanUrl || cleanPath.startsWith(`${cleanUrl}/`);
 	};
@@ -42,8 +45,8 @@ export function NavMain({
 				{items.map((item) => {
 					const isActive =
 						"items" in item
-							? item.items.some((subItem) => "url" in subItem && isUrlActive(subItem.url))
-							: isUrlActive(item.url);
+							? item.items.some((subItem) => "url" in subItem && isUrlActive(subItem.url, subItem.exact))
+							: isUrlActive(item.url, item.exact);
 
 					if (!("items" in item)) {
 						return (
@@ -80,7 +83,7 @@ export function NavMain({
 										"url" in subItem ? (
 											<SidebarMenuSubItem key={subItem.title}>
 												<SidebarMenuSubButton
-													isActive={isUrlActive(subItem.url)}
+													isActive={isUrlActive(subItem.url, subItem.exact)}
 													render={<Link to={subItem.url} />}
 												>
 													{subItem.icon}

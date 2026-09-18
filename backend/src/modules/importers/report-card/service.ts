@@ -6,6 +6,31 @@ import type {
   ReportCardModuleDto,
 } from "./dto.js";
 
+/** Maps Persian grade title → numeric orderIndex (1–12) */
+const GRADE_TITLE_TO_ORDER: Record<string, number> = {
+  "اول": 1,
+  "دوم": 2,
+  "سوم": 3,
+  "چهارم": 4,
+  "پنجم": 5,
+  "ششم": 6,
+  "هفتم": 7,
+  "هشتم": 8,
+  "نهم": 9,
+  "دهم": 10,
+  "یازدهم": 11,
+  "دوازدهم": 12,
+};
+
+function gradeTitleToOrderIndex(title: string): number {
+  return GRADE_TITLE_TO_ORDER[title.trim()] ?? 10;
+}
+
+function gradeTitleToStage(title: string): "middle_school" | "high_school" {
+  const idx = gradeTitleToOrderIndex(title);
+  return idx <= 9 ? "middle_school" : "high_school";
+}
+
 export interface ImportReportCardsResult {
   schoolId: string;
   schoolName: string;
@@ -86,7 +111,7 @@ export async function importReportCards(
   // 2. Academic Year (1404-1405) - Upsert
   const yearTitle = batch.school.academicYear;
   let academicYear = await prisma.academicYear.findFirst({
-    where: { schoolId, title: yearTitle, deletedAt: null },
+    where: { schoolId, title: yearTitle },
   });
 
   if (!academicYear) {
@@ -99,13 +124,18 @@ export async function importReportCards(
         isActive: true,
       },
     });
+  } else if (academicYear.deletedAt) {
+    academicYear = await prisma.academicYear.update({
+      where: { id: academicYear.id },
+      data: { deletedAt: null, isActive: true },
+    });
   }
 
   // 3. Terms (Term 1 & Term 2) - Upsert
   const termsMap = new Map<number, string>();
   for (const termNo of [1, 2]) {
     let term = await prisma.term.findFirst({
-      where: { academicYearId: academicYear.id, termNumber: termNo, deletedAt: null },
+      where: { academicYearId: academicYear.id, termNumber: termNo },
     });
     if (!term) {
       term = await prisma.term.create({
@@ -118,27 +148,37 @@ export async function importReportCards(
           endDate: termNo === 1 ? new Date("2026-01-20T00:00:00.000Z") : new Date("2026-06-21T00:00:00.000Z"),
         },
       });
+    } else if (term.deletedAt) {
+      term = await prisma.term.update({
+        where: { id: term.id },
+        data: { deletedAt: null },
+      });
     }
     termsMap.set(termNo, term.id);
   }
 
   // 4. GradeLevel ("دهم") & FieldOfStudy ("شبکه و نرم افزار رایانه") - Upsert
   let gradeLevel = await prisma.gradeLevel.findFirst({
-    where: { schoolId, title: batch.school.gradeTitle, deletedAt: null },
+    where: { schoolId, title: batch.school.gradeTitle },
   });
   if (!gradeLevel) {
     gradeLevel = await prisma.gradeLevel.create({
       data: {
         schoolId,
         title: batch.school.gradeTitle,
-        orderIndex: 10,
-        stage: "high_school",
+        orderIndex: gradeTitleToOrderIndex(batch.school.gradeTitle),
+        stage: gradeTitleToStage(batch.school.gradeTitle),
       },
+    });
+  } else if (gradeLevel.deletedAt) {
+    gradeLevel = await prisma.gradeLevel.update({
+      where: { id: gradeLevel.id },
+      data: { deletedAt: null },
     });
   }
 
   let fieldOfStudy = await prisma.fieldOfStudy.findFirst({
-    where: { schoolId, title: batch.school.fieldTitle, deletedAt: null },
+    where: { schoolId, title: batch.school.fieldTitle },
   });
   if (!fieldOfStudy) {
     fieldOfStudy = await prisma.fieldOfStudy.create({
@@ -147,6 +187,11 @@ export async function importReportCards(
         title: batch.school.fieldTitle,
         branch: "technical",
       },
+    });
+  } else if (fieldOfStudy.deletedAt) {
+    fieldOfStudy = await prisma.fieldOfStudy.update({
+      where: { id: fieldOfStudy.id },
+      data: { deletedAt: null },
     });
   }
 
@@ -159,7 +204,6 @@ export async function importReportCards(
       gradeLevelId: gradeLevel.id,
       fieldOfStudyId: fieldOfStudy.id,
       name: className,
-      deletedAt: null,
     },
   });
   if (!schoolClass) {
@@ -172,6 +216,11 @@ export async function importReportCards(
         name: className,
         capacity: 35,
       },
+    });
+  } else if (schoolClass.deletedAt) {
+    schoolClass = await prisma.schoolClass.update({
+      where: { id: schoolClass.id },
+      data: { deletedAt: null },
     });
   }
 
@@ -202,6 +251,15 @@ export async function importReportCards(
         joinedAt: new Date(),
       },
     });
+  } else if (teacherUserSchool.deletedAt || teacherUserSchool.status !== "active") {
+    teacherUserSchool = await prisma.userSchool.update({
+      where: { id: teacherUserSchool.id },
+      data: {
+        status: "active",
+        leftAt: null,
+        deletedAt: null,
+      },
+    });
   }
 
   let teacherProfile = await prisma.teacher.findUnique({
@@ -215,6 +273,11 @@ export async function importReportCards(
         employmentType: "رسمی",
       },
     });
+  } else if (teacherProfile.deletedAt) {
+    teacherProfile = await prisma.teacher.update({
+      where: { id: teacherProfile.id },
+      data: { deletedAt: null },
+    });
   }
 
   // 7. Subjects, Modules, Curricula, TeachingAssignments & Exams - Upsert
@@ -227,7 +290,7 @@ export async function importReportCards(
   for (const course of sampleCourses) {
     // Safe find-and-update for Subject (compatible with soft-delete partial indexes)
     let subject = await prisma.subject.findFirst({
-      where: { schoolId, code: course.code, deletedAt: null },
+      where: { schoolId, code: course.code },
     });
     if (!subject) {
       subject = await prisma.subject.create({
@@ -243,9 +306,9 @@ export async function importReportCards(
       subject = await prisma.subject.update({
         where: { id: subject.id },
         data: {
-          name: course.title,
           defaultUnit: new Prisma.Decimal(course.unit),
           subjectType: course.isModular ? "modular" : "theoretical",
+          deletedAt: null,
         },
       });
     }
@@ -258,7 +321,6 @@ export async function importReportCards(
         gradeLevelId: gradeLevel.id,
         fieldOfStudyId: fieldOfStudy.id,
         subjectId: subject.id,
-        deletedAt: null,
       },
     });
     if (!existingCurriculum) {
@@ -277,7 +339,10 @@ export async function importReportCards(
     } else {
       await prisma.curriculum.update({
         where: { id: existingCurriculum.id },
-        data: { unit: new Prisma.Decimal(course.unit) },
+        data: {
+          unit: new Prisma.Decimal(course.unit),
+          deletedAt: null,
+        },
       });
     }
 
@@ -287,7 +352,6 @@ export async function importReportCards(
         classId: schoolClass.id,
         subjectId: subject.id,
         academicYearId: academicYear.id,
-        deletedAt: null,
       },
     });
     if (!assignment) {
@@ -303,7 +367,10 @@ export async function importReportCards(
     } else {
       assignment = await prisma.teachingAssignment.update({
         where: { id: assignment.id },
-        data: { teacherId: teacherProfile.id },
+        data: {
+          teacherId: teacherProfile.id,
+          deletedAt: null,
+        },
       });
     }
     assignmentsMap.set(subject.id, assignment.id);
@@ -315,7 +382,6 @@ export async function importReportCards(
           where: {
             subjectId: subject.id,
             OR: [{ code: mod.code }, { orderIndex: mod.orderIndex }],
-            deletedAt: null,
           },
         });
 
@@ -335,8 +401,8 @@ export async function importReportCards(
             where: { id: existingModule.id },
             data: {
               code: mod.code,
-              title: mod.title,
               orderIndex: mod.orderIndex,
+              deletedAt: null,
             },
           });
         }
@@ -372,7 +438,6 @@ export async function importReportCards(
             termId: spec.termId,
             examType: spec.type,
             subjectModuleId: null,
-            deletedAt: null,
           },
         });
 
@@ -387,6 +452,11 @@ export async function importReportCards(
               examDate: spec.termId === term1Id ? new Date("2026-01-10T00:00:00.000Z") : new Date("2026-06-10T00:00:00.000Z"),
               maxScore: new Prisma.Decimal(20),
             },
+          });
+        } else if (exam.deletedAt) {
+          exam = await prisma.exam.update({
+            where: { id: exam.id },
+            data: { deletedAt: null },
           });
         }
         examsMap.set(key, exam.id);
@@ -408,9 +478,9 @@ export async function importReportCards(
           let exam = await prisma.exam.findFirst({
             where: {
               teachingAssignmentId: assignmentId,
+              termId: assignedTermId,
               subjectModuleId: moduleId,
               examType: spec.type,
-              deletedAt: null,
             },
           });
 
@@ -426,6 +496,11 @@ export async function importReportCards(
                 examDate: assignedTermId === term1Id ? new Date("2025-11-20T00:00:00.000Z") : new Date("2026-04-20T00:00:00.000Z"),
                 maxScore: new Prisma.Decimal(spec.max),
               },
+            });
+          } else if (exam.deletedAt) {
+            exam = await prisma.exam.update({
+              where: { id: exam.id },
+              data: { deletedAt: null },
             });
           }
           examsMap.set(key, exam.id);
@@ -487,14 +562,15 @@ export async function importReportCards(
           birthDate: birthDateObj ?? user.birthDate,
           birthPlace: s.birthPlace ?? user.birthPlace,
           gender: s.gender ?? user.gender,
+          deletedAt: null,
         },
       });
       studentsUpdated++;
     }
 
     // Safe find-or-create UserSchool
-    let userSchool = await prisma.userSchool.findFirst({
-      where: { userId: user.id, schoolId, deletedAt: null },
+    let userSchool = await prisma.userSchool.findUnique({
+      where: { userId_schoolId: { userId: user.id, schoolId } },
     });
     if (!userSchool) {
       userSchool = await prisma.userSchool.create({
@@ -505,11 +581,20 @@ export async function importReportCards(
           joinedAt: new Date(),
         },
       });
+    } else if (userSchool.deletedAt || userSchool.status !== "active") {
+      userSchool = await prisma.userSchool.update({
+        where: { id: userSchool.id },
+        data: {
+          status: "active",
+          leftAt: null,
+          deletedAt: null,
+        },
+      });
     }
 
     // Safe find-and-update Student Profile
-    let student = await prisma.student.findFirst({
-      where: { userId: user.id, schoolId, deletedAt: null },
+    let student = await prisma.student.findUnique({
+      where: { userId_schoolId: { userId: user.id, schoolId } },
     });
     if (!student) {
       student = await prisma.student.create({
@@ -519,10 +604,13 @@ export async function importReportCards(
           studentNumber: s.studentNumber,
         },
       });
-    } else if (student.studentNumber !== s.studentNumber) {
+    } else {
       student = await prisma.student.update({
         where: { id: student.id },
-        data: { studentNumber: s.studentNumber },
+        data: {
+          studentNumber: s.studentNumber,
+          deletedAt: null,
+        },
       });
     }
 
@@ -571,11 +659,12 @@ export async function importReportCards(
     const cardFinalGpa = cardFinalWeight > 0 ? Math.round((cardFinalSum / cardFinalWeight) * 100) / 100 : 0;
 
     // Safe find-and-update Enrollment
-    const existingEnrollment = await prisma.enrollment.findFirst({
+    const existingEnrollment = await prisma.enrollment.findUnique({
       where: {
-        studentId: student.id,
-        academicYearId: academicYear.id,
-        deletedAt: null,
+        studentId_academicYearId: {
+          studentId: student.id,
+          academicYearId: academicYear.id,
+        },
       },
     });
     if (!existingEnrollment) {
@@ -600,12 +689,14 @@ export async function importReportCards(
         where: { id: existingEnrollment.id },
         data: {
           classId: schoolClass.id,
+          status: "active",
           gpa: new Prisma.Decimal(studentCard.summary.gpa),
           continuousGpa: new Prisma.Decimal(cardContinuousGpa),
           finalGpa: new Prisma.Decimal(cardFinalGpa),
           totalUnitsPassed: new Prisma.Decimal(studentCard.summary.totalUnitsPassed),
           totalUnitsTaken: new Prisma.Decimal(studentCard.summary.totalUnitsTaken),
           totalScoreSum: new Prisma.Decimal(studentCard.summary.totalScoreSum),
+          deletedAt: null,
         },
       });
     }
@@ -618,11 +709,12 @@ export async function importReportCards(
       competencyLevel?: "not_achieved" | "achieved" | "beyond_expectation";
       isAbsent: boolean;
     }) {
-      const existing = await prisma.score.findFirst({
+      const existing = await prisma.score.findUnique({
         where: {
-          examId: data.examId,
-          studentId: data.studentId,
-          deletedAt: null,
+          examId_studentId: {
+            examId: data.examId,
+            studentId: data.studentId,
+          },
         },
       });
       if (!existing) {
@@ -643,6 +735,7 @@ export async function importReportCards(
             score: data.score,
             competencyLevel: data.competencyLevel ?? existing.competencyLevel,
             isAbsent: data.isAbsent,
+            deletedAt: null,
           },
         });
       }

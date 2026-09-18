@@ -13,8 +13,8 @@ import { z } from "zod";
  *   }
  */
 export const listInput = z.object({
-	page: z.number().int().min(1).default(1),
-	limit: z.number().int().min(1).max(100).default(20),
+	page: z.number({ invalid_type_error: "شماره صفحه نامعتبر است" }).int({ message: "شماره صفحه باید عدد صحیح باشد" }).min(1, { message: "شماره صفحه باید حداقل ۱ باشد" }).default(1),
+	limit: z.number({ invalid_type_error: "تعداد نامعتبر است" }).int({ message: "تعداد باید عدد صحیح باشد" }).min(1, { message: "حداقل تعداد باید ۱ باشد" }).max(100, { message: "حداکثر تعداد ۱۰۰ است" }).default(20),
 });
 
 export type ListInput = z.infer<typeof listInput>;
@@ -33,7 +33,7 @@ export type ListInput = z.infer<typeof listInput>;
  */
 export const searchInput = listInput.extend({
 	// Free-text search across the fields the endpoint declares searchable.
-	q: z.string().trim().max(200).optional(),
+	q: z.string({ invalid_type_error: "متن جستجو نامعتبر است" }).trim().max(200, { message: "جستجو بسیار طولانی است" }).optional(),
 });
 
 export type SearchInput = z.infer<typeof searchInput>;

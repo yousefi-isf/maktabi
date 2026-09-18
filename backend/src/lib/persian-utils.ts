@@ -30,8 +30,11 @@ export function normalizePersianText(input: string): string {
     .replace(/\u0643/g, "ک") // Arabic Kaf -> Persian Keheh
     .replace(/\u0629/g, "ه") // Teh Marbuta -> Heh
     .replace(/\u0649/g, "ی") // Alef Maksura -> Persian Yeh
-    .replace(/[\u200B\u200C\u200E\u200F\uFEFF]/g, " ") // Zero-width spaces to normal space for uniformity
-    .replace(/\s+/g, " ")
+    .replace(/[\u200B\u200E\u200F\uFEFF]/g, "") // این‌ها واقعاً بی‌فایده‌ن، حذف می‌شن (نه تبدیل به فاصله)
+    .replace(/[ \t]+/g, " ") // فقط فاصله و تب معمولی جمع می‌شن؛ نیم‌فاصله دست‌نخورده می‌مونه
+    .replace(/ ?\u200C ?/g, "\u200C") // اگه فاصله‌ی معمولی اشتباهی کنار نیم‌فاصله نشسته بود، پاکش کن
+    .replace(/\u200C{2,}/g, "\u200C") // چند نیم‌فاصله‌ی پشت‌سرهم رو یکی کن
+    .replace(/^\u200C+|\u200C+$/g, "") // نیم‌فاصله‌ی اول/آخر رشته بی‌معنیه، حذفش کن
     .trim();
 }
 

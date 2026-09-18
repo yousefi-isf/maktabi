@@ -11,6 +11,10 @@ const envSchema = z.object({
   PASSWORD_PEPPER: z.string().min(32),
   CLIENT_ORIGIN: z.url(),
   APP_NAME: z.string(),
+  /** Shared secret between the attendance-gateway and this backend.
+   *  The gateway must include this in every POST /internal/device/punch request.
+   *  Generate a strong random string (e.g. openssl rand -hex 32). */
+  GATEWAY_SECRET: z.string().min(16),
 });
 
 export const env = envSchema.parse(process.env);

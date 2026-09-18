@@ -42,6 +42,7 @@ export const PERMISSIONS = {
 
 		GRADE_CREATE: "academic.grade.create",
 		GRADE_UPDATE: "academic.grade.update",
+		GRADE_DELETE: "academic.grade.delete",
 		GRADE_LIST: "academic.grade.list",
 
 		FIELD_CREATE: "academic.field.create",
@@ -52,6 +53,7 @@ export const PERMISSIONS = {
 		// subjects & curriculum
 		SUBJECT_CREATE: "academic.subject.create",
 		SUBJECT_UPDATE: "academic.subject.update",
+		SUBJECT_DELETE: "academic.subject.delete",
 		SUBJECT_LIST: "academic.subject.list",
 
 		CURRICULUM_CREATE: "academic.curriculum.create",
@@ -60,6 +62,7 @@ export const PERMISSIONS = {
 		// classes
 		CLASS_CREATE: "academic.class.create",
 		CLASS_UPDATE: "academic.class.update",
+		CLASS_DELETE: "academic.class.delete",
 		CLASS_LIST: "academic.class.list",
 	},
 	ENROLLMENT: {
@@ -136,6 +139,7 @@ export const PERMISSION_DESCRIPTIONS = {
 	"academic.term.list": "View terms",
 	"academic.grade.create": "Create grade levels",
 	"academic.grade.update": "Update grade levels",
+	"academic.grade.delete": "Delete grade levels",
 	"academic.grade.list": "View grade levels",
 	"academic.field.create": "Create fields of study",
 	"academic.field.update": "Update fields of study",
@@ -143,11 +147,13 @@ export const PERMISSION_DESCRIPTIONS = {
 	"academic.field.list": "View fields of study",
 	"academic.subject.create": "Create subjects and modules",
 	"academic.subject.update": "Update subjects",
+	"academic.subject.delete": "Delete subjects",
 	"academic.subject.list": "View subjects",
 	"academic.curriculum.create": "Define curriculums (units, weights)",
 	"academic.curriculum.list": "View curriculums",
 	"academic.class.create": "Create classes",
 	"academic.class.update": "Update classes",
+	"academic.class.delete": "Delete classes",
 	"academic.class.list": "View classes",
 
 	"enrollment.student.enroll": "Enroll students into classes",

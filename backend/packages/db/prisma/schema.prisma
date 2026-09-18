@@ -110,6 +110,7 @@ model School {
   attendances         Attendance[]
   announcements       Announcement[]
   auditLogs           AuditLog[]
+  devicePunchLogs     DevicePunchLog[]
 
   // Student / Teacher / Parent / UserRole are intentionally NOT listed here.
   // Per the ERD, those four only reach School through UserSchool's composite
@@ -414,10 +415,11 @@ model Student {
   // here, go through userSchool.user / userSchool.school.
   userSchool UserSchool @relation(fields: [userId, schoolId], references: [userId, schoolId])
 
-  enrollments    Enrollment[]
-  scores         Score[]
-  attendances    Attendance[]
-  parentStudents ParentStudent[]
+  enrollments     Enrollment[]
+  scores          Score[]
+  attendances     Attendance[]
+  parentStudents  ParentStudent[]
+  devicePunchLogs DevicePunchLog[]
 
   @@unique([userId, schoolId])
   @@unique([schoolId, studentNumber])
@@ -733,6 +735,52 @@ model Attendance {
   // IMPLEMENTATION NOTES, periodNo being nullable breaks this as written.
   @@index([schoolId, attDate])
   @@map("attendance")
+}
+
+// ----------------------------------------------------------------------------
+// Device Punch Log — raw ZKTeco punch-in events
+// ----------------------------------------------------------------------------
+//
+// This is the raw log from the attendance device (ZKTeco / similar).
+// It is intentionally separate from Attendance (the teacher-managed record):
+//
+//   DevicePunchLog  — every finger/card scan from the physical device,
+//                     captured in real-time by the attendance-gateway service.
+//   Attendance      — the academic/administrative record (teacher-managed,
+//                     linked to a Term, Class, and optionally a Timetable slot).
+//
+// The gateway writes here; a background service (or manual trigger) later
+// reconciles these raw events into Attendance rows.
+
+model DevicePunchLog {
+  id           String   @id @default(uuid())
+  schoolId     String   @map("school_id")
+  /// Nullable — set once we successfully resolve deviceUserId → Student.
+  /// Null means the nationalCode was not found in this school at punch time.
+  studentId    String?  @map("student_id")
+  /// Raw value sent by the device (expected to be the student's nationalCode,
+  /// but stored verbatim for audit/troubleshooting purposes).
+  deviceUserId String   @map("device_user_id")
+  /// Exact timestamp reported by the device hardware clock.
+  recordTime   DateTime @map("record_time") @db.Timestamptz
+  /// IP address of the physical device that produced this event.
+  deviceIp     String   @map("device_ip")
+  /// ZKTeco internal sequential serial for this punch record (userSn field).
+  /// Together with deviceIp, this uniquely identifies a punch — used to
+  /// prevent duplicate inserts on gateway reconnect / replay.
+  deviceSn     Int      @map("device_sn")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  school  School   @relation(fields: [schoolId], references: [id])
+  student Student? @relation(fields: [studentId], references: [id])
+
+  /// Idempotency guard: same physical device cannot produce two log rows
+  /// for the same sequential record number.
+  @@unique([deviceIp, deviceSn])
+  @@index([schoolId, recordTime])
+  @@index([studentId, recordTime])
+  @@map("device_punch_log")
 }
 
 // ----------------------------------------------------------------------------

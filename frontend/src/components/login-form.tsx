@@ -20,8 +20,8 @@ import { ModeToggle } from "./mode-toggle"
 import { showErrorToast } from "@/lib/show-error-toast";
 
 const loginSchema = z.object({
-    email: z.email("ایمیل معتبر وارد کنید"),
-    password: z.string().min(8, "رمز عبور باید حداقل ۸ کاراکتر باشد"),
+    email: z.string({ required_error: "ایمیل الزامی است", invalid_type_error: "ایمیل نامعتبر است" }).email("ایمیل معتبر وارد کنید"),
+    password: z.string({ required_error: "رمز عبور الزامی است", invalid_type_error: "رمز عبور نامعتبر است" }).min(8, "رمز عبور باید حداقل ۸ کاراکتر باشد"),
 })
 
 type LoginValues = z.infer<typeof loginSchema>

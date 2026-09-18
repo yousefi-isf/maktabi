@@ -1,4 +1,5 @@
 import { pathToFileURL } from "node:url";
+import { EventEmitter } from "node:events";
 import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
 import { prisma } from "@maktabi/db";
@@ -10,6 +11,19 @@ import { env } from "#env";
 import { auth } from "./modules/auth/auth.js";
 import { createContext } from "./trpc/context.js";
 import { appRouter } from "./trpc/router.js";
+import { processPunch } from "./modules/attendance/punch.service.js";
+
+/**
+ * Internal event bus — emits 'punch' and 'deviceStatus' events.
+ */
+export const punchEvents = new EventEmitter();
+
+/**
+ * In-memory state of attendance devices (schoolId -> 'connected' | 'disconnected')
+ */
+export const deviceStatuses = new Map<string, 'connected' | 'disconnected'>();
+
+
 
 export async function buildServer() {
   const app = Fastify({
@@ -72,7 +86,86 @@ export async function buildServer() {
     trpcOptions: { router: appRouter, createContext },
   });
 
+  // -----------------------------------------------------------------------
+  // Internal route — called only by the attendance-gateway service.
+  // NOT exposed publicly; protect with the shared GATEWAY_SECRET.
+  // -----------------------------------------------------------------------
+  app.post("/internal/device/punch", {
+    schema: {
+      body: {
+        type: "object",
+        required: ["secret", "schoolId", "deviceUserId", "recordTime", "deviceIp", "deviceSn"],
+        properties: {
+          secret: { type: "string" },
+          schoolId: { type: "string" },
+          deviceUserId: { type: "string" },
+          recordTime: { type: "string" },
+          deviceIp: { type: "string" },
+          deviceSn: { type: "number" },
+        },
+      },
+    },
+    async handler(request, reply) {
+      const body = request.body as {
+        secret: string;
+        schoolId: string;
+        deviceUserId: string;
+        recordTime: string;
+        deviceIp: string;
+        deviceSn: number;
+      };
+
+      // 1. Validate shared secret
+      if (body.secret !== env.GATEWAY_SECRET) {
+        return reply.status(401).send({ error: "Unauthorized" });
+      }
+
+      try {
+        const result = await processPunch(body);
+
+        // 2. Broadcast to any active real-time listeners (SSE / tRPC subscription)
+        if (!result.alreadyExists) {
+          punchEvents.emit("punch", result);
+        }
+
+        return reply.status(result.alreadyExists ? 200 : 201).send(result);
+      } catch (err) {
+        request.log.error({ err }, "[punch] Failed to process punch event");
+        return reply.status(500).send({ error: "Internal server error" });
+      }
+    },
+  });
+
+  // -----------------------------------------------------------------------
+  // Internal route for Gateway to report device connection status
+  // -----------------------------------------------------------------------
+  app.post("/internal/device/status", {
+    schema: {
+      body: {
+        type: "object",
+        required: ["secret", "schoolId", "status"],
+        properties: {
+          secret: { type: "string" },
+          schoolId: { type: "string" },
+          status: { type: "string", enum: ["connected", "disconnected"] },
+        },
+      },
+    },
+    async handler(request, reply) {
+      const body = request.body as { secret: string; schoolId: string; status: 'connected' | 'disconnected' };
+      if (body.secret !== env.GATEWAY_SECRET) {
+        return reply.status(401).send({ error: "Unauthorized" });
+      }
+
+      deviceStatuses.set(body.schoolId, body.status);
+      punchEvents.emit("deviceStatus", { schoolId: body.schoolId, status: body.status });
+
+      return reply.send({ success: true });
+    },
+  });
+
   app.get("/health", async () => ({ status: "ok" }));
+
 
   app.addHook("onClose", async () => {
     await prisma.$disconnect();
