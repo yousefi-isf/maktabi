@@ -4,7 +4,6 @@ import {
 	BookOpenIcon,
 	BotIcon,
 	CalendarDays,
-	ClipboardList,
 	Clock,
 	FileUp,
 	FrameIcon,
@@ -12,12 +11,7 @@ import {
 	LayoutDashboard,
 	Library,
 	Presentation,
-	School,
-	Settings2Icon,
 	Trophy,
-	UserKey,
-	UserShield,
-	Users,
 } from "lucide-react";
 import type { PermissionNavItem } from "./permissions";
 
@@ -27,43 +21,43 @@ export const navigationItems = [
 		url: "/",
 		icon: <LayoutDashboard />,
 	},
-	{
-		title: "مدیریت",
-		icon: <Settings2Icon />,
-		items: [
-			{
-				title: "مدارس",
-				url: "/schools",
-				required: "system.full_access",
-				icon: <School />,
-			},
-			{
-				title: "کاربران",
-				url: "/allusers",
-				required: "system.full_access",
-				icon: <Users />,
-			},
-			{
-				title: "نقش‌ها",
-				url: "/roles",
-				required: "identity.role.list",
-				icon: <UserShield />,
-			},
-			{
-				title: "مجوزها",
-				url: "/permissions",
-				required: "identity.permission.list",
-				icon: <UserKey />,
-			},
-		],
-	},
+	// {
+	// 	title: "مدیریت",
+	// 	icon: <Settings2Icon />,
+	// 	items: [
+	// 		{
+	// 			title: "مدارس",
+	// 			url: "/schools",
+	// 			required: "system.full_access",
+	// 			icon: <School />,
+	// 		},
+	// 		{
+	// 			title: "کاربران",
+	// 			url: "/allusers",
+	// 			required: "system.full_access",
+	// 			icon: <Users />,
+	// 		},
+	// 		{
+	// 			title: "نقش‌ها",
+	// 			url: "/roles",
+	// 			required: "identity.role.list",
+	// 			icon: <UserShield />,
+	// 		},
+	// 		{
+	// 			title: "مجوزها",
+	// 			url: "/permissions",
+	// 			required: "identity.permission.list",
+	// 			icon: <UserKey />,
+	// 		},
+	// 	],
+	// },
 	{
 		title: "بخش آموزشی",
 		icon: <BotIcon />,
 		items: [
 			{
 				title: "سال‌های تحصیلی",
-				url: "/academic-years",
+				url: "/academic-years/",
 				icon: <CalendarDays />,
 				required: {
 					anyOf: [
@@ -76,7 +70,7 @@ export const navigationItems = [
 			},
 			{
 				title: "دانش آموزان",
-				url: "/students",
+				url: "/students/",
 				icon: <GraduationCap />,
 				required: {
 					anyOf: [
@@ -102,16 +96,13 @@ export const navigationItems = [
 				title: "رتبه‌بندی دانش‌آموزان",
 				url: "/rankings",
 				required: {
-					anyOf: [
-						"identity.student.list",
-						"assessment.score.read",
-					],
+					anyOf: ["identity.student.list", "assessment.score.read"],
 				},
 				icon: <Trophy />,
 			},
 			{
 				title: "رشته‌های تحصیلی",
-				url: "/fieldofstudy",
+				url: "/fieldofstudy/",
 				icon: <Library />,
 				required: {
 					anyOf: [
@@ -124,7 +115,7 @@ export const navigationItems = [
 			},
 			{
 				title: "پایه‌های تحصیلی",
-				url: "/grade-levels",
+				url: "/grade-levels/",
 				icon: <GraduationCap />,
 				required: {
 					anyOf: [
@@ -136,7 +127,7 @@ export const navigationItems = [
 			},
 			{
 				title: "کلاس‌ها",
-				url: "/classes",
+				url: "/classes/",
 				icon: <Presentation />,
 				required: {
 					anyOf: [
@@ -149,7 +140,7 @@ export const navigationItems = [
 			},
 			{
 				title: "دروس",
-				url: "/subjects",
+				url: "/subjects/",
 				icon: <Book />,
 				required: {
 					anyOf: [
@@ -160,18 +151,18 @@ export const navigationItems = [
 					],
 				},
 			},
-			{
-				title: "امتحانات",
-				url: "/exams",
-				icon: <ClipboardList />,
-				required: {
-					anyOf: [
-						"academic.exam.read",
-						"academic.exam.read.own",
-						"academic.exam.create",
-					],
-				},
-			},
+			// {
+			// 	title: "امتحانات",
+			// 	url: "/exams",
+			// 	icon: <ClipboardList />,
+			// 	required: {
+			// 		anyOf: [
+			// 			"academic.exam.read",
+			// 			"academic.exam.read.own",
+			// 			"academic.exam.create",
+			// 		],
+			// 	},
+			// },
 		],
 	},
 	{
@@ -180,7 +171,7 @@ export const navigationItems = [
 		items: [
 			{
 				title: "داشبورد زنده",
-				url: "/attendance",
+				url: "/attendance/",
 				exact: true,
 				icon: <Activity />,
 				required: {

@@ -5,7 +5,7 @@ import { Fingerprint, UserCircle, Clock, AlertTriangle } from 'lucide-react';
 import { format } from 'date-fns-jalali';
 import { guardPermission } from '@/lib/route-guards';
 import { useTRPC, useTRPCClient } from '@/lib/trpc';
-import type { PunchResult } from '../../../../backend/src/modules/attendance/punch.service';
+import type { PunchItem as PunchResult } from '@/features/dashboard/LivePunchesCard';
 
 export const Route = createFileRoute('/_authenticated/attendance/')({
 	beforeLoad: guardPermission({

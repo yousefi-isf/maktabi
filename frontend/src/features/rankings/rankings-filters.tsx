@@ -1,6 +1,13 @@
-import { RefreshCw, Filter, Calendar, GraduationCap, BookOpen, School } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import type { RankingFilterOptions, RankingFilterState } from './types';
+import {
+	BookOpen,
+	Calendar,
+	Filter,
+	GraduationCap,
+	RefreshCw,
+	School,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import type { RankingFilterOptions, RankingFilterState } from "./types";
 
 interface RankingsFiltersProps {
 	options: RankingFilterOptions;
@@ -19,9 +26,12 @@ export function RankingsFilters({
 }: RankingsFiltersProps) {
 	// Filter classes based on selected grade and field
 	const filteredClasses = options.classes.filter((c) => {
-		if (filters.academicYearId && c.academicYearId !== filters.academicYearId) return false;
-		if (filters.gradeLevelId && c.gradeLevelId !== filters.gradeLevelId) return false;
-		if (filters.fieldOfStudyId && c.fieldOfStudyId !== filters.fieldOfStudyId) return false;
+		if (filters.academicYearId && c.academicYearId !== filters.academicYearId)
+			return false;
+		if (filters.gradeLevelId && c.gradeLevelId !== filters.gradeLevelId)
+			return false;
+		if (filters.fieldOfStudyId && c.fieldOfStudyId !== filters.fieldOfStudyId)
+			return false;
 		return true;
 	});
 
@@ -33,7 +43,7 @@ export function RankingsFilters({
 					<span>فیلترهای رتبه‌بندی تحصیلی</span>
 				</div>
 
-				<Button
+				{/* <Button
 					variant="outline"
 					size="sm"
 					onClick={onRecalculate}
@@ -43,7 +53,7 @@ export function RankingsFilters({
 				>
 					<RefreshCw className={`w-3.5 h-3.5 ${isRecalculating ? 'animate-spin' : ''}`} />
 					<span>{isRecalculating ? 'در حال محاسبه مجدد...' : 'همگام‌سازی و محاسبه مجدد معدل‌ها'}</span>
-				</Button>
+				</Button> */}
 			</div>
 
 			<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -58,14 +68,14 @@ export function RankingsFilters({
 						onChange={(e) =>
 							onFilterChange({
 								academicYearId: e.target.value,
-								classId: '', // Reset class on year change
+								classId: "", // Reset class on year change
 							})
 						}
 						className="w-full h-9 rounded-lg border border-input bg-background px-3 py-1 text-xs text-foreground shadow-xs focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer"
 					>
 						{options.academicYears.map((y) => (
 							<option key={y.id} value={y.id}>
-								{y.title} {y.isActive ? '(فعال)' : ''}
+								{y.title} {y.isActive ? "(فعال)" : ""}
 							</option>
 						))}
 					</select>
@@ -82,7 +92,7 @@ export function RankingsFilters({
 						onChange={(e) =>
 							onFilterChange({
 								gradeLevelId: e.target.value,
-								classId: '', // Reset class on grade change
+								classId: "", // Reset class on grade change
 							})
 						}
 						className="w-full h-9 rounded-lg border border-input bg-background px-3 py-1 text-xs text-foreground shadow-xs focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer"
@@ -107,7 +117,7 @@ export function RankingsFilters({
 						onChange={(e) =>
 							onFilterChange({
 								fieldOfStudyId: e.target.value,
-								classId: '', // Reset class on field change
+								classId: "", // Reset class on field change
 							})
 						}
 						className="w-full h-9 rounded-lg border border-input bg-background px-3 py-1 text-xs text-foreground shadow-xs focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer"
@@ -144,4 +154,3 @@ export function RankingsFilters({
 		</div>
 	);
 }
-
