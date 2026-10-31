@@ -18,7 +18,7 @@ const schoolSelect = {
 	updatedAt: true,
 } as const;
 
-/* -------------------------- Create input (JSON): -------------------------- */
+/* ―――――――――――――――――――――――――― Create input (JSON): ―――――――――――――――――――――――――― */
 /**
  * {
  *   "json": {
@@ -45,7 +45,7 @@ const createInput = z.object({
 	phone: z.string().trim().max(32).optional(),
 });
 
-/* -------------------------- Update input (JSON): -------------------------- */
+/* ―――――――――――――――――――――――――― Update input (JSON): ―――――――――――――――――――――――――― */
 /**
  * {
  *   "json": {
@@ -75,7 +75,7 @@ const updateInput = z.object({
 	phone: z.string().trim().max(32).nullish(),
 });
 
-/* -------------------------- Delete input (JSON): -------------------------- */
+/* ―――――――――――――――――――――――――― Delete input (JSON): ―――――――――――――――――――――――――― */
 /**
  * {
  *   "json": {
@@ -90,7 +90,7 @@ const deleteInput = z.object({
 	id: z.union([z.uuid(), z.array(z.uuid()).min(1)]),
 });
 
-/* --------------------- List schools input (JSON): --------------------- */
+/* ――――――――――――――――――――――― List schools input (JSON): ――――――――――――――――――――――― */
 /**
  * {
  *   "json": {

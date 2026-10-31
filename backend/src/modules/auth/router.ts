@@ -13,7 +13,7 @@ import {
 	SUPER_ADMIN_ACCESS,
 } from "./access.js";
 
-/* -------------------------- Switch school input (JSON): -------------------------- */
+/* ――――――――――――――――――――――― Switch school input (JSON): ―――――――――――――――――――――― */
 /**
  * {
  *   "json": {
@@ -28,7 +28,7 @@ const switchSchoolInput = z.object({
 	schoolId: z.uuid(),
 });
 
-/* ----------------------- Invited user input (JSON): ----------------------- */
+/* ――――――――――――――――――――――― Invited user input (JSON): ――――――――――――――――――――――― */
 /**
  * {
  *   "json": {

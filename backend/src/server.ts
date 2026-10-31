@@ -13,6 +13,7 @@ import { createContext } from "./trpc/context.js";
 import { appRouter } from "./trpc/router.js";
 import { processPunch } from "./modules/attendance/punch.service.js";
 
+
 /**
  * Internal event bus — emits 'punch' and 'deviceStatus' events.
  */
@@ -86,10 +87,8 @@ export async function buildServer() {
     trpcOptions: { router: appRouter, createContext },
   });
 
-  // -----------------------------------------------------------------------
-  // Internal route — called only by the attendance-gateway service.
-  // NOT exposed publicly; protect with the shared GATEWAY_SECRET.
-  // -----------------------------------------------------------------------
+  /* ―――――――――――――――――――― Internal attendance gateway route ――――――――――――――――――― */
+  // Protect this route with the shared GATEWAY_SECRET.
   app.post("/internal/device/punch", {
     schema: {
       body: {
@@ -136,9 +135,7 @@ export async function buildServer() {
     },
   });
 
-  // -----------------------------------------------------------------------
-  // Internal route for Gateway to report device connection status
-  // -----------------------------------------------------------------------
+  /* ―――――― Internal route for Gateway to report device connection status ――――― */
   app.post("/internal/device/status", {
     schema: {
       body: {

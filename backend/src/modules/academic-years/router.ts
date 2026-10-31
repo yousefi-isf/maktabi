@@ -10,6 +10,7 @@ const UPDATE_PERMISSION: PermissionCode = "academic.year.update";
 const DELETE_PERMISSION: PermissionCode = "academic.year.delete";
 const LIST_PERMISSION: PermissionCode = "academic.year.list";
 
+/* ――――――――――――――――――――――――――― Create input (JSON): ――――――――――――――――――――――――――― */
 const createInput = z
 	.object({
 		title: z.string({ required_error: "عنوان الزامی است", invalid_type_error: "عنوان نامعتبر است" }).trim().min(1, "عنوان الزامی است").max(100, "عنوان بسیار طولانی است"),
@@ -22,10 +23,12 @@ const createInput = z
 		path: ["endDate"],
 	});
 
+/* ――――――――――――――――――――――――――― Update input (JSON): ――――――――――――――――――――――――――― */
 const updateInput = createInput.extend({
 	id: z.string({ required_error: "شناسه الزامی است", invalid_type_error: "شناسه نامعتبر است" }).uuid("شناسه نامعتبر است"),
 });
 
+/* ――――――――――――――――――――――――――― Delete input (JSON): ――――――――――――――――――――――――――― */
 const deleteInput = z.object({
 	id: z.union([
 		z.string({ required_error: "شناسه الزامی است", invalid_type_error: "شناسه نامعتبر است" }).uuid("شناسه نامعتبر است"), 
@@ -33,11 +36,13 @@ const deleteInput = z.object({
 	], { required_error: "شناسه‌ها الزامی هستند" }),
 });
 
+/* ――――――――――――――――――――――――― Get by ID input (JSON): ―――――――――――――――――――――――――― */
 const getByIdInput = z.object({
 	id: z.string({ required_error: "شناسه الزامی است", invalid_type_error: "شناسه نامعتبر است" }).uuid("شناسه نامعتبر است"),
 });
 
 export const academicYearsRouter = router({
+	/* ―――――――――――――――――――――――――――――――― 1. Create ――――――――――――――――――――――――――――――― */
 	create: tenantProcedure
 		.input(createInput)
 		.mutation(async ({ ctx, input }) => {
@@ -88,6 +93,7 @@ export const academicYearsRouter = router({
 			}
 		}),
 
+	/* ―――――――――――――――――――――――――――――――― 2. Update ――――――――――――――――――――――――――――――― */
 	update: tenantProcedure
 		.input(updateInput)
 		.mutation(async ({ ctx, input }) => {
@@ -140,6 +146,7 @@ export const academicYearsRouter = router({
 			}
 		}),
 
+	/* ――――――――――――――――――――――――――――――――― 3. List ―――――――――――――――――――――――――――――――― */
 	list: tenantProcedure
 		.input(searchInput)
 		.query(async ({ ctx, input }) => {
@@ -176,6 +183,7 @@ export const academicYearsRouter = router({
 			);
 		}),
 
+	/* ―――――――――――――――――――――――――――――― 4. Get By ID ―――――――――――――――――――――――――――――― */
 	getById: tenantProcedure
 		.input(getByIdInput)
 		.query(async ({ ctx, input }) => {
@@ -201,6 +209,7 @@ export const academicYearsRouter = router({
 			return academicYear;
 		}),
 
+	/* ――――――――――――――――――――――――――― 5. Get Delete Stats ―――――――――――――――――――――――――― */
 	getDeleteStats: tenantProcedure
 		.input(getByIdInput)
 		.query(async ({ ctx, input }) => {
@@ -225,6 +234,7 @@ export const academicYearsRouter = router({
 			return stats._count;
 		}),
 
+	/* ―――――――――――――――――――――――――――――――― 6. Delete ――――――――――――――――――――――――――――――― */
 	delete: tenantProcedure
 		.input(z.object({ 
 			id: z.union([z.string().uuid(), z.array(z.string().uuid()).min(1)]),

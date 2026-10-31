@@ -16,7 +16,7 @@ const CREATE_PERMISSION: PermissionCode = "identity.user.create";
 const INVITE_PERMISSION: PermissionCode = "identity.user.invite";
 const DELETE_PERMISSION: PermissionCode = "identity.user.delete";
 
-/* ---------------------- List users input (JSON): ---------------------- */
+/* ―――――――――――――――――――――――― List users input (JSON): ―――――――――――――――――――――――― */
 /**
  * {
  *   "json": {
@@ -31,7 +31,7 @@ const DELETE_PERMISSION: PermissionCode = "identity.user.delete";
  */
 const listUsersInput = searchInput;
 
-/* -------------------------- Create input (JSON): -------------------------- */
+/* ―――――――――――――――――――――――――― Create input (JSON): ―――――――――――――――――――――――――― */
 /**
  * {
  *   "json": {
@@ -56,7 +56,7 @@ const createInput = z.object({
 	academicYearId: z.string({ invalid_type_error: "سال تحصیلی نامعتبر است" }).uuid({ message: "شناسه سال تحصیلی نامعتبر است" }).optional(),
 });
 
-/* -------------------------- Invite input (JSON): -------------------------- */
+/* ―――――――――――――――――――――――――― Invite input (JSON): ―――――――――――――――――――――――――― */
 /**
  * {
  *   "json": {
@@ -80,7 +80,7 @@ const inviteInput = z.object({
 	}),
 });
 
-/* -------------------------- Delete input (JSON): -------------------------- */
+/* ―――――――――――――――――――――――――― Delete input (JSON): ―――――――――――――――――――――――――― */
 /**
  * {
  *   "json": {
@@ -98,7 +98,7 @@ const deleteInput = z.object({
 	]),
 });
 
-/* ------------------------- Get by ID input (JSON): ------------------------ */
+/* ――――――――――――――――――――――――― Get by ID input (JSON): ―――――――――――――――――――――――― */
 /**
  * {
  *   "json": {

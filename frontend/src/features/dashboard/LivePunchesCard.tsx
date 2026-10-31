@@ -28,12 +28,12 @@ export function LivePunchesCard({
 	const trpcClient = useTRPCClient();
 	const [livePunches, setLivePunches] = useState<PunchItem[]>([]);
 
-	// 1. Fetch initial logs for today
+	/* ――――――――――――――――――――― 1. Fetch initial logs for today ―――――――――――――――――――― */
 	const { data: initialLogs, isLoading } = useQuery({
 		...trpc.attendance.punchLogs.list.queryOptions({}),
 	});
 
-	// 2. Subscribe to real-time events (punches)
+	/* ――――――――――――――― 2. Subscribe to real-time events (punches) ――――――――――――――― */
 	useEffect(() => {
 		const punchSub = trpcClient.attendance.punchLogs.subscribe.subscribe(
 			undefined,
@@ -55,7 +55,7 @@ export function LivePunchesCard({
 		};
 	}, [trpcClient]);
 
-	// Combine live punches (newest first) with initial logs (also newest first)
+	/* ――――――――――――――――― Combine live punches with initial logs ――――――――――――――――― */
 	const allPunches = [
 		...livePunches,
 		...(initialLogs?.map((log) => ({

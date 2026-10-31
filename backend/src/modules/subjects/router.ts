@@ -5,6 +5,7 @@ import { appError } from "../../trpc/app-error.js";
 import { Prisma, SubjectType } from "@maktabi/db";
 
 export const subjectsRouter = router({
+  /* ――――――――――――――――――――――――――――――――― 1. List ―――――――――――――――――――――――――――――――― */
   list: tenantProcedure
     .input(
       z.object({
@@ -66,6 +67,7 @@ export const subjectsRouter = router({
       };
     }),
 
+  /* ―――――――――――――――――――――――――――――――― 2. Create ――――――――――――――――――――――――――――――― */
   create: tenantProcedure
     .input(
       z.object({
@@ -122,6 +124,7 @@ export const subjectsRouter = router({
       return newSubject;
     }),
 
+  /* ―――――――――――――――――――――――――――――――― 3. Update ――――――――――――――――――――――――――――――― */
   update: tenantProcedure
     .input(
       z.object({
@@ -226,6 +229,7 @@ export const subjectsRouter = router({
       return updatedSubject;
     }),
 
+  /* ―――――――――――――――――――――――――――――――― 4. Delete ――――――――――――――――――――――――――――――― */
   delete: tenantProcedure
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {

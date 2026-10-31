@@ -1,8 +1,6 @@
 import { prisma } from "@maktabi/db";
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
+/* ―――――――――――――――――――――――――――――――――― Types ――――――――――――――――――――――――――――――――― */
 
 export interface PunchPayload {
   /** Shared secret sent by the attendance-gateway — validated before processing. */
@@ -29,9 +27,7 @@ export interface PunchResult {
   alreadyExists: boolean;
 }
 
-// ---------------------------------------------------------------------------
-// Service
-// ---------------------------------------------------------------------------
+/* ――――――――――――――――――――――――――――――――― Service ―――――――――――――――――――――――――――――――― */
 
 /**
  * Processes a raw punch event from the ZKTeco attendance device.
@@ -47,9 +43,7 @@ export interface PunchResult {
 export async function processPunch(payload: PunchPayload): Promise<PunchResult> {
   const { schoolId, deviceUserId, recordTime, deviceIp, deviceSn } = payload;
 
-  // ------------------------------------------------------------------
-  // 1. Idempotency check — same device + same serial = same punch
-  // ------------------------------------------------------------------
+  /* ―――――― 1. Idempotency check — same device + same serial = same punch ――――― */
   const existing = await prisma.devicePunchLog.findUnique({
     where: { deviceIp_deviceSn: { deviceIp, deviceSn } },
     select: { id: true, studentId: true, recordTime: true },
@@ -68,14 +62,12 @@ export async function processPunch(payload: PunchPayload): Promise<PunchResult> 
     };
   }
 
-  // ------------------------------------------------------------------
-  // 2. Resolve deviceUserId (9-digit prefix) → Student
-  //    Query: User.nationalCode LIKE 'deviceUserId%' AND Student.schoolId
+  /* ――――――――――― 2. Resolve deviceUserId (9-digit prefix) to Student ―――――――――― */
+  // Query: User.nationalCode LIKE 'deviceUserId%' AND Student.schoolId
   //
   //    Fix: ZKTeco often trims leading zeros, and short IDs (like "4")
   //    should not broadly match any national code starting with "4".
   //    We pad it strictly to 9 digits (e.g. "4" -> "000000004") before matching.
-  // ------------------------------------------------------------------
   const paddedDeviceUserId = deviceUserId.padStart(9, '0');
 
   let resolvedStudentId: string | null = null;
@@ -111,9 +103,7 @@ export async function processPunch(payload: PunchPayload): Promise<PunchResult> 
     resolvedNationalCode = student.userSchool.user.nationalCode;
   }
 
-  // ------------------------------------------------------------------
-  // 3. Persist the raw punch log
-  // ------------------------------------------------------------------
+  /* ―――――――――――――――――――――― 3. Persist the raw punch log ―――――――――――――――――――――― */
   const log = await prisma.devicePunchLog.create({
     data: {
       schoolId,

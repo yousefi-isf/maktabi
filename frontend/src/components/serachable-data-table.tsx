@@ -77,7 +77,7 @@ export function SearchableDataTable<
     endAddone,
     startAddone,
 }: SearchableDataTableProps<TData, TFilters>) {
-    // --- منطق سرچ ---
+    /* ―――――――――――――――――――――――――――――――― منطق سرچ ―――――――――――――――――――――――――――――――― */
     const form = useAppForm({ defaultValues: { q: controlledSearchValue ?? '' } })
 
     // هماهنگ‌سازی مقدار اینپوت در صورت تغییر خارجی searchValue (مثلاً بازگشت در مرورگر)
@@ -108,12 +108,12 @@ export function SearchableDataTable<
     const activeQ = controlledSearchValue !== undefined ? controlledSearchValue : debouncedQ
     const filters = { q: activeQ, ...extraFilters } as unknown as TFilters
 
-    // --- منطق rowSelection ---
+    /* ―――――――――――――――――――――――――――― منطق rowSelection ――――――――――――――――――――――――――― */
     const [internalRowSelection, setInternalRowSelection] = useState<RowSelectionState>({})
     const rowSelection = controlledRowSelection ?? internalRowSelection
     const onRowSelectionChange = controlledOnRowSelectionChange ?? setInternalRowSelection
 
-    // --- منطق pagination ---
+    /* ――――――――――――――――――――――――――――― منطق pagination ―――――――――――――――――――――――――――― */
     const [internalPagination, setInternalPagination] = useState<PaginationState>({
         pageIndex: 0,
         pageSize: initialPageSize,

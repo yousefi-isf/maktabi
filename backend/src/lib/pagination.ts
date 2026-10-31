@@ -1,7 +1,7 @@
 import { Prisma } from "@maktabi/db";
 import { z } from "zod";
 
-/* -------------------------- List input (JSON): -------------------------- */
+/* ――――――――――――――――――――――――――― List input (JSON): ――――――――――――――――――――――――――― */
 /**
  * {
  *   "json": {
@@ -19,7 +19,7 @@ export const listInput = z.object({
 
 export type ListInput = z.infer<typeof listInput>;
 
-/* ---------------------- Searchable list input (JSON): ---------------------- */
+/* ―――――――――――――――――――――― Searchable list input (JSON): ――――――――――――――――――――― */
 /**
  * {
  *   "json": {

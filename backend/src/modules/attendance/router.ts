@@ -6,7 +6,7 @@ import type { PunchResult } from "./punch.service.js";
 
 export const attendanceRouter = router({
 	punchLogs: router({
-		// 1. Fetch today's raw punch logs for the dashboard
+		/* ―――――――――――― 1. Fetch today's raw punch logs for the dashboard ――――――――――― */
 		list: tenantProcedure
 			.input(
 				z.object({
@@ -45,7 +45,7 @@ export const attendanceRouter = router({
 				});
 			}),
 
-		// 3. Attendance summary: present vs absent students for a specific date (defaults to today)
+		/* ―― 2. Attendance summary: present vs absent students for a specific date ― */
 		todaySummary: tenantProcedure
 			.input(
 				z
@@ -133,7 +133,7 @@ export const attendanceRouter = router({
 				};
 			}),
 
-		// History log for data table with search, filter, and pagination
+		/* ―――― 3. History log for data table with search, filter, and pagination ――― */
 		history: tenantProcedure
 			.input(
 				z.object({
@@ -212,7 +212,7 @@ export const attendanceRouter = router({
 				return { items, total, page, limit };
 			}),
 
-		// 2. Real-time subscription for live dashboard updates
+		/* ―――――――――― 4. Real-time subscription for live dashboard updates ―――――――――― */
 		subscribe: tenantProcedure.subscription(({ ctx }) => {
 			return observable<PunchResult>((emit) => {
 				// Listener function that matches the schoolId
@@ -233,15 +233,15 @@ export const attendanceRouter = router({
 		}),
 	}),
 
-	// Device connection status endpoints
+	/* ――――――――――――――――――― Device connection status endpoints ――――――――――――――――――― */
 	deviceStatus: router({
-		// Initial fetch of current state
+		/* ―――――――――――――――――――― 1. Initial fetch of current state ――――――――――――――――――― */
 		current: tenantProcedure.query(({ ctx }) => {
 			// Return 'unknown' if the gateway hasn't reported yet, otherwise the real status
 			return deviceStatuses.get(ctx.activeSchoolId) ?? "unknown";
 		}),
 
-		// Real-time subscription to status changes
+		/* ――――――――――――――― 2. Real-time subscription to status changes ―――――――――――――― */
 		subscribe: tenantProcedure.subscription(({ ctx }) => {
 			return observable<"connected" | "disconnected">((emit) => {
 				const onStatusChange = (data: {

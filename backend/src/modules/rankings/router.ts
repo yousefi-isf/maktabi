@@ -6,9 +6,7 @@ import { router, tenantProcedure } from "../../trpc/trpc.js";
 import { calculateAndSyncStudentGpa, getStudentRankings } from "./service.js";
 
 export const rankingsRouter = router({
-	// ==========================================
-	// 0. Filter Options (Academic Years, Grades, Fields, Classes)
-	// ==========================================
+	/* ――――――― 0. Filter Options (Academic Years, Grades, Fields, Classes) ―――――― */
 	getFilterOptions: tenantProcedure.query(async ({ ctx }) => {
 		const schoolId = ctx.activeSchoolId;
 		const [academicYears, gradeLevels, fieldsOfStudy, classes] =
@@ -49,9 +47,7 @@ export const rankingsRouter = router({
 		};
 	}),
 
-	// ==========================================
-	// 1. Get Student Rankings
-	// ==========================================
+	/* ――――――――――――――――――――――――― 1. Get Student Rankings ―――――――――――――――――――――――― */
 	getStudentRankings: tenantProcedure
 		.input(
 			z.object({
@@ -97,9 +93,7 @@ export const rankingsRouter = router({
 			}
 		}),
 
-	// ==========================================
-	// 2. Recalculate & Sync All GPAs
-	// ==========================================
+	/* ――――――――――――――――――――― 2. Recalculate & Sync All GPAs ――――――――――――――――――――― */
 	recalculateGpas: tenantProcedure
 		.input(
 			z.object({
@@ -160,9 +154,7 @@ export const rankingsRouter = router({
 				});
 			}
 		}),
-	// ==========================================
-	// 3. Get Student Score Detail (for dialog)
-	// ==========================================
+	/* ―――――――――――――――― 3. Get Student Score Detail (for dialog) ―――――――――――――――― */
 	getStudentScoreDetail: tenantProcedure
 		.input(
 			z.object({

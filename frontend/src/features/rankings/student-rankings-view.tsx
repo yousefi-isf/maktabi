@@ -21,7 +21,7 @@ export function StudentRankingsView() {
 		classId: "",
 	});
 
-	// 1. Fetch filter options (years, grades, fields, classes)
+	/* ―――――――― 1. Fetch filter options (years, grades, fields, classes) ―――――――― */
 	const filterOptionsQuery = useQuery(
 		trpc.rankings.getFilterOptions.queryOptions(),
 	);
@@ -38,7 +38,7 @@ export function StudentRankingsView() {
 		}
 	}, [filterOptionsQuery.data, filters.academicYearId]);
 
-	// 2. Fetch rankings data
+	/* ――――――――――――――――――――――――― 2. Fetch rankings data ――――――――――――――――――――――――― */
 	const rankingsQuery = useQuery({
 		...trpc.rankings.getStudentRankings.queryOptions({
 			academicYearId: filters.academicYearId,
@@ -49,7 +49,7 @@ export function StudentRankingsView() {
 		enabled: Boolean(filters.academicYearId),
 	});
 
-	// 3. Mutation to recalculate GPAs from Score table if requested
+	/* ―――――― 3. Mutation to recalculate GPAs from Score table if requested ――――― */
 	const recalculateMutation = useMutation(
 		trpc.rankings.recalculateGpas.mutationOptions(),
 	);

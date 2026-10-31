@@ -14,9 +14,7 @@ function decodeBase64File(base64Str: string): Buffer {
 }
 
 export const reportCardImporterRouter = router({
-  // ==========================================
-  // 1. Preview PDF (Dry-run parser)
-  // ==========================================
+  /* ――――――――――――――――――――― 1. Preview PDF (Dry-run parser) ―――――――――――――――――――― */
   preview: platformProcedure
     .input(
       z.object({
@@ -72,9 +70,7 @@ export const reportCardImporterRouter = router({
       }
     }),
 
-  // ==========================================
-  // 2. Import File (Parse + Upsert to DB)
-  // ==========================================
+  /* ―――――――――――――――――― 2. Import File (Parse + Upsert to DB) ――――――――――――――――― */
   importFile: platformProcedure
     .input(
       z.object({
@@ -116,9 +112,7 @@ export const reportCardImporterRouter = router({
       }
     }),
 
-  // ==========================================
-  // 3. Import Batch (Upsert already parsed DTO)
-  // ==========================================
+  /* ――――――――――――――― 3. Import Batch (Upsert already parsed DTO) ―――――――――――――― */
   importBatch: platformProcedure
     .input(
       z.object({

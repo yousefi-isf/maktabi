@@ -7,9 +7,7 @@ import { TRPCError } from "@trpc/server";
 import { paginate, searchInput } from "../../lib/pagination.js";
 
 export const studentsRouter = router({
-  // ==========================================
-  // 1. List
-  // ==========================================
+  /* ――――――――――――――――――――――――――――――――― 1. List ―――――――――――――――――――――――――――――――― */
   list: tenantProcedure
     .input(searchInput)
     .query(async ({ ctx, input }) => {
@@ -81,9 +79,7 @@ export const studentsRouter = router({
       };
     }),
 
-  // ==========================================
-  // 1.1 Get By ID
-  // ==========================================
+  /* ―――――――――――――――――――――――――――――― 1.1 Get By ID ――――――――――――――――――――――――――――― */
   getById: tenantProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
@@ -119,9 +115,7 @@ export const studentsRouter = router({
       };
     }),
 
-  // ==========================================
-  // 2. Create
-  // ==========================================
+  /* ―――――――――――――――――――――――――――――――― 2. Create ――――――――――――――――――――――――――――――― */
   create: tenantProcedure
     .input(
       z.object({
@@ -216,9 +210,7 @@ export const studentsRouter = router({
       });
     }),
 
-  // ==========================================
-  // 3. Update
-  // ==========================================
+  /* ―――――――――――――――――――――――――――――――― 3. Update ――――――――――――――――――――――――――――――― */
   update: tenantProcedure
     .input(
       z.object({
@@ -289,9 +281,7 @@ export const studentsRouter = router({
       });
     }),
 
-  // ==========================================
-  // 4. Delete
-  // ==========================================
+  /* ―――――――――――――――――――――――――――――――― 4. Delete ――――――――――――――――――――――――――――――― */
   delete: tenantProcedure
     .input(
       z.object({

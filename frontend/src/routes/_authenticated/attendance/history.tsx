@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-// 1. Search Schema
+/* ―――――――――――――――――――――――――――― 1. Search Schema ―――――――――――――――――――――――――――― */
 const historySearchSchema = z.object({
   page: z.coerce.number({ error: "شماره صفحه نامعتبر است" }).int({ message: "شماره صفحه باید عدد صحیح باشد" }).positive({ message: "شماره صفحه باید مثبت باشد" }).catch(1).default(1),
   limit: z.coerce.number({ error: "تعداد نامعتبر است" }).int({ message: "تعداد باید عدد صحیح باشد" }).positive({ message: "تعداد باید مثبت باشد" }).catch(15).default(15),
@@ -76,7 +76,7 @@ function AttendanceHistory() {
     });
   };
 
-  // 2. Fetch History Data
+  /* ―――――――――――――――――――――――――― 2. Fetch History Data ――――――――――――――――――――――――― */
   const query = useQuery({
     ...trpc.attendance.punchLogs.history.queryOptions({
       q: search.q,
@@ -90,7 +90,7 @@ function AttendanceHistory() {
   const logs = query.data?.items ?? [];
   const total = query.data?.total ?? 0;
 
-  // 3. Define Columns
+  /* ―――――――――――――――――――――――――――― 3. Define Columns ――――――――――――――――――――――――――― */
   const columns = [
     {
       accessorKey: 'studentName',

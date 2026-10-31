@@ -20,7 +20,7 @@ function AttendanceDashboard() {
 	const [livePunches, setLivePunches] = useState<PunchResult[]>([]);
 	const [deviceStatus, setDeviceStatus] = useState<'connected' | 'disconnected' | 'unknown'>('unknown');
 
-	// 1. Fetch initial logs & status for today
+	/* ―――――――――――――――― 1. Fetch initial logs & status for today ―――――――――――――――― */
 	const { data: initialLogs, isLoading } = useQuery({
 		...trpc.attendance.punchLogs.list.queryOptions({}),
 	});
@@ -37,7 +37,7 @@ function AttendanceDashboard() {
 		}
 	}, [initialStatus]);
 
-	// 2. Subscribe to real-time events (punches and status)
+	/* ―――――――――― 2. Subscribe to real-time events (punches and status) ――――――――― */
 	useEffect(() => {
 		const punchSub = trpcClient.attendance.punchLogs.subscribe.subscribe(undefined, {
 			onData(newPunch) {
@@ -66,7 +66,7 @@ function AttendanceDashboard() {
 		};
 	}, [trpcClient]);
 
-	// Combine live punches (newest first) with initial logs (also newest first)
+	/* ――――――――――――――――― Combine live punches with initial logs ――――――――――――――――― */
 	const allPunches = [
 		...livePunches,
 		...(initialLogs?.map((log) => ({

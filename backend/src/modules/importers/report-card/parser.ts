@@ -326,6 +326,8 @@ function parseSchoolData(
 		.trim();
 	// if (!gradeTitle) gradeTitle = "دهم"; // fallback
 
+	if (!fieldTitle) fieldTitle = "نامشخص";
+	if (!gradeTitle) gradeTitle = "نامشخص";
 	if (!schoolName) schoolName = "نامشخص";
 
 	return {

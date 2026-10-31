@@ -10,24 +10,29 @@ const UPDATE_PERMISSION: PermissionCode = "academic.field.update";
 const DELETE_PERMISSION: PermissionCode = "academic.field.delete";
 const LIST_PERMISSION: PermissionCode = "academic.field.list";
 
+/* ――――――――――――――――――――――――――― Create input (JSON): ――――――――――――――――――――――――――― */
 const createInput = z.object({
 	title: z.string().trim().min(1).max(100),
 	branch: z.enum(["theoretical", "technical", "vocational"]),
 });
 
+/* ――――――――――――――――――――――――――― Update input (JSON): ――――――――――――――――――――――――――― */
 const updateInput = createInput.extend({
 	id: z.uuid(),
 });
 
+/* ――――――――――――――――――――――――――― Delete input (JSON): ――――――――――――――――――――――――――― */
 const deleteInput = z.object({
 	id: z.union([z.string().uuid(), z.array(z.uuid()).min(1)]),
 });
 
+/* ――――――――――――――――――――――――― Get by ID input (JSON): ―――――――――――――――――――――――――― */
 const getByIdInput = z.object({
 	id: z.uuid(),
 });
 
 export const fieldsOfStudyRouter = router({
+	/* ―――――――――――――――――――――――――――――― 1. Get By ID ―――――――――――――――――――――――――――――― */
 	getById: tenantProcedure
 		.input(getByIdInput)
 		.query(async ({ ctx, input }) => {
@@ -47,6 +52,7 @@ export const fieldsOfStudyRouter = router({
 			return field;
 		}),
 
+	/* ―――――――――――――――――――――――――――――――― 2. Create ――――――――――――――――――――――――――――――― */
 	create: tenantProcedure
 		.input(createInput)
 		.mutation(async ({ ctx, input }) => {
@@ -71,6 +77,7 @@ export const fieldsOfStudyRouter = router({
 			}
 		}),
 
+	/* ―――――――――――――――――――――――――――――――― 3. Update ――――――――――――――――――――――――――――――― */
 	update: tenantProcedure
 		.input(updateInput)
 		.mutation(async ({ ctx, input }) => {
@@ -100,6 +107,7 @@ export const fieldsOfStudyRouter = router({
 			}
 		}),
 
+	/* ――――――――――――――――――――――――――――――――― 4. List ―――――――――――――――――――――――――――――――― */
 	list: tenantProcedure
 		.input(searchInput)
 		.query(async ({ ctx, input }) => {
@@ -134,6 +142,7 @@ export const fieldsOfStudyRouter = router({
 			);
 		}),
 
+	/* ―――――――――――――――――――――――――――――――― 5. Delete ――――――――――――――――――――――――――――――― */
 	delete: tenantProcedure
 		.input(deleteInput)
 		.mutation(async ({ ctx, input }) => {
