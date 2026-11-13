@@ -7,12 +7,12 @@ import { useControllableState } from "@/hooks/use-controllable-state";
 import { Button } from "./button"
 import { type DataTableFeatures, features } from "./table-features"
 
-interface PaginationState {
+export interface PaginationState {
     pageIndex: number
     pageSize: number
 }
 
-interface TableMeta {
+export interface TableMeta {
     totalItems: number
     totalPages: number
     hasNextPage: boolean

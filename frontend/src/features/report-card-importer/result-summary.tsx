@@ -66,7 +66,7 @@ export function ResultSummary({ result, onReset }: ResultSummaryProps) {
 							className="flex items-center gap-2"
 						>
 							<RotateCcw className="w-4 h-4" />
-							بارگذاری کارنامه دیگر
+							ورود کارنامه دیگر
 						</Button>
 						<Button
 							className="flex items-center gap-2"

@@ -3,11 +3,15 @@ import { z } from "zod";
 import { PERMISSIONS } from "../../config/permissions.js";
 import { appError } from "../../trpc/app-error.js";
 import { router, tenantProcedure } from "../../trpc/trpc.js";
-import { calculateAndSyncStudentGpa, getStudentRankings } from "./service.js";
+import { calculateCourse, roundGrade, type GpaBasis } from "./gpa-calculation.js";
+import { calculateAndSyncStudentGpa, getStudentRankings, toGpaCourses } from "./service.js";
 
 export const rankingsRouter = router({
 	/* ――――――― 0. Filter Options (Academic Years, Grades, Fields, Classes) ―――――― */
 	getFilterOptions: tenantProcedure.query(async ({ ctx }) => {
+        if (!ctx.user.isSuperAdmin && !ctx.permissions.includes(PERMISSIONS.SYSTEM.FULL_ACCESS) && !ctx.permissions.includes(PERMISSIONS.ASSESSMENT.SCORE_READ) && !ctx.permissions.includes(PERMISSIONS.IDENTITY.STUDENT_LIST)) {
+            throw appError({ code: "FORBIDDEN", appCode: "MISSING_PERMISSION", params: { permission: PERMISSIONS.ASSESSMENT.SCORE_READ } });
+        }
 		const schoolId = ctx.activeSchoolId;
 		const [academicYears, gradeLevels, fieldsOfStudy, classes] =
 			await Promise.all([
@@ -99,6 +103,8 @@ export const rankingsRouter = router({
 			z.object({
 				academicYearId: z.string().min(1, "انتخاب سال تحصیلی الزامی است"),
 				classId: z.string().optional(),
+				gradeLevelId: z.string().optional(),
+				fieldOfStudyId: z.string().optional(),
 			}),
 		)
 		.mutation(async ({ ctx, input }) => {
@@ -124,24 +130,33 @@ export const rankingsRouter = router({
 						academicYearId: input.academicYearId,
 						deletedAt: null,
 						...(input.classId ? { classId: input.classId } : {}),
+						schoolClass: {
+							deletedAt: null,
+							...(input.gradeLevelId ? { gradeLevelId: input.gradeLevelId } : {}),
+							...(input.fieldOfStudyId ? { fieldOfStudyId: input.fieldOfStudyId } : {}),
+						},
 					},
 					select: { studentId: true },
 				});
 
 				let updatedCount = 0;
 				for (const e of enrollments) {
-					await calculateAndSyncStudentGpa(
-						ctx.prisma,
+					const result = await ctx.prisma.$transaction((tx) => calculateAndSyncStudentGpa(
+						tx,
+						ctx.activeSchoolId,
 						e.studentId,
 						input.academicYearId,
-					);
-					updatedCount++;
+					));
+					if (result.updated) updatedCount++;
 				}
 
 				return {
 					success: true,
 					totalUpdated: updatedCount,
-					message: `معدل ${updatedCount} دانش‌آموز با موفقیت بر اساس نمرات خام دیتابیس مجدداً محاسبه و همگام گردید.`,
+					totalUnchanged: enrollments.length - updatedCount,
+					message: updatedCount
+						? `معدل ${updatedCount} دانش‌آموز به‌روزرسانی شد؛ ${enrollments.length - updatedCount} مورد بدون تغییر بود.`
+						: "تغییری در نمرات و واحدها وجود نداشت؛ معدل‌ها بدون تغییر باقی ماندند.",
 				};
 			} catch (err: unknown) {
 				if (err instanceof TRPCError) throw err;
@@ -212,9 +227,17 @@ export const rankingsRouter = router({
 			const scores = await ctx.prisma.score.findMany({
 				where: {
 					studentId: input.studentId,
+					schoolId: ctx.activeSchoolId,
 					deletedAt: null,
 					exam: {
-						teachingAssignment: { academicYearId: input.academicYearId },
+						schoolId: ctx.activeSchoolId,
+						deletedAt: null,
+						teachingAssignment: {
+							academicYearId: input.academicYearId,
+							schoolId: ctx.activeSchoolId,
+							deletedAt: null,
+							subject: { deletedAt: null },
+						},
 					},
 				},
 				include: {
@@ -223,17 +246,24 @@ export const rankingsRouter = router({
 							subjectModule: true,
 							teachingAssignment: {
 								include: {
-									subject: true,
+									subject: {
+										include: {
+											subjectModules: {
+												where: { deletedAt: null },
+												select: { id: true, weight: true },
+											},
+										},
+									},
 									teacher: {
 										include: { userSchool: { include: { user: true } } },
 									},
 								},
 							},
-							term: { select: { title: true } },
+							term: { select: { title: true, termNumber: true } },
 						},
 					},
 				},
-				orderBy: { exam: { examDate: "asc" } },
+				orderBy: { id: "asc" },
 			});
 
 			// 3. Group by subject
@@ -249,8 +279,10 @@ export const rankingsRouter = router({
 					examTitle: string;
 					examType: string;
 					termTitle: string;
+					termNumber: number;
 					score: number | null;
 					isAbsent: boolean;
+					moduleId: string | null;
 					moduleTitle: string | null;
 					moduleOrderIndex: number | null;
 				}[];
@@ -279,97 +311,30 @@ export const rankingsRouter = router({
 					examTitle: s.exam.title,
 					examType: s.exam.examType,
 					termTitle: s.exam.term.title,
+					termNumber: s.exam.term.termNumber,
 					score: s.score !== null ? Number(s.score) : null,
 					isAbsent: s.isAbsent,
+					moduleId: s.exam.subjectModule?.id ?? null,
 					moduleTitle: s.exam.subjectModule?.title ?? null,
 					moduleOrderIndex: s.exam.subjectModule?.orderIndex ?? null,
 				});
 			}
 
-			// 4. Compute derived fields per subject
+			// Use the same course rules and official import basis as GPA synchronization.
+			const courseMap = new Map(toGpaCourses(scores).map((course) => [course.id, course]));
+			const basis = enrollment.gpaBasis as unknown as GpaBasis | null;
+			const originalMap = new Map(basis?.courses.map((course) => [course.id, course]) ?? []);
+			const rounded = (value: number | null) => value === null ? null : roundGrade(value);
 			const subjects = Array.from(subjectMap.values()).map((subj) => {
-				if (!subj.isModular) {
-					const c1 = subj.scores.find(
-						(s) =>
-							s.examType === "continuous" && s.examTitle.includes("نوبت اول"),
-					);
-					const c2 = subj.scores.find(
-						(s) =>
-							s.examType === "continuous" && !s.examTitle.includes("نوبت اول"),
-					);
-					const f1 = subj.scores.find(
-						(s) =>
-							s.examType === "term_final" && s.examTitle.includes("نوبت اول"),
-					);
-					const f2 = subj.scores.find(
-						(s) =>
-							s.examType === "term_final" && !s.examTitle.includes("نوبت اول"),
-					);
-
-					const v = (x: typeof c1) =>
-						x ? (x.isAbsent ? 0 : (x.score ?? 0)) : null;
-					const c1v = v(c1),
-						c2v = v(c2),
-						f1v = v(f1),
-						f2v = v(f2);
-
-					let contAvg: number | null = null;
-					if (c1v !== null && c2v !== null) contAvg = (c1v + c2v) / 2;
-					else if (c2v !== null) contAvg = c2v;
-					else if (c1v !== null) contAvg = c1v;
-
-					let finalAvg: number | null = null;
-					if (f1v !== null && f2v !== null) finalAvg = (f1v + 2 * f2v) / 3;
-					else if (f2v !== null) finalAvg = f2v;
-					else if (f1v !== null) finalAvg = f1v;
-
-					const overallAvg =
-						contAvg !== null && finalAvg !== null
-							? (contAvg + finalAvg * 2) / 3
-							: (contAvg ?? finalAvg ?? null);
-
-					const annualScore =
-						((c1v ?? 0) + 2 * (f1v ?? 0) + (c2v ?? 0) + 4 * (f2v ?? 0)) / 8;
-					const isPassed = annualScore >= 10 && (f2v ?? f1v ?? 0) >= 10;
-
-					return {
-						...subj,
-						continuousAvg:
-							contAvg !== null ? Math.round(contAvg * 100) / 100 : null,
-						finalAvg:
-							finalAvg !== null ? Math.round(finalAvg * 100) / 100 : null,
-						overallAvg:
-							overallAvg !== null ? Math.round(overallAvg * 100) / 100 : null,
-						annualScore: Math.round(annualScore * 100) / 100,
-						isPassed,
-					};
-				} else {
-					// Modular
-					const modFinals = subj.scores.filter(
-						(s) => s.examType === "modular_competency",
-					);
-					const allPassed =
-						modFinals.length === 5 &&
-						modFinals.every((s) => !s.isAbsent && (s.score ?? 0) >= 10);
-					const avgScore =
-						modFinals.length > 0
-							? modFinals.reduce(
-									(sum, s) => sum + (s.isAbsent ? 0 : (s.score ?? 0)),
-									0,
-								) / modFinals.length
-							: null;
-
-					return {
-						...subj,
-						continuousAvg: null,
-						finalAvg: null,
-						overallAvg:
-							avgScore !== null ? Math.round(avgScore * 100) / 100 : null,
-						annualScore:
-							avgScore !== null ? Math.round(avgScore * 100) / 100 : 0,
-						isPassed: allPassed,
-					};
-				}
+				const grade = calculateCourse(courseMap.get(subj.subjectId)!, originalMap.get(subj.subjectId));
+				return {
+					...subj,
+					continuousAvg: rounded(grade.continuous),
+					finalAvg: rounded(grade.final),
+					overallAvg: rounded(grade.overall),
+					annualScore: rounded(grade.overall),
+					isPassed: grade.isPassed,
+				};
 			});
 
 			// Sort: theoretical first, then modular; within each group by subjectName

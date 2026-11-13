@@ -13,10 +13,10 @@ const LIST_PERMISSION: PermissionCode = "academic.year.list";
 /* ――――――――――――――――――――――――――― Create input (JSON): ――――――――――――――――――――――――――― */
 const createInput = z
 	.object({
-		title: z.string({ required_error: "عنوان الزامی است", invalid_type_error: "عنوان نامعتبر است" }).trim().min(1, "عنوان الزامی است").max(100, "عنوان بسیار طولانی است"),
-		startDate: z.date({ required_error: "تاریخ شروع الزامی است", invalid_type_error: "تاریخ شروع نامعتبر است" }),
-		endDate: z.date({ required_error: "تاریخ پایان الزامی است", invalid_type_error: "تاریخ پایان نامعتبر است" }),
-		isActive: z.boolean({ invalid_type_error: "وضعیت نامعتبر است" }).default(false),
+		title: z.string({ error: (issue) => issue.input === undefined ? "عنوان الزامی است" : "عنوان نامعتبر است" }).trim().min(1, "عنوان الزامی است").max(100, "عنوان بسیار طولانی است"),
+		startDate: z.date({ error: (issue) => issue.input === undefined ? "تاریخ شروع الزامی است" : "تاریخ شروع نامعتبر است" }),
+		endDate: z.date({ error: (issue) => issue.input === undefined ? "تاریخ پایان الزامی است" : "تاریخ پایان نامعتبر است" }),
+		isActive: z.boolean({ error: "وضعیت نامعتبر است" }).default(false),
 	})
 	.refine(({ startDate, endDate }) => endDate > startDate, {
 		message: "تاریخ پایان باید پس از تاریخ شروع باشد",
@@ -24,21 +24,13 @@ const createInput = z
 	});
 
 /* ――――――――――――――――――――――――――― Update input (JSON): ――――――――――――――――――――――――――― */
-const updateInput = createInput.extend({
-	id: z.string({ required_error: "شناسه الزامی است", invalid_type_error: "شناسه نامعتبر است" }).uuid("شناسه نامعتبر است"),
-});
-
-/* ――――――――――――――――――――――――――― Delete input (JSON): ――――――――――――――――――――――――――― */
-const deleteInput = z.object({
-	id: z.union([
-		z.string({ required_error: "شناسه الزامی است", invalid_type_error: "شناسه نامعتبر است" }).uuid("شناسه نامعتبر است"), 
-		z.array(z.string({ invalid_type_error: "شناسه نامعتبر است" }).uuid("شناسه نامعتبر است")).min(1, "حداقل یک شناسه باید انتخاب شود")
-	], { required_error: "شناسه‌ها الزامی هستند" }),
+const updateInput = createInput.safeExtend({
+	id: z.string({ error: (issue) => issue.input === undefined ? "شناسه الزامی است" : "شناسه نامعتبر است" }).uuid("شناسه نامعتبر است"),
 });
 
 /* ――――――――――――――――――――――――― Get by ID input (JSON): ―――――――――――――――――――――――――― */
 const getByIdInput = z.object({
-	id: z.string({ required_error: "شناسه الزامی است", invalid_type_error: "شناسه نامعتبر است" }).uuid("شناسه نامعتبر است"),
+	id: z.string({ error: (issue) => issue.input === undefined ? "شناسه الزامی است" : "شناسه نامعتبر است" }).uuid("شناسه نامعتبر است"),
 });
 
 export const academicYearsRouter = router({

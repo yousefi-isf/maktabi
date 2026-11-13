@@ -27,7 +27,7 @@ const historySearchSchema = z.object({
 export const Route = createFileRoute('/_authenticated/attendance/history')({
   validateSearch: historySearchSchema,
   beforeLoad: guardPermission({
-    anyOf: ['attendance.record.read', 'attendance.record.read.own'],
+    anyOf: ['attendance.record.read'],
   }),
   component: AttendanceHistory,
 });
@@ -65,11 +65,12 @@ function AttendanceHistory() {
     });
   };
 
-  const handleTimeRangeChange = (val: string) => {
+  const handleTimeRangeChange = (val: typeof search.timeRange | null) => {
+    if (val === null) return;
     navigate({
       search: (prev) => ({
         ...prev,
-        timeRange: val as any,
+        timeRange: val,
         page: 1, // Reset page on filter change
       }),
       replace: true,

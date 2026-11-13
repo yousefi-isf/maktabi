@@ -1,4 +1,5 @@
 import { Prisma, type PrismaClient } from "@maktabi/db";
+import { calculateGpa, type GpaBasis, type GpaCourse, type GpaSummary } from "./gpa-calculation.js";
 
 export interface StudentRankingItem {
   studentId: string;
@@ -183,195 +184,129 @@ export async function getStudentRankings(
   };
 }
 
-/**
- * Calculates a student's GPA and units from the raw Score table and synchronizes with Enrollment.
- */
-export async function calculateAndSyncStudentGpa(
+/** Read numeric calculation inputs without titles or display order. */
+export async function loadGpaCourses(
   prisma: PrismaClient | Prisma.TransactionClient,
+  schoolId: string,
   studentId: string,
-  academicYearId: string
-): Promise<{
-  gpa: number;
-  continuousGpa: number;
-  finalGpa: number;
-  unitsPassed: number;
-  unitsTaken: number;
-}> {
+  academicYearId: string,
+): Promise<GpaCourse[]> {
   const scores = await prisma.score.findMany({
     where: {
-      studentId,
-      exam: {
-        teachingAssignment: { academicYearId },
-      },
-      deletedAt: null,
+      schoolId, studentId, deletedAt: null,
+      exam: { schoolId, deletedAt: null, teachingAssignment: { schoolId, academicYearId, deletedAt: null, subject: { deletedAt: null } } },
     },
-    include: {
-      exam: {
-        include: {
-          subjectModule: true,
-          teachingAssignment: {
-            include: { subject: true },
-          },
-        },
-      },
-    },
+    include: { exam: { include: {
+      term: { select: { termNumber: true } },
+      teachingAssignment: { include: { subject: { include: { subjectModules: {
+        where: { deletedAt: null }, select: { id: true, weight: true },
+      } } } } },
+    } } },
+    orderBy: { id: "asc" },
   });
+  return toGpaCourses(scores);
+}
 
-  const subjectMap = new Map<string, { unit: number; isModular: boolean; scores: typeof scores }>();
-  for (const s of scores) {
-    const subj = s.exam.teachingAssignment.subject;
-    if (!subjectMap.has(subj.id)) {
-      subjectMap.set(subj.id, {
-        unit: Number(subj.defaultUnit),
-        isModular: subj.subjectType === "modular",
-        scores: [],
-      });
-    }
-    subjectMap.get(subj.id)!.scores.push(s);
-  }
-
-  let totalContinuousWeight = 0;
-  let totalFinalWeight = 0;
-  let totalOverallWeight = 0;
-
-  let sumContinuousWeightedScores = 0;
-  let sumFinalWeightedScores = 0;
-  let sumOverallWeightedScores = 0;
-
-  let totalUnits = 0;
-  let passedUnits = 0;
-
-  for (const [_, subj] of subjectMap) {
-    totalUnits += subj.unit;
-
-    if (!subj.isModular) {
-      let c1: number | null = null;
-      let f1: number | null = null;
-      let c2: number | null = null;
-      let f2: number | null = null;
-
-      for (const s of subj.scores) {
-        const val = s.isAbsent ? 0 : Number(s.score ?? 0);
-        if (s.exam.examType === "continuous") {
-          if (s.exam.title.includes("نوبت اول")) c1 = val;
-          else c2 = val;
-        } else if (s.exam.examType === "term_final") {
-          if (s.exam.title.includes("نوبت اول")) f1 = val;
-          else f2 = val;
-        }
-      }
-
-      // Continuous average: if both terms exist, (c1 + c2) / 2
-      let contScore = 0;
-      if (c1 !== null && c2 !== null) contScore = (c1 + c2) / 2;
-      else if (c2 !== null) contScore = c2;
-      else if (c1 !== null) contScore = c1;
-
-      // Final average: if both terms exist, (f1 + 2 * f2) / 3
-      let finalScore = 0;
-      if (f1 !== null && f2 !== null) finalScore = (f1 + 2 * f2) / 3;
-      else if (f2 !== null) finalScore = f2;
-      else if (f1 !== null) finalScore = f1;
-
-      // Overall: (مستمر + ۲ * پایانی) / ۳
-      const overallScore = (contScore + finalScore * 2) / 3;
-
-      sumContinuousWeightedScores += contScore * subj.unit;
-      totalContinuousWeight += subj.unit;
-
-      sumFinalWeightedScores += finalScore * subj.unit;
-      totalFinalWeight += subj.unit;
-
-      sumOverallWeightedScores += overallScore * subj.unit;
-      totalOverallWeight += subj.unit;
-
-      // Passing check
-      const annualScore = ((c1 ?? 0) + 2 * (f1 ?? 0) + (c2 ?? 0) + 4 * (f2 ?? 0)) / 8;
-      const isPassed = annualScore >= 10 && (f2 ?? f1 ?? 0) >= 10;
-      if (isPassed) passedUnits += subj.unit;
-    } else {
-      // Modular course: each module unit weight = unit / 5
-      const moduleUnitWeight = subj.unit / 5;
-      const modContMap = new Map<number, number>();
-      const modFinalMap = new Map<number, number>();
-
-      for (const s of subj.scores) {
-        if (!s.exam.subjectModule) continue;
-        const ord = s.exam.subjectModule.orderIndex;
-        const val = s.isAbsent ? 0 : Number(s.score ?? 0);
-
-        if (s.exam.examType === "modular_continuous") {
-          // 1..5 scaled to 20
-          modContMap.set(ord, val * 4);
-        } else if (s.exam.examType === "modular_competency") {
-          modFinalMap.set(ord, val);
-        }
-      }
-
-      const allOrdIndices = Array.from(new Set([...modContMap.keys(), ...modFinalMap.keys()]));
-
-      for (const ord of allOrdIndices) {
-        const cVal = modContMap.get(ord);
-        const fVal = modFinalMap.get(ord);
-
-        if (cVal !== undefined) {
-          sumContinuousWeightedScores += cVal * moduleUnitWeight;
-          totalContinuousWeight += moduleUnitWeight;
-        }
-
-        if (fVal !== undefined) {
-          sumFinalWeightedScores += fVal * moduleUnitWeight;
-          totalFinalWeight += moduleUnitWeight;
-
-          sumOverallWeightedScores += fVal * moduleUnitWeight;
-          totalOverallWeight += moduleUnitWeight;
-        }
-      }
-
-      const modFinalScores = Array.from(modFinalMap.values());
-      const isPassed = modFinalScores.length === 5 && modFinalScores.every((score) => score >= 10);
-      if (isPassed) passedUnits += subj.unit;
-    }
-  }
-
-  const continuousGpa = totalContinuousWeight > 0 ? Math.round((sumContinuousWeightedScores / totalContinuousWeight) * 100) / 100 : 0;
-  const finalGpa = totalFinalWeight > 0 ? Math.round((sumFinalWeightedScores / totalFinalWeight) * 100) / 100 : 0;
-  const calcOverallGpa = totalOverallWeight > 0 ? Math.round((sumOverallWeightedScores / totalOverallWeight) * 100) / 100 : 0;
-
-  // Check existing enrollment to preserve official Sida footer GPA if present
-  const existingEnrollment = await prisma.enrollment.findFirst({
-    where: { studentId, academicYearId, deletedAt: null },
-  });
-
-  const finalOverallGpa = existingEnrollment?.gpa && Number(existingEnrollment.gpa) > 0
-    ? Number(existingEnrollment.gpa)
-    : calcOverallGpa;
-
-  const roundedSum = Math.round(sumOverallWeightedScores * 100) / 100;
-
-  // Update Enrollment
-  await prisma.enrollment.updateMany({
-    where: {
-      studentId,
-      academicYearId,
-      deletedAt: null,
-    },
-    data: {
-      continuousGpa: new Prisma.Decimal(continuousGpa),
-      finalGpa: new Prisma.Decimal(finalGpa),
-      gpa: new Prisma.Decimal(finalOverallGpa),
-      totalUnitsPassed: new Prisma.Decimal(passedUnits),
-      totalUnitsTaken: new Prisma.Decimal(totalUnits),
-      totalScoreSum: new Prisma.Decimal(roundedSum),
-    },
-  });
-
-  return {
-    gpa: finalOverallGpa,
-    continuousGpa,
-    finalGpa,
-    unitsPassed: passedUnits,
-    unitsTaken: totalUnits,
+interface GpaScoreRow {
+  id: string;
+  score: Prisma.Decimal | number | null;
+  isAbsent: boolean;
+  exam: {
+    examType: string;
+    subjectModuleId: string | null;
+    term: { termNumber: number };
+    teachingAssignment: { subject: {
+      id: string;
+      defaultUnit: Prisma.Decimal | number;
+      subjectType: string;
+      subjectModules: { id: string; weight: Prisma.Decimal | number }[];
+    } };
   };
 }
 
+/** Display and synchronization must use identical numeric inputs and score IDs. */
+export function toGpaCourses(scores: readonly GpaScoreRow[]): GpaCourse[] {
+  const courses = new Map<string, GpaCourse>();
+  for (const score of scores) {
+    const subject = score.exam.teachingAssignment.subject;
+    if (!courses.has(subject.id)) courses.set(subject.id, {
+      id: subject.id, unit: Number(subject.defaultUnit), isModular: subject.subjectType === "modular",
+      modules: subject.subjectModules.map((module) => ({ id: module.id, weight: Number(module.weight) })),
+      scores: [],
+    });
+    courses.get(subject.id)!.scores.push({
+      id: score.id, type: score.exam.examType, term: score.exam.term.termNumber,
+      moduleId: score.exam.subjectModuleId,
+      value: score.score === null ? null : Number(score.score), isAbsent: score.isAbsent,
+    });
+  }
+  return [...courses.values()];
+}
+
+export function enrollmentGpaSummary(enrollment: {
+  gpa: unknown; continuousGpa: unknown; finalGpa: unknown;
+  totalUnitsPassed: unknown; totalUnitsTaken: unknown; totalScoreSum: unknown;
+}): GpaSummary {
+  return {
+    gpa: Number(enrollment.gpa ?? 0),
+    continuousGpa: Number(enrollment.continuousGpa ?? 0),
+    finalGpa: Number(enrollment.finalGpa ?? 0),
+    totalUnitsPassed: Number(enrollment.totalUnitsPassed ?? 0),
+    totalUnitsTaken: Number(enrollment.totalUnitsTaken ?? 0),
+    totalScoreSum: Number(enrollment.totalScoreSum ?? 0),
+  };
+}
+
+/** Initialize legacy records before editing their subjects, without changing grades. */
+export async function captureSubjectGpaBases(
+  prisma: Prisma.TransactionClient,
+  schoolId: string,
+  subjectId: string,
+) {
+  const enrollments = await prisma.enrollment.findMany({
+    where: {
+      schoolId, deletedAt: null, gpaBasis: { equals: Prisma.DbNull },
+      student: { scores: { some: { schoolId, deletedAt: null, exam: { teachingAssignment: { subjectId } } } } },
+    },
+  });
+  for (const enrollment of enrollments) {
+    const courses = await loadGpaCourses(prisma, schoolId, enrollment.studentId, enrollment.academicYearId);
+    if (!courses.some((course) => course.id === subjectId)) continue;
+    const basis: GpaBasis = { version: 1, courses, summary: enrollmentGpaSummary(enrollment) };
+    await prisma.enrollment.update({
+      where: { id: enrollment.id }, data: { gpaBasis: basis as unknown as Prisma.InputJsonObject },
+    });
+  }
+}
+
+/** Reweight the imported result, preserving its exact values for unchanged inputs. */
+export async function calculateAndSyncStudentGpa(
+  prisma: PrismaClient | Prisma.TransactionClient,
+  schoolId: string,
+  studentId: string,
+  academicYearId: string,
+) {
+  const enrollment = await prisma.enrollment.findFirst({
+    where: { schoolId, studentId, academicYearId, deletedAt: null },
+  });
+  if (!enrollment) throw new Error("ثبت‌نام دانش‌آموز یافت نشد");
+  const courses = await loadGpaCourses(prisma, schoolId, studentId, academicYearId);
+  const previous = enrollmentGpaSummary(enrollment);
+  // Legacy imports did not retain the official per-course totals. Capture their
+  // existing summary once; a sync must not silently replace it with an estimate.
+  const basis: GpaBasis = enrollment.gpaBasis
+    ? enrollment.gpaBasis as unknown as GpaBasis
+    : { version: 1, courses, summary: previous };
+  const summary = calculateGpa(courses, basis);
+  const updated = Object.keys(summary).some((key) => summary[key as keyof GpaSummary] !== previous[key as keyof GpaSummary]);
+  if (updated || !enrollment.gpaBasis) {
+    await prisma.enrollment.update({
+      where: { id: enrollment.id },
+      data: {
+        ...(updated ? summary : {}),
+        ...(!enrollment.gpaBasis ? { gpaBasis: basis as unknown as Prisma.InputJsonObject } : {}),
+      },
+    });
+  }
+  return { ...summary, updated };
+}

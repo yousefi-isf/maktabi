@@ -18,12 +18,6 @@ export const columns = columnHelper.columns([
 		cell: ({ getValue }) => {
 			const branch = getValue();
 			const label = branchLabels[branch] ?? branch;
-			const variant =
-				branch === "theoretical"
-					? "secondary"
-					: branch === "technical"
-						? "outline"
-						: "default";
 			return <div>{label}</div>;
 		},
 	}),

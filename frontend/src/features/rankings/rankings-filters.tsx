@@ -43,17 +43,17 @@ export function RankingsFilters({
 					<span>فیلترهای رتبه‌بندی تحصیلی</span>
 				</div>
 
-				{/* <Button
+				<Button
 					variant="outline"
 					size="sm"
 					onClick={onRecalculate}
 					disabled={isRecalculating || !filters.academicYearId}
 					className="h-8 text-xs flex items-center gap-1.5 hover:bg-muted cursor-pointer"
-					title="محاسبه مجدد معدل همه دانش‌آموزان از روی نمرات خام جدول Score"
+					title="همگام‌سازی معدل دانش‌آموزان انتخاب‌شده با تغییرات واحدها و نمرات"
 				>
 					<RefreshCw className={`w-3.5 h-3.5 ${isRecalculating ? 'animate-spin' : ''}`} />
 					<span>{isRecalculating ? 'در حال محاسبه مجدد...' : 'همگام‌سازی و محاسبه مجدد معدل‌ها'}</span>
-				</Button> */}
+				</Button>
 			</div>
 
 			<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">

@@ -3,7 +3,7 @@ import { getSelectColumn } from "@/components/data-table/select-column";
 import type { DataTableFeatures } from "@/components/ui/table-features";
 import { Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { RouterOutputs } from "@/lib/permissions";
+import type { RouterOutputs } from "@/lib/types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTRPC } from "@/lib/trpc";
 import { showInfoToast, showTRPCErrorToast } from "@/lib/show-error-toast";

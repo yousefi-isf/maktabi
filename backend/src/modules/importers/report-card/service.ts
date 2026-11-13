@@ -1,10 +1,7 @@
 import { Prisma, type PrismaClient } from "@maktabi/db";
-import type {
-	ReportCardBatchDto,
-	ReportCardCourseDto,
-	ReportCardModuleDto,
-	SingleReportCardDto,
-} from "./dto.js";
+import { calculateGpa, type GpaBasis } from "../../rankings/gpa-calculation.js";
+import { loadGpaCourses } from "../../rankings/service.js";
+import { reportCardBatchDtoSchema, type ReportCardBatchDto } from "./dto.js";
 
 /** Maps Persian grade title → numeric orderIndex (1–12) */
 const GRADE_TITLE_TO_ORDER: Record<string, number> = {
@@ -52,17 +49,41 @@ export interface ImportReportCardsResult {
 }
 
 export interface ImportServiceContext {
-	prisma: PrismaClient | Prisma.TransactionClient;
+	prisma: PrismaClient;
 	activeSchoolId?: string | null;
 }
 
+// Imports make many sequential writes. Keep their lifetime bounded while allowing
+// a full class to finish; the ordinary interactive-transaction timeout is too short.
+const IMPORT_TRANSACTION_TIMEOUT_MS = 60_000;
+
 /**
- * Service to import and upsert report cards into the database.
- * Completely idempotent: updates and replaces existing records where applicable.
+ * Owns the transaction for both import APIs. A result is returned only after
+ * commit, and any failure rolls back the entire batch, including shared setup.
  */
 export async function importReportCards(
 	batch: ReportCardBatchDto,
 	ctx: ImportServiceContext,
+): Promise<ImportReportCardsResult> {
+	// Validate before acquiring a connection or writing any data.
+	const validated = reportCardBatchDtoSchema.parse(batch);
+	return ctx.prisma.$transaction(async (tx) => {
+		// Serialize imports for the same destination: find-then-create operations
+		// must not race each other. PostgreSQL releases this lock on rollback too.
+		const destination = ctx.activeSchoolId ?? `source:${validated.school.code}`;
+		await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext('report-card-import'), hashtext(${destination}))`;
+		return importReportCardsInTransaction(validated, {
+			prisma: tx,
+			activeSchoolId: ctx.activeSchoolId,
+		});
+	}, { maxWait: 10_000, timeout: IMPORT_TRANSACTION_TIMEOUT_MS });
+}
+
+// All helpers close over this transaction client; never use the global client
+// here, or writes could survive a failed import. Errors deliberately propagate.
+async function importReportCardsInTransaction(
+	batch: ReportCardBatchDto,
+	ctx: { prisma: Prisma.TransactionClient; activeSchoolId?: string | null },
 ): Promise<ImportReportCardsResult> {
 	const prisma = ctx.prisma;
 
@@ -669,59 +690,6 @@ export async function importReportCards(
 			});
 		}
 
-		// Calculate continuousGpa and finalGpa for this student card
-		let cardContWeight = 0;
-		let cardFinalWeight = 0;
-		let cardContSum = 0;
-		let cardFinalSum = 0;
-
-		for (const c of studentCard.courses) {
-			if (!c.isModular) {
-				const hasT1Cont = typeof c.t1Continuous === "number";
-				const hasT2Cont = typeof c.t2Continuous === "number";
-				let cScore = 0;
-				if (hasT1Cont && hasT2Cont)
-					cScore =
-						((c.t1Continuous as number) + (c.t2Continuous as number)) / 2;
-				else if (hasT2Cont) cScore = c.t2Continuous as number;
-				else if (hasT1Cont) cScore = c.t1Continuous as number;
-
-				const hasT1Final = typeof c.t1Final === "number";
-				const hasT2Final = typeof c.t2Final === "number";
-				let fScore = 0;
-				if (hasT1Final && hasT2Final)
-					fScore = ((c.t1Final as number) + 2 * (c.t2Final as number)) / 3;
-				else if (hasT2Final) fScore = c.t2Final as number;
-				else if (hasT1Final) fScore = c.t1Final as number;
-
-				cardContSum += cScore * c.unit;
-				cardContWeight += c.unit;
-				cardFinalSum += fScore * c.unit;
-				cardFinalWeight += c.unit;
-			} else {
-				const modWeight = c.unit / 5;
-				for (const m of c.modules) {
-					if (m.moduleContinuous !== null && m.moduleContinuous !== undefined) {
-						cardContSum += m.moduleContinuous * 4 * modWeight;
-						cardContWeight += modWeight;
-					}
-					if (m.moduleFinalScore !== null && m.moduleFinalScore !== undefined) {
-						cardFinalSum += m.moduleFinalScore * modWeight;
-						cardFinalWeight += modWeight;
-					}
-				}
-			}
-		}
-
-		const cardContinuousGpa =
-			cardContWeight > 0
-				? Math.round((cardContSum / cardContWeight) * 100) / 100
-				: 0;
-		const cardFinalGpa =
-			cardFinalWeight > 0
-				? Math.round((cardFinalSum / cardFinalWeight) * 100) / 100
-				: 0;
-
 		// Safe find-and-update Enrollment
 		const existingEnrollment = await prisma.enrollment.findUnique({
 			where: {
@@ -741,8 +709,6 @@ export async function importReportCards(
 					status: "active",
 					enrolledAt: new Date("2025-09-23T00:00:00.000Z"),
 					gpa: new Prisma.Decimal(studentCard.summary.gpa),
-					continuousGpa: new Prisma.Decimal(cardContinuousGpa),
-					finalGpa: new Prisma.Decimal(cardFinalGpa),
 					totalUnitsPassed: new Prisma.Decimal(
 						studentCard.summary.totalUnitsPassed,
 					),
@@ -759,8 +725,6 @@ export async function importReportCards(
 					classId: schoolClass.id,
 					status: "active",
 					gpa: new Prisma.Decimal(studentCard.summary.gpa),
-					continuousGpa: new Prisma.Decimal(cardContinuousGpa),
-					finalGpa: new Prisma.Decimal(cardFinalGpa),
 					totalUnitsPassed: new Prisma.Decimal(
 						studentCard.summary.totalUnitsPassed,
 					),
@@ -881,6 +845,35 @@ export async function importReportCards(
 				}
 			}
 		}
+
+		// Retain the official course results and the exact inputs at import time.
+		// Syncing/reweighting must never replace these results with approximations.
+		const gpaCourses = await loadGpaCourses(prisma, validSchoolId, student.id, academicYear.id);
+		for (const course of studentCard.courses) {
+			const subjectId = subjectsMap.get(course.code)?.id;
+			const input = gpaCourses.find((entry) => entry.id === subjectId);
+			if (input) input.official = { score: course.finalScore, isPassed: course.isPassed };
+		}
+		const calculated = calculateGpa(gpaCourses);
+		const gpaBasis: GpaBasis = {
+			version: 1,
+			courses: gpaCourses,
+			summary: {
+				...calculated,
+				gpa: studentCard.summary.gpa,
+				totalUnitsPassed: studentCard.summary.totalUnitsPassed,
+				totalUnitsTaken: studentCard.summary.totalUnitsTaken,
+				totalScoreSum: studentCard.summary.totalScoreSum,
+			},
+		};
+		await prisma.enrollment.update({
+			where: { studentId_academicYearId: { studentId: student.id, academicYearId: academicYear.id } },
+			data: {
+				continuousGpa: calculated.continuousGpa,
+				finalGpa: calculated.finalGpa,
+				gpaBasis: gpaBasis as unknown as Prisma.InputJsonObject,
+			},
+		});
 
 		resultDetails.push({
 			nationalCode: s.nationalCode,

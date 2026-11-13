@@ -1,31 +1,38 @@
 import { observable } from "@trpc/server/observable";
 import { z } from "zod";
-import { deviceStatuses, punchEvents } from "../../server.js";
+import { currentDeviceStatus, punchEvents } from "./events.js";
 import { router, tenantProcedure } from "../../trpc/trpc.js";
+import { PERMISSIONS } from "../../config/permissions.js";
+import { requirePermission, tehranDay, tehranToday } from "./policy.js";
+import { classroomRouter } from "./classroom-router.js";
 import type { PunchResult } from "./punch.service.js";
 
+const overviewProcedure = tenantProcedure.use(({ ctx, next }) => {
+	requirePermission(ctx, PERMISSIONS.ATTENDANCE.RECORD_READ);
+	return next({ ctx });
+});
+
 export const attendanceRouter = router({
+	classroom: classroomRouter,
 	punchLogs: router({
 		/* ―――――――――――― 1. Fetch today's raw punch logs for the dashboard ――――――――――― */
-		list: tenantProcedure
+		list: overviewProcedure
 			.input(
 				z.object({
 					date: z.string().optional(), // ISO date string (YYYY-MM-DD), defaults to today
 				}),
 			)
 			.query(async ({ ctx, input }) => {
-				const targetDate = input.date ? new Date(input.date) : new Date();
-				const startOfDay = new Date(targetDate);
-				startOfDay.setHours(0, 0, 0, 0);
-				const endOfDay = new Date(targetDate);
-				endOfDay.setHours(23, 59, 59, 999);
+				const { start: startOfDay, end: endOfDay } = tehranDay(
+					input.date ?? tehranToday(),
+				);
 
 				return ctx.prisma.devicePunchLog.findMany({
 					where: {
 						schoolId: ctx.activeSchoolId,
 						recordTime: {
 							gte: startOfDay,
-							lte: endOfDay,
+							lt: endOfDay,
 						},
 					},
 					include: {
@@ -46,34 +53,21 @@ export const attendanceRouter = router({
 			}),
 
 		/* ―― 2. Attendance summary: present vs absent students for a specific date ― */
-		todaySummary: tenantProcedure
+		todaySummary: overviewProcedure
 			.input(
 				z
 					.object({
-						date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+						date: z
+							.string()
+							.regex(/^\d{4}-\d{2}-\d{2}$/)
+							.optional(),
 					})
 					.optional(),
 			)
 			.query(async ({ ctx, input }) => {
-				// Tehran is UTC+3:30. We compute boundaries in that timezone
-				// by shifting "now" by +3.5 hours, then extracting the calendar date,
-				// then converting back to UTC for the DB query.
-				const TEHRAN_OFFSET_MS = 3.5 * 60 * 60 * 1000;
-				const nowUtc = new Date();
-				const nowTehran = new Date(nowUtc.getTime() + TEHRAN_OFFSET_MS);
-
-				const tehranDateStr =
-					input?.date ?? nowTehran.toISOString().slice(0, 10); // "YYYY-MM-DD"
-				const startOfDayTehran = new Date(`${tehranDateStr}T00:00:00.000Z`);
-				const endOfDayTehran = new Date(`${tehranDateStr}T23:59:59.999Z`);
-
-				// Convert Tehran midnight back to UTC for DB query
-				const startOfDayUtc = new Date(
-					startOfDayTehran.getTime() - TEHRAN_OFFSET_MS,
-				);
-				const endOfDayUtc = new Date(
-					endOfDayTehran.getTime() - TEHRAN_OFFSET_MS,
-				);
+				const tehranDateStr = input?.date ?? tehranToday();
+				const { start: startOfDayUtc, end: endOfDayUtc } =
+					tehranDay(tehranDateStr);
 
 				// 1. All active students in this school
 				const allStudents = await ctx.prisma.student.findMany({
@@ -93,7 +87,7 @@ export const attendanceRouter = router({
 					where: {
 						schoolId: ctx.activeSchoolId,
 						studentId: { not: null },
-						recordTime: { gte: startOfDayUtc, lte: endOfDayUtc },
+						recordTime: { gte: startOfDayUtc, lt: endOfDayUtc },
 					},
 					select: { studentId: true, recordTime: true },
 					distinct: ["studentId"],
@@ -123,9 +117,30 @@ export const attendanceRouter = router({
 						nationalCode: s.userSchool.user.nationalCode,
 					}));
 
+				const confirmations = await ctx.prisma.attendance.findMany({
+					where: {
+						schoolId: ctx.activeSchoolId,
+						attDate: { gte: startOfDayUtc, lt: endOfDayUtc },
+						periodNo: null,
+						deletedAt: null,
+						confirmedAt: { not: null },
+						studentId: { in: allStudents.map((student) => student.id) },
+					},
+					select: { studentId: true, status: true },
+					distinct: ["studentId"],
+				});
+
 				return {
 					date: tehranDateStr,
 					totalStudents: allStudents.length,
+					confirmedPresentCount: confirmations.filter(
+						(record) => record.status === "present" || record.status === "late",
+					).length,
+					confirmedAbsentCount: confirmations.filter(
+						(record) =>
+							record.status === "absent" || record.status === "excused",
+					).length,
+					pendingConfirmationCount: allStudents.length - confirmations.length,
 					presentCount: present.length,
 					absentCount: absent.length,
 					present,
@@ -134,7 +149,7 @@ export const attendanceRouter = router({
 			}),
 
 		/* ―――― 3. History log for data table with search, filter, and pagination ――― */
-		history: tenantProcedure
+		history: overviewProcedure
 			.input(
 				z.object({
 					q: z.string().optional(),
@@ -213,7 +228,7 @@ export const attendanceRouter = router({
 			}),
 
 		/* ―――――――――― 4. Real-time subscription for live dashboard updates ―――――――――― */
-		subscribe: tenantProcedure.subscription(({ ctx }) => {
+		subscribe: overviewProcedure.subscription(({ ctx }) => {
 			return observable<PunchResult>((emit) => {
 				// Listener function that matches the schoolId
 				const onPunch = (data: PunchResult & { schoolId: string }) => {
@@ -236,13 +251,13 @@ export const attendanceRouter = router({
 	/* ――――――――――――――――――― Device connection status endpoints ――――――――――――――――――― */
 	deviceStatus: router({
 		/* ―――――――――――――――――――― 1. Initial fetch of current state ――――――――――――――――――― */
-		current: tenantProcedure.query(({ ctx }) => {
+		current: overviewProcedure.query(({ ctx }) => {
 			// Return 'unknown' if the gateway hasn't reported yet, otherwise the real status
-			return deviceStatuses.get(ctx.activeSchoolId) ?? "unknown";
+			return currentDeviceStatus(ctx.activeSchoolId);
 		}),
 
 		/* ――――――――――――――― 2. Real-time subscription to status changes ―――――――――――――― */
-		subscribe: tenantProcedure.subscription(({ ctx }) => {
+		subscribe: overviewProcedure.subscription(({ ctx }) => {
 			return observable<"connected" | "disconnected">((emit) => {
 				const onStatusChange = (data: {
 					schoolId: string;

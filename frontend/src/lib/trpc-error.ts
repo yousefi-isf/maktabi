@@ -6,6 +6,15 @@ import type {
 type ErrorMessageResolver = (params: AppErrorParams | null) => string;
 
 const ERROR_MESSAGES = {
+	CLASS_NOT_FOUND: () => "کلاس مورد نظر یافت نشد.",
+	CLASS_IN_USE: () => "امکان حذف این کلاس وجود ندارد زیرا دانش‌آموزانی در آن ثبت‌نام کرده‌اند.",
+	SUBJECT_NOT_FOUND: () => "درس مورد نظر یافت نشد.",
+	SUBJECT_IN_USE: () => "این درس به دلیل داشتن اطلاعات وابسته قابل حذف نیست.",
+	STUDENT_NOT_FOUND_IN_ACTIVE_SCHOOL: () => "دانش‌آموز در مدرسهٔ فعال یافت نشد.",
+	GRADE_LEVEL_NOT_FOUND: () => "پایهٔ تحصیلی مورد نظر یافت نشد.",
+	GRADE_LEVEL_IN_USE: () => "این پایهٔ تحصیلی به دلیل داشتن اطلاعات وابسته قابل حذف نیست.",
+	GRADE_LEVEL_TITLE_EXISTS: () => "پایهٔ تحصیلی با این عنوان قبلاً ثبت شده است.",
+
 	AUTHENTICATION_REQUIRED: () =>
 		"برای انجام این عملیات باید وارد حساب کاربری شوید.",
 	ACTIVE_SCHOOL_NOT_SELECTED: () => "هیچ مدرسه فعالی انتخاب نشده است.",
@@ -73,7 +82,7 @@ export function getTRPCErrorMessage(error: LocalizableTRPCError): string {
 		return error.message;
 	}
 
-	return ERROR_MESSAGES[appCode](error.data?.params ?? null);
+	return ERROR_MESSAGES[appCode]?.(error.data?.params ?? null) ?? error.message;
 }
 
 export function getTRPCFieldErrors(

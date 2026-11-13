@@ -220,7 +220,7 @@ export function CoursesPreviewTable({ batch, onUpdateBatch }: CoursesPreviewTabl
 													<div className="flex flex-col gap-1.5 p-2 bg-background rounded-md border shadow-sm">
 														<span className="text-xs font-semibold text-muted-foreground mb-1">پودمان‌های درس:</span>
 														<div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-															{c.modules.sort((a,b)=>a.orderIndex - b.orderIndex).map((m, mIdx) => (
+															{c.modules.sort((a,b)=>a.orderIndex - b.orderIndex).map((m) => (
 																<div key={m.code || m.orderIndex} className="flex items-center gap-2">
 																	<span className="text-[10px] font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded shrink-0 w-16 text-center">
 																		پودمان {m.orderIndex}

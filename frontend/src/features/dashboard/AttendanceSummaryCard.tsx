@@ -16,13 +16,7 @@ import { useMemo, useState } from "react";
 import { JalaliDatePicker } from "@/components/ui/jalali-date-picker";
 import { Input } from "@/components/ui/input";
 import { normalizePersianDigits } from "@/lib/normalize-persian-digits";
-import {
-	addDays,
-	formatDate,
-	isSameDay,
-	isToday,
-	today,
-} from "@/lib/persian-date";
+import { addDays, formatDate, isToday, today } from "@/lib/persian-date";
 import { useTRPC } from "@/lib/trpc";
 
 type Tab = "absent" | "present" | "all";
@@ -147,7 +141,7 @@ export function AttendanceSummaryCard() {
 			<div className="p-5 border-b bg-muted/20 flex flex-col gap-4">
 				<div className="flex flex-wrap items-center justify-between gap-2.5">
 					<div className="flex items-center gap-2">
-						<h2 className="font-semibold text-base">وضعیت حضور و غیاب</h2>
+						<h2 className="font-semibold text-base">مرحلهٔ اول: ثبت دستگاه</h2>
 						{isSelectedToday ? (
 							<span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
 								<span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -258,7 +252,9 @@ export function AttendanceSummaryCard() {
 								(data?.presentCount ?? 0)
 							)}
 						</span>
-						<span className="text-xs text-muted-foreground">حاضر</span>
+						<span className="text-xs text-muted-foreground">
+							دارای ثبت دستگاه
+						</span>
 					</button>
 
 					{/* Absent Tab */}
@@ -279,16 +275,41 @@ export function AttendanceSummaryCard() {
 								(data?.absentCount ?? 0)
 							)}
 						</span>
-						<span className="text-xs text-muted-foreground">غایب</span>
+						<span className="text-xs text-muted-foreground">
+							بدون ثبت دستگاه
+						</span>
 					</button>
 				</div>
 			</div>
+
+			{data && (
+				<div className="grid grid-cols-3 gap-2 border-b px-5 py-3 text-center text-xs">
+					<div>
+						<strong className="block text-base text-emerald-700 dark:text-emerald-400">
+							{data.confirmedPresentCount}
+						</strong>
+						حضور تأییدشده
+					</div>
+					<div>
+						<strong className="block text-base text-rose-700 dark:text-rose-400">
+							{data.confirmedAbsentCount}
+						</strong>
+						غیبت ثبت‌شده
+					</div>
+					<div>
+						<strong className="block text-base text-amber-700 dark:text-amber-400">
+							{data.pendingConfirmationCount}
+						</strong>
+						در انتظار تثبیت
+					</div>
+				</div>
+			)}
 
 			{/* Progress bar */}
 			{data && data.totalStudents > 0 && (
 				<div className="px-5 pt-3">
 					<div className="flex justify-between text-xs text-muted-foreground mb-1">
-						<span>درصد حضور ({formatDate(selectedDate, "d MMMM")})</span>
+						<span>درصد ثبت دستگاه ({formatDate(selectedDate, "d MMMM")})</span>
 						<span dir="ltr">
 							{Math.round((data.presentCount / data.totalStudents) * 100)}%
 						</span>
@@ -334,8 +355,8 @@ export function AttendanceSummaryCard() {
 						{activeTab === "all"
 							? "لیست کل دانش‌آموزان"
 							: activeTab === "present"
-								? "لیست دانش‌آموزان حاضر"
-								: "لیست دانش‌آموزان غایب"}
+								? "دانش‌آموزان دارای ثبت دستگاه"
+								: "دانش‌آموزان بدون ثبت دستگاه"}
 					</span>
 					<span>
 						{normQuery ? (
@@ -370,7 +391,9 @@ export function AttendanceSummaryCard() {
 								<p>
 									دانش‌آموزی با این مشخصات در لیست{" "}
 									<span className="font-semibold text-foreground">
-										{activeTab === "absent" ? "غایبین" : "حاضرین"}
+										{activeTab === "absent"
+											? "بدون ثبت دستگاه"
+											: "دارای ثبت دستگاه"}
 									</span>{" "}
 									یافت نشد.
 								</p>
@@ -381,8 +404,8 @@ export function AttendanceSummaryCard() {
 								>
 									مشاهده در لیست{" "}
 									{crossTabMatch.targetTab === "present"
-										? "حاضرین"
-										: "غایبین"}{" "}
+										? "دارای ثبت دستگاه"
+										: "بدون ثبت دستگاه"}{" "}
 									({crossTabMatch.count} مورد)
 								</button>
 							</div>
@@ -393,9 +416,12 @@ export function AttendanceSummaryCard() {
 								{normQuery ? (
 									<span>دانش‌آموزی با این نام یا کد ملی یافت نشد.</span>
 								) : activeTab === "present" ? (
-									<span>هنوز برای این تاریخ حضوری ثبت نشده است.</span>
+									<span>هنوز برای این تاریخ ترددی ثبت نشده است.</span>
 								) : activeTab === "absent" ? (
-									<span>همه دانش‌آموزان حاضرند! 🎉</span>
+									<span>
+										همهٔ دانش‌آموزان ثبت دستگاه دارند؛ تأیید کلاس جداگانه انجام
+										می‌شود.
+									</span>
 								) : (
 									<span>دانش‌آموزی ثبت نشده است.</span>
 								)}
@@ -440,7 +466,7 @@ export function AttendanceSummaryCard() {
 												</div>
 											) : (
 												<div className="text-xs text-rose-600 bg-rose-500/10 px-2 py-0.5 rounded-full shrink-0 font-medium">
-													غایب
+													بدون ثبت دستگاه
 												</div>
 											)}
 										</li>

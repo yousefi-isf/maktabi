@@ -19,8 +19,8 @@ export const UserFields = withFieldGroup({
 		const trpc = useTRPC();
 		const queryClient = useQueryClient();
 
-		const academicYearsQuery = trpc.academicYears.list.queryOptions();
-		const rolesQuery = trpc.roles.list.queryOptions();
+		const academicYearsQuery = trpc.academicYears.list.queryOptions({ limit: 100 });
+
 
 		return (
 			<FieldGroup className="grid grid-cols-[auto_1fr] py-2">
@@ -43,7 +43,7 @@ export const UserFields = withFieldGroup({
 							orientation={"horizontal"}
 							fetcher={async () => {
 								const data = await queryClient.fetchQuery(academicYearsQuery);
-								return data.map((year) => ({
+								return data.data.map((year) => ({
 									label: year.title,
 									value: year.id,
 								}));

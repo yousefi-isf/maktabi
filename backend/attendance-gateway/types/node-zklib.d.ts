@@ -9,18 +9,20 @@ declare module 'node-zklib' {
   }
 
   export interface ZKAttendance {
-    userSn: number;
-    deviceUserId: string;
+    userSn?: number;
+    deviceUserId: string | number;
     recordTime: Date;
     ip?: string;
   }
 
   export interface UsersResponse {
     data: ZKUser[];
+    err?: unknown;
   }
 
   export interface AttendanceResponse {
     data: ZKAttendance[];
+    err?: unknown;
   }
 
   export interface ZKRealTimeLog {

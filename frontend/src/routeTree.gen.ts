@@ -13,6 +13,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as SetPasswordRouteImport } from './routes/set-password'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
 import { Route as AuthenticatedExamsRouteImport } from './routes/_authenticated/exams'
 import { Route as AuthenticatedHelpRouteImport } from './routes/_authenticated/help'
 import { Route as AuthenticatedImportRouteImport } from './routes/_authenticated/import'
@@ -25,6 +26,7 @@ import { Route as AuthenticatedAcademicYearsAcademicYearIdRouteImport } from './
 import { Route as AuthenticatedAllusersIndexRouteImport } from './routes/_authenticated/allusers/index'
 import { Route as AuthenticatedAllusersUserIdRouteImport } from './routes/_authenticated/allusers/$userId'
 import { Route as AuthenticatedAttendanceIndexRouteImport } from './routes/_authenticated/attendance/index'
+import { Route as AuthenticatedAttendanceClassroomRouteImport } from './routes/_authenticated/attendance/classroom'
 import { Route as AuthenticatedAttendanceHistoryRouteImport } from './routes/_authenticated/attendance/history'
 import { Route as AuthenticatedClassesIndexRouteImport } from './routes/_authenticated/classes/index'
 import { Route as AuthenticatedExamsCreateRouteImport } from './routes/_authenticated/exams.create'
@@ -56,6 +58,11 @@ const SetPasswordRoute = SetPasswordRouteImport.update({
 const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAccountRoute = AuthenticatedAccountRouteImport.update({
+  id: '/account',
+  path: '/account',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedExamsRoute = AuthenticatedExamsRouteImport.update({
@@ -122,6 +129,12 @@ const AuthenticatedAttendanceIndexRoute =
   AuthenticatedAttendanceIndexRouteImport.update({
     id: '/attendance/',
     path: '/attendance/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAttendanceClassroomRoute =
+  AuthenticatedAttendanceClassroomRouteImport.update({
+    id: '/attendance/classroom',
+    path: '/attendance/classroom',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedAttendanceHistoryRoute =
@@ -207,6 +220,7 @@ export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/login': typeof LoginRoute
   '/set-password': typeof SetPasswordRoute
+  '/account': typeof AuthenticatedAccountRoute
   '/exams': typeof AuthenticatedExamsRouteWithChildren
   '/help': typeof AuthenticatedHelpRoute
   '/import': typeof AuthenticatedImportRoute
@@ -216,6 +230,7 @@ export interface FileRoutesByFullPath {
   '/test': typeof AuthenticatedTestRoute
   '/academic-years/$academicYearId': typeof AuthenticatedAcademicYearsAcademicYearIdRoute
   '/allusers/$userId': typeof AuthenticatedAllusersUserIdRoute
+  '/attendance/classroom': typeof AuthenticatedAttendanceClassroomRoute
   '/attendance/history': typeof AuthenticatedAttendanceHistoryRoute
   '/exams/create': typeof AuthenticatedExamsCreateRoute
   '/exams/publish': typeof AuthenticatedExamsPublishRoute
@@ -236,6 +251,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/set-password': typeof SetPasswordRoute
+  '/account': typeof AuthenticatedAccountRoute
   '/exams': typeof AuthenticatedExamsRouteWithChildren
   '/help': typeof AuthenticatedHelpRoute
   '/import': typeof AuthenticatedImportRoute
@@ -246,6 +262,7 @@ export interface FileRoutesByTo {
   '/': typeof AuthenticatedIndexRoute
   '/academic-years/$academicYearId': typeof AuthenticatedAcademicYearsAcademicYearIdRoute
   '/allusers/$userId': typeof AuthenticatedAllusersUserIdRoute
+  '/attendance/classroom': typeof AuthenticatedAttendanceClassroomRoute
   '/attendance/history': typeof AuthenticatedAttendanceHistoryRoute
   '/exams/create': typeof AuthenticatedExamsCreateRoute
   '/exams/publish': typeof AuthenticatedExamsPublishRoute
@@ -268,6 +285,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/login': typeof LoginRoute
   '/set-password': typeof SetPasswordRoute
+  '/_authenticated/account': typeof AuthenticatedAccountRoute
   '/_authenticated/exams': typeof AuthenticatedExamsRouteWithChildren
   '/_authenticated/help': typeof AuthenticatedHelpRoute
   '/_authenticated/import': typeof AuthenticatedImportRoute
@@ -278,6 +296,7 @@ export interface FileRoutesById {
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/academic-years/$academicYearId': typeof AuthenticatedAcademicYearsAcademicYearIdRoute
   '/_authenticated/allusers/$userId': typeof AuthenticatedAllusersUserIdRoute
+  '/_authenticated/attendance/classroom': typeof AuthenticatedAttendanceClassroomRoute
   '/_authenticated/attendance/history': typeof AuthenticatedAttendanceHistoryRoute
   '/_authenticated/exams/create': typeof AuthenticatedExamsCreateRoute
   '/_authenticated/exams/publish': typeof AuthenticatedExamsPublishRoute
@@ -301,6 +320,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/set-password'
+    | '/account'
     | '/exams'
     | '/help'
     | '/import'
@@ -310,6 +330,7 @@ export interface FileRouteTypes {
     | '/test'
     | '/academic-years/$academicYearId'
     | '/allusers/$userId'
+    | '/attendance/classroom'
     | '/attendance/history'
     | '/exams/create'
     | '/exams/publish'
@@ -330,6 +351,7 @@ export interface FileRouteTypes {
   to:
     | '/login'
     | '/set-password'
+    | '/account'
     | '/exams'
     | '/help'
     | '/import'
@@ -340,6 +362,7 @@ export interface FileRouteTypes {
     | '/'
     | '/academic-years/$academicYearId'
     | '/allusers/$userId'
+    | '/attendance/classroom'
     | '/attendance/history'
     | '/exams/create'
     | '/exams/publish'
@@ -361,6 +384,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/login'
     | '/set-password'
+    | '/_authenticated/account'
     | '/_authenticated/exams'
     | '/_authenticated/help'
     | '/_authenticated/import'
@@ -371,6 +395,7 @@ export interface FileRouteTypes {
     | '/_authenticated/'
     | '/_authenticated/academic-years/$academicYearId'
     | '/_authenticated/allusers/$userId'
+    | '/_authenticated/attendance/classroom'
     | '/_authenticated/attendance/history'
     | '/_authenticated/exams/create'
     | '/_authenticated/exams/publish'
@@ -423,6 +448,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/account': {
+      id: '/_authenticated/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AuthenticatedAccountRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/exams': {
@@ -507,6 +539,13 @@ declare module '@tanstack/react-router' {
       path: '/attendance'
       fullPath: '/attendance/'
       preLoaderRoute: typeof AuthenticatedAttendanceIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/attendance/classroom': {
+      id: '/_authenticated/attendance/classroom'
+      path: '/attendance/classroom'
+      fullPath: '/attendance/classroom'
+      preLoaderRoute: typeof AuthenticatedAttendanceClassroomRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/attendance/history': {
@@ -617,6 +656,7 @@ const AuthenticatedExamsRouteWithChildren =
   AuthenticatedExamsRoute._addFileChildren(AuthenticatedExamsRouteChildren)
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAccountRoute: typeof AuthenticatedAccountRoute
   AuthenticatedExamsRoute: typeof AuthenticatedExamsRouteWithChildren
   AuthenticatedHelpRoute: typeof AuthenticatedHelpRoute
   AuthenticatedImportRoute: typeof AuthenticatedImportRoute
@@ -627,6 +667,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedAcademicYearsAcademicYearIdRoute: typeof AuthenticatedAcademicYearsAcademicYearIdRoute
   AuthenticatedAllusersUserIdRoute: typeof AuthenticatedAllusersUserIdRoute
+  AuthenticatedAttendanceClassroomRoute: typeof AuthenticatedAttendanceClassroomRoute
   AuthenticatedAttendanceHistoryRoute: typeof AuthenticatedAttendanceHistoryRoute
   AuthenticatedFieldofstudyFieldofstudyIdRoute: typeof AuthenticatedFieldofstudyFieldofstudyIdRoute
   AuthenticatedGradeLevelsGradeLevelIdRoute: typeof AuthenticatedGradeLevelsGradeLevelIdRoute
@@ -644,6 +685,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAccountRoute: AuthenticatedAccountRoute,
   AuthenticatedExamsRoute: AuthenticatedExamsRouteWithChildren,
   AuthenticatedHelpRoute: AuthenticatedHelpRoute,
   AuthenticatedImportRoute: AuthenticatedImportRoute,
@@ -655,6 +697,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAcademicYearsAcademicYearIdRoute:
     AuthenticatedAcademicYearsAcademicYearIdRoute,
   AuthenticatedAllusersUserIdRoute: AuthenticatedAllusersUserIdRoute,
+  AuthenticatedAttendanceClassroomRoute: AuthenticatedAttendanceClassroomRoute,
   AuthenticatedAttendanceHistoryRoute: AuthenticatedAttendanceHistoryRoute,
   AuthenticatedFieldofstudyFieldofstudyIdRoute:
     AuthenticatedFieldofstudyFieldofstudyIdRoute,

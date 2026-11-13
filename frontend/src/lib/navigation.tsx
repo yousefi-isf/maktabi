@@ -13,13 +13,16 @@ import {
 	Presentation,
 	Trophy,
 } from "lucide-react";
+import { DASHBOARD_REQUIREMENT } from "./dashboard-access";
 import type { PermissionNavItem } from "./permissions";
 
 export const navigationItems = [
+	{ title: "حساب من", url: "/account", icon: <GraduationCap /> },
 	{
 		title: "پیشخوان",
 		url: "/",
 		icon: <LayoutDashboard />,
+		required: DASHBOARD_REQUIREMENT,
 	},
 	// {
 	// 	title: "مدیریت",
@@ -57,7 +60,7 @@ export const navigationItems = [
 		items: [
 			{
 				title: "سال‌های تحصیلی",
-				url: "/academic-years/",
+				url: "/academic-years",
 				icon: <CalendarDays />,
 				required: {
 					anyOf: [
@@ -70,7 +73,7 @@ export const navigationItems = [
 			},
 			{
 				title: "دانش آموزان",
-				url: "/students/",
+				url: "/students",
 				icon: <GraduationCap />,
 				required: {
 					anyOf: [
@@ -102,7 +105,7 @@ export const navigationItems = [
 			},
 			{
 				title: "رشته‌های تحصیلی",
-				url: "/fieldofstudy/",
+				url: "/fieldofstudy",
 				icon: <Library />,
 				required: {
 					anyOf: [
@@ -115,7 +118,7 @@ export const navigationItems = [
 			},
 			{
 				title: "پایه‌های تحصیلی",
-				url: "/grade-levels/",
+				url: "/grade-levels",
 				icon: <GraduationCap />,
 				required: {
 					anyOf: [
@@ -127,7 +130,7 @@ export const navigationItems = [
 			},
 			{
 				title: "کلاس‌ها",
-				url: "/classes/",
+				url: "/classes",
 				icon: <Presentation />,
 				required: {
 					anyOf: [
@@ -140,7 +143,7 @@ export const navigationItems = [
 			},
 			{
 				title: "دروس",
-				url: "/subjects/",
+				url: "/subjects",
 				icon: <Book />,
 				required: {
 					anyOf: [
@@ -170,12 +173,24 @@ export const navigationItems = [
 		icon: <FrameIcon />,
 		items: [
 			{
-				title: "داشبورد زنده",
-				url: "/attendance/",
+				title: "تثبیت حضور کلاس",
+				url: "/attendance/classroom",
+				icon: <Presentation />,
+				required: {
+					anyOf: [
+						"attendance.record.create",
+						"attendance.record.update",
+						"attendance.record.read",
+					],
+				},
+			},
+			{
+				title: "ثبت اولیهٔ دستگاه",
+				url: "/attendance",
 				exact: true,
 				icon: <Activity />,
 				required: {
-					anyOf: ["attendance.record.read", "attendance.record.read.own"],
+					anyOf: ["attendance.record.read"],
 				},
 			},
 			{
@@ -183,7 +198,7 @@ export const navigationItems = [
 				url: "/attendance/history",
 				icon: <Clock />,
 				required: {
-					anyOf: ["attendance.record.read", "attendance.record.read.own"],
+					anyOf: ["attendance.record.read"],
 				},
 			},
 		],

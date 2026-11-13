@@ -25,6 +25,7 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
+import { ScoreBreakdown } from "@/components/score-breakdown";
 import { useTRPC } from "@/lib/trpc";
 
 interface StudentScoresDialogProps {
@@ -285,18 +286,16 @@ export function StudentScoresDialog({
 											</TableHeader>
 											<TableBody>
 												{theoreticalSubjects.map((subj, idx) => {
-													const byType = (type: string, term1: boolean) =>
+													const byType = (type: string, term: number) =>
 														subj.scores.find(
 															(s) =>
 																s.examType === type &&
-																(term1
-																	? s.examTitle.includes("نوبت اول")
-																	: !s.examTitle.includes("نوبت اول")),
+																s.termNumber === term,
 														);
-													const c1 = byType("continuous", true);
-													const c2 = byType("continuous", false);
-													const f1 = byType("term_final", true);
-													const f2 = byType("term_final", false);
+													const c1 = byType("continuous", 1);
+													const c2 = byType("continuous", 2);
+													const f1 = byType("term_final", 1);
+													const f2 = byType("term_final", 2);
 
 													const scoreCell = (s: typeof c1) => {
 														if (!s)
@@ -382,7 +381,7 @@ export function StudentScoresDialog({
 								<section className="space-y-2">
 									<h3 className="flex items-center gap-2 text-sm font-semibold">
 										<BarChart3 className="w-4 h-4 text-primary" />
-										دروس پودمانی ({modularSubjects.length} درس)
+										دروس با نمرات تفکیکی ({modularSubjects.length} درس)
 									</h3>
 									<div className="border rounded-lg overflow-hidden">
 										<Table>
@@ -398,7 +397,7 @@ export function StudentScoresDialog({
 														واحد
 													</TableHead>
 													<TableHead className="text-center text-xs">
-														وضعیت پودمان‌ها
+														نمرات تفکیکی
 													</TableHead>
 													<TableHead className="w-20 text-center text-xs font-bold">
 														میانگین
@@ -429,46 +428,25 @@ export function StudentScoresDialog({
 															<TableCell className="font-mono text-xs text-muted-foreground">
 																{subj.subjectCode}
 															</TableCell>
-															<TableCell className="font-medium text-xs">
+															<TableCell className="min-w-36 max-w-52 whitespace-normal text-sm font-medium leading-6">
 																{subj.subjectName}
 															</TableCell>
-															<TableCell className="text-xs text-muted-foreground">
+															<TableCell className="max-w-32 whitespace-normal text-xs text-muted-foreground leading-5">
 																{subj.teacherName}
 															</TableCell>
 															<TableCell className="text-center font-mono text-xs">
 																{subj.unit}
 															</TableCell>
 															<TableCell>
-																{modFinals.length > 0 ? (
-																	<div className="flex items-center gap-1.5 flex-wrap">
-																		{modFinals.map((m) => {
-																			const passed =
-																				!m.isAbsent && (m.score ?? 0) >= 10;
-																			return (
-																				<span
-																					key={m.moduleOrderIndex}
-																					title={`پودمان ${m.moduleOrderIndex}: ${m.moduleTitle ?? ""} — نمره: ${m.isAbsent ? "غ" : (m.score ?? "-")}`}
-																					className={`inline-flex flex-col items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-medium border ${
-																						passed
-																							? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30"
-																							: "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/30"
-																					}`}
-																				>
-																					<span>پ{m.moduleOrderIndex}</span>
-																					<span>
-																						{m.isAbsent
-																							? "غ"
-																							: (m.score?.toFixed(0) ?? "-")}
-																					</span>
-																				</span>
-																			);
-																		})}
-																	</div>
-																) : (
-																	<span className="text-xs text-muted-foreground">
-																		-
-																	</span>
-																)}
+																<ScoreBreakdown
+																	parts={modFinals.map((score) => ({
+																		id: score.examId,
+																		order: score.moduleOrderIndex,
+																		title: score.moduleTitle,
+																		score: score.score,
+																		isAbsent: score.isAbsent,
+																	}))}
+																/>
 															</TableCell>
 															<TableCell className="text-center">
 																<ScoreBadge value={subj.overallAvg} />

@@ -1,5 +1,5 @@
 
-import { type ComponentProps, type PropsWithChildren, useState, useSyncExternalStore } from "react";
+import { type PropsWithChildren, useState } from "react";
 import { Button } from "./ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 

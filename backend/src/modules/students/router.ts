@@ -119,12 +119,12 @@ export const studentsRouter = router({
   create: tenantProcedure
     .input(
       z.object({
-        fullName: z.string({ required_error: "نام و نام خانوادگی الزامی است", invalid_type_error: "نام نامعتبر است" }).min(3, "نام باید حداقل ۳ کاراکتر باشد"),
-        nationalCode: z.string({ required_error: "کد ملی الزامی است", invalid_type_error: "کد ملی نامعتبر است" }).length(10, "کد ملی باید دقیقاً ۱۰ رقم باشد"),
-        email: z.string({ required_error: "ایمیل الزامی است", invalid_type_error: "ایمیل نامعتبر است" }).email("فرمت ایمیل نامعتبر است"),
-        phone: z.string({ invalid_type_error: "تلفن نامعتبر است" }).optional(),
-        studentNumber: z.string({ required_error: "شماره دانش‌آموزی الزامی است", invalid_type_error: "شماره دانش‌آموزی نامعتبر است" }).min(1, "شماره دانش‌آموزی الزامی است"),
-        status: z.enum(["active", "inactive", "left"], { invalid_type_error: "وضعیت نامعتبر است" }).optional().default("active"),
+        fullName: z.string({ error: (issue) => issue.input === undefined ? "نام و نام خانوادگی الزامی است" : "نام نامعتبر است" }).min(3, "نام باید حداقل ۳ کاراکتر باشد"),
+        nationalCode: z.string({ error: (issue) => issue.input === undefined ? "کد ملی الزامی است" : "کد ملی نامعتبر است" }).length(10, "کد ملی باید دقیقاً ۱۰ رقم باشد"),
+        email: z.string({ error: (issue) => issue.input === undefined ? "ایمیل الزامی است" : "ایمیل نامعتبر است" }).email("فرمت ایمیل نامعتبر است"),
+        phone: z.string({ error: "تلفن نامعتبر است" }).optional(),
+        studentNumber: z.string({ error: (issue) => issue.input === undefined ? "شماره دانش‌آموزی الزامی است" : "شماره دانش‌آموزی نامعتبر است" }).min(1, "شماره دانش‌آموزی الزامی است"),
+        status: z.enum(["active", "inactive", "left"], { error: "وضعیت نامعتبر است" }).optional().default("active"),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -214,13 +214,13 @@ export const studentsRouter = router({
   update: tenantProcedure
     .input(
       z.object({
-        studentId: z.string({ required_error: "شناسه دانش‌آموز الزامی است", invalid_type_error: "شناسه دانش‌آموز نامعتبر است" }),
-        fullName: z.string({ required_error: "نام و نام خانوادگی الزامی است", invalid_type_error: "نام نامعتبر است" }).min(3, "نام باید حداقل ۳ کاراکتر باشد"),
-        nationalCode: z.string({ required_error: "کد ملی الزامی است", invalid_type_error: "کد ملی نامعتبر است" }).length(10, "کد ملی باید دقیقاً ۱۰ رقم باشد"),
-        email: z.string({ required_error: "ایمیل الزامی است", invalid_type_error: "ایمیل نامعتبر است" }).email("فرمت ایمیل نامعتبر است"),
-        phone: z.string({ invalid_type_error: "تلفن نامعتبر است" }).optional(),
-        studentNumber: z.string({ required_error: "شماره دانش‌آموزی الزامی است", invalid_type_error: "شماره دانش‌آموزی نامعتبر است" }).min(1, "شماره دانش‌آموزی الزامی است"),
-        status: z.enum(["active", "inactive", "left"], { required_error: "وضعیت الزامی است", invalid_type_error: "وضعیت نامعتبر است" }),
+        studentId: z.string({ error: (issue) => issue.input === undefined ? "شناسه دانش‌آموز الزامی است" : "شناسه دانش‌آموز نامعتبر است" }),
+        fullName: z.string({ error: (issue) => issue.input === undefined ? "نام و نام خانوادگی الزامی است" : "نام نامعتبر است" }).min(3, "نام باید حداقل ۳ کاراکتر باشد"),
+        nationalCode: z.string({ error: (issue) => issue.input === undefined ? "کد ملی الزامی است" : "کد ملی نامعتبر است" }).length(10, "کد ملی باید دقیقاً ۱۰ رقم باشد"),
+        email: z.string({ error: (issue) => issue.input === undefined ? "ایمیل الزامی است" : "ایمیل نامعتبر است" }).email("فرمت ایمیل نامعتبر است"),
+        phone: z.string({ error: "تلفن نامعتبر است" }).optional(),
+        studentNumber: z.string({ error: (issue) => issue.input === undefined ? "شماره دانش‌آموزی الزامی است" : "شماره دانش‌آموزی نامعتبر است" }).min(1, "شماره دانش‌آموزی الزامی است"),
+        status: z.enum(["active", "inactive", "left"], { error: (issue) => issue.input === undefined ? "وضعیت الزامی است" : "وضعیت نامعتبر است" }),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -285,7 +285,7 @@ export const studentsRouter = router({
   delete: tenantProcedure
     .input(
       z.object({
-        studentIds: z.array(z.string({ invalid_type_error: "شناسه نامعتبر است" }), { required_error: "شناسه‌ها الزامی هستند", invalid_type_error: "لیست شناسه‌ها نامعتبر است" }),
+        studentIds: z.array(z.string({ error: "شناسه نامعتبر است" }), { error: (issue) => issue.input === undefined ? "شناسه‌ها الزامی هستند" : "لیست شناسه‌ها نامعتبر است" }),
       })
     )
     .mutation(async ({ ctx, input }) => {

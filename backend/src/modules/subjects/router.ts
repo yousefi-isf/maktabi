@@ -1,8 +1,10 @@
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 import { router, tenantProcedure } from "../../trpc/trpc.js";
 import { PERMISSIONS } from "../../config/permissions.js";
 import { appError } from "../../trpc/app-error.js";
-import { Prisma, SubjectType } from "@maktabi/db";
+import { SubjectType } from "@maktabi/db";
+import { captureSubjectGpaBases } from "../rankings/service.js";
 
 export const subjectsRouter = router({
   /* ――――――――――――――――――――――――――――――――― 1. List ―――――――――――――――――――――――――――――――― */
@@ -57,7 +59,14 @@ export const subjectsRouter = router({
 
       const totalPages = Math.ceil(totalItems / input.limit);
       return {
-        data,
+        data: data.map((subject) => ({
+          ...subject,
+          defaultUnit: Number(subject.defaultUnit),
+          subjectModules: subject.subjectModules.map((module) => ({
+            ...module,
+            weight: Number(module.weight),
+          })),
+        })),
         meta: {
           totalItems,
           totalPages,
@@ -170,8 +179,28 @@ export const subjectsRouter = router({
       }
 
       const updatedSubject = await ctx.prisma.$transaction(async (tx) => {
+        const incomingIds = (input.modules ?? []).flatMap((module) => module.id ? [module.id] : []);
+        // Validate every supplied ID before any writes, including GPA snapshots
+        // and removal of omitted modules. IDs alone do not establish ownership.
+        const ownedModules = incomingIds.length ? await tx.subjectModule.findMany({
+          where: {
+            id: { in: incomingIds },
+            subjectId: input.id,
+            schoolId: ctx.activeSchoolId,
+            deletedAt: null,
+          },
+          select: { id: true },
+        }) : [];
+        if (new Set(incomingIds).size !== incomingIds.length || ownedModules.length !== incomingIds.length) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "فهرست پودمان‌ها نامعتبر است؛ پودمان‌های انتخاب‌شده باید فعال و متعلق به همین درس و مدرسه باشند.",
+          });
+        }
+
+        await captureSubjectGpaBases(tx, ctx.activeSchoolId, input.id);
         const subject = await tx.subject.update({
-          where: { id: input.id },
+          where: { id: input.id, schoolId: ctx.activeSchoolId, deletedAt: null },
           data: {
             name: input.name,
             code: input.code,
@@ -181,11 +210,11 @@ export const subjectsRouter = router({
         });
 
         if (input.subjectType === 'modular' && input.modules) {
-          const incomingIds = input.modules.filter((m): m is {id: string, title: string, code?: string|null, orderIndex: number, weight: number} => !!m.id).map(m => m.id);
-          
           await tx.subjectModule.updateMany({
             where: {
               subjectId: input.id,
+              schoolId: ctx.activeSchoolId,
+              deletedAt: null,
               id: { notIn: incomingIds }
             },
             data: { deletedAt: new Date() }
@@ -194,7 +223,7 @@ export const subjectsRouter = router({
           for (const m of input.modules) {
             if (m.id) {
               await tx.subjectModule.update({
-                where: { id: m.id },
+                where: { id: m.id, subjectId: input.id, schoolId: ctx.activeSchoolId, deletedAt: null },
                 data: {
                   title: m.title,
                   code: m.code,
@@ -218,13 +247,13 @@ export const subjectsRouter = router({
           }
         } else if (input.subjectType !== 'modular') {
           await tx.subjectModule.updateMany({
-            where: { subjectId: input.id },
+            where: { subjectId: input.id, schoolId: ctx.activeSchoolId, deletedAt: null },
             data: { deletedAt: new Date() }
           });
         }
 
         return subject;
-      });
+      }, { timeout: 30_000 });
 
       return updatedSubject;
     }),
@@ -258,14 +287,14 @@ export const subjectsRouter = router({
       if (!existingSubject || existingSubject.schoolId !== ctx.activeSchoolId) {
         throw appError({
           code: "NOT_FOUND",
-          appCode: "SUBJECT_NOT_FOUND" as any,
+          appCode: "SUBJECT_NOT_FOUND",
         });
       }
 
       if (existingSubject._count.curricula > 0) {
         throw appError({
           code: "BAD_REQUEST",
-          appCode: "SUBJECT_IN_USE" as any,
+          appCode: "SUBJECT_IN_USE",
         });
       }
 

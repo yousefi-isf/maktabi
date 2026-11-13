@@ -14,7 +14,7 @@ import { showInfoToast, showTRPCErrorToast } from "@/lib/show-error-toast";
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { FieldGroup } from "@/components/ui/field";
-import { zodValidator } from "@tanstack/zod-form-adapter";
+
 
 const formSchema = z.object({
 	id: z.string().optional(),
@@ -30,7 +30,7 @@ type FormValues = z.infer<typeof formSchema>;
 interface ClassFormDialogProps {
 	open?: boolean;
 	onOpenChange?: (open: boolean) => void;
-	defaultValues?: Partial<FormValues>;
+	defaultValues?: Omit<Partial<FormValues>, "fieldOfStudyId"> & { fieldOfStudyId?: string | null };
 }
 
 export function ClassFormDialog({ open: controlledOpen, onOpenChange: controlledOnOpenChange, defaultValues }: ClassFormDialogProps) {
@@ -44,30 +44,28 @@ export function ClassFormDialog({ open: controlledOpen, onOpenChange: controlled
 
 	const { data: filterOpts } = useQuery(trpc.rankings.getFilterOptions.queryOptions());
 
-	const mutation = useMutation(
-		(isEdit ? trpc.classes.update : trpc.classes.create).mutationOptions({
-			onSuccess: async () => {
-				await queryClient.invalidateQueries({
-					queryKey: trpc.classes.list.queryKey(),
-				});
-				showInfoToast(isEdit ? "کلاس با موفقیت بروزرسانی شد." : "کلاس جدید با موفقیت ایجاد شد.");
-				onOpenChange(false);
-				if (!isEdit) form.reset();
-			},
-			onError: showTRPCErrorToast,
-		})
-	);
+	const mutationOptions = {
+		onSuccess: async () => {
+			await queryClient.invalidateQueries(trpc.classes.list.pathFilter());
+			showInfoToast(isEdit ? "کلاس با موفقیت بروزرسانی شد." : "کلاس جدید با موفقیت ایجاد شد.");
+			onOpenChange(false);
+			if (!isEdit) form.reset();
+		},
+		onError: showTRPCErrorToast,
+	};
+	const createMutation = useMutation(trpc.classes.create.mutationOptions(mutationOptions));
+	const updateMutation = useMutation(trpc.classes.update.mutationOptions(mutationOptions));
 
+	const initialValues: FormValues = {
+		id: defaultValues?.id,
+		name: defaultValues?.name ?? "",
+		capacity: defaultValues?.capacity ?? 30,
+		academicYearId: defaultValues?.academicYearId || "",
+		gradeLevelId: defaultValues?.gradeLevelId || "",
+		fieldOfStudyId: defaultValues?.fieldOfStudyId || "",
+	};
 	const form = useAppForm({
-		defaultValues: {
-			name: defaultValues?.name || "",
-			capacity: defaultValues?.capacity || 30,
-			academicYearId: defaultValues?.academicYearId || "",
-			gradeLevelId: defaultValues?.gradeLevelId || "",
-			fieldOfStudyId: defaultValues?.fieldOfStudyId || "",
-			...defaultValues,
-		} as FormValues,
-		validatorAdapter: zodValidator(),
+		defaultValues: initialValues,
 		validators: {
 			onSubmit: formSchema,
 		},
@@ -76,18 +74,20 @@ export function ClassFormDialog({ open: controlledOpen, onOpenChange: controlled
 				...value,
 				fieldOfStudyId: value.fieldOfStudyId === "__none__" || !value.fieldOfStudyId ? undefined : value.fieldOfStudyId,
 			};
-			mutation.mutate(payload as any);
+			if (value.id) {
+				await updateMutation.mutateAsync({ ...payload, id: value.id });
+			} else {
+				await createMutation.mutateAsync(payload);
+			}
 		},
 	});
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			{!controlledOpen && (
-				<DialogTrigger asChild>
-					<Button className="gap-2">
-						<Plus className="w-4 h-4" />
-						ایجاد کلاس
-					</Button>
+				<DialogTrigger render={<Button className="gap-2" />}>
+					<Plus className="w-4 h-4" />
+					ایجاد کلاس
 				</DialogTrigger>
 			)}
 			<DialogContent className="sm:max-w-[425px]">
@@ -106,19 +106,19 @@ export function ClassFormDialog({ open: controlledOpen, onOpenChange: controlled
 					>
 						<FieldGroup>
 							<form.AppField name="name">
-								{(field: any) => (
+								{(field) => (
 									<field.TextField label="نام کلاس" placeholder="مثال: کلاس 101" />
 								)}
 							</form.AppField>
 
 							<form.AppField name="capacity">
-								{(field: any) => (
+								{(field) => (
 									<field.NumberField label="ظرفیت کلاس" />
 								)}
 							</form.AppField>
 
 							<form.AppField name="academicYearId">
-								{(field: any) => (
+								{(field) => (
 									<field.SelectField
 										label="سال تحصیلی"
 										placeholder="انتخاب سال تحصیلی"
@@ -133,7 +133,7 @@ export function ClassFormDialog({ open: controlledOpen, onOpenChange: controlled
 							</form.AppField>
 
 							<form.AppField name="gradeLevelId">
-								{(field: any) => (
+								{(field) => (
 									<field.SelectField
 										label="پایه تحصیلی"
 										placeholder="انتخاب پایه تحصیلی"
@@ -148,7 +148,7 @@ export function ClassFormDialog({ open: controlledOpen, onOpenChange: controlled
 							</form.AppField>
 
 							<form.AppField name="fieldOfStudyId">
-								{(field: any) => (
+								{(field) => (
 									<field.SelectField
 										label="رشته تحصیلی (اختیاری)"
 										placeholder="عمومی / بدون رشته"

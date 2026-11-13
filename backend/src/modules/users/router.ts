@@ -48,12 +48,12 @@ const listUsersInput = searchInput;
  * }
  */
 const createInput = z.object({
-	email: z.string({ required_error: "ایمیل الزامی است", invalid_type_error: "ایمیل نامعتبر است" }).email({ message: "فرمت ایمیل نامعتبر است" }),
-	fullName: z.string({ required_error: "نام و نام خانوادگی الزامی است", invalid_type_error: "نام نامعتبر است" }).trim().min(1, { message: "نام و نام خانوادگی الزامی است" }).max(200, { message: "نام بسیار طولانی است" }),
-	nationalCode: z.string({ required_error: "کدملی الزامی است", invalid_type_error: "کدملی نامعتبر است" }).trim().min(1, { message: "کدملی الزامی است" }).max(32, { message: "کدملی نامعتبر است" }),
-	phone: z.string({ invalid_type_error: "تلفن نامعتبر است" }).trim().min(1, { message: "تلفن الزامی است" }).max(32, { message: "تلفن نامعتبر است" }).optional(),
-	roleId: z.string({ required_error: "نقش الزامی است", invalid_type_error: "شناسه نقش نامعتبر است" }).uuid({ message: "شناسه نقش نامعتبر است" }),
-	academicYearId: z.string({ invalid_type_error: "سال تحصیلی نامعتبر است" }).uuid({ message: "شناسه سال تحصیلی نامعتبر است" }).optional(),
+	email: z.string({ error: (issue) => issue.input === undefined ? "ایمیل الزامی است" : "ایمیل نامعتبر است" }).email({ message: "فرمت ایمیل نامعتبر است" }),
+	fullName: z.string({ error: (issue) => issue.input === undefined ? "نام و نام خانوادگی الزامی است" : "نام نامعتبر است" }).trim().min(1, { message: "نام و نام خانوادگی الزامی است" }).max(200, { message: "نام بسیار طولانی است" }),
+	nationalCode: z.string({ error: (issue) => issue.input === undefined ? "کدملی الزامی است" : "کدملی نامعتبر است" }).trim().min(1, { message: "کدملی الزامی است" }).max(32, { message: "کدملی نامعتبر است" }),
+	phone: z.string({ error: "تلفن نامعتبر است" }).trim().min(1, { message: "تلفن الزامی است" }).max(32, { message: "تلفن نامعتبر است" }).optional(),
+	roleId: z.string({ error: (issue) => issue.input === undefined ? "نقش الزامی است" : "شناسه نقش نامعتبر است" }).uuid({ message: "شناسه نقش نامعتبر است" }),
+	academicYearId: z.string({ error: "سال تحصیلی نامعتبر است" }).uuid({ message: "شناسه سال تحصیلی نامعتبر است" }).optional(),
 });
 
 /* ―――――――――――――――――――――――――― Invite input (JSON): ―――――――――――――――――――――――――― */
@@ -72,8 +72,8 @@ const createInput = z.object({
  * }
  */
 const inviteInput = z.object({
-	userId: z.string({ required_error: "کاربر الزامی است", invalid_type_error: "شناسه کاربر نامعتبر است" }).uuid({ message: "شناسه کاربر نامعتبر است" }),
-	inviteExpiredAt: z.date({ invalid_type_error: "تاریخ نامعتبر است" }).optional().default(() => {
+	userId: z.string({ error: (issue) => issue.input === undefined ? "کاربر الزامی است" : "شناسه کاربر نامعتبر است" }).uuid({ message: "شناسه کاربر نامعتبر است" }),
+	inviteExpiredAt: z.date({ error: "تاریخ نامعتبر است" }).optional().default(() => {
 		const date = new Date();
 		date.setDate(date.getDate() + 2);
 		return date;
@@ -93,8 +93,8 @@ const inviteInput = z.object({
  */
 const deleteInput = z.object({
 	id: z.union([
-		z.string({ required_error: "شناسه الزامی است", invalid_type_error: "شناسه نامعتبر است" }).uuid({ message: "شناسه نامعتبر است" }),
-		z.array(z.string({ invalid_type_error: "شناسه نامعتبر است" }).uuid({ message: "شناسه نامعتبر است" })).min(1, { message: "حداقل یک شناسه باید انتخاب شود" })
+		z.string({ error: (issue) => issue.input === undefined ? "شناسه الزامی است" : "شناسه نامعتبر است" }).uuid({ message: "شناسه نامعتبر است" }),
+		z.array(z.string({ error: "شناسه نامعتبر است" }).uuid({ message: "شناسه نامعتبر است" })).min(1, { message: "حداقل یک شناسه باید انتخاب شود" })
 	]),
 });
 
@@ -110,7 +110,7 @@ const deleteInput = z.object({
  * }
  */
 const getByIdInput = z.object({
-	id: z.string({ required_error: "شناسه الزامی است", invalid_type_error: "شناسه نامعتبر است" }).uuid({ message: "شناسه نامعتبر است" }),
+	id: z.string({ error: (issue) => issue.input === undefined ? "شناسه الزامی است" : "شناسه نامعتبر است" }).uuid({ message: "شناسه نامعتبر است" }),
 });
 
 export const usersRouter = router({

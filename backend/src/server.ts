@@ -1,5 +1,6 @@
 import { pathToFileURL } from "node:url";
-import { EventEmitter } from "node:events";
+import { punchEvents, expireDeviceStatuses, reportDeviceStatus } from "./modules/attendance/events.js";
+export { punchEvents, deviceStatuses } from "./modules/attendance/events.js";
 import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
 import { prisma } from "@maktabi/db";
@@ -11,19 +12,7 @@ import { env } from "#env";
 import { auth } from "./modules/auth/auth.js";
 import { createContext } from "./trpc/context.js";
 import { appRouter } from "./trpc/router.js";
-import { processPunch } from "./modules/attendance/punch.service.js";
-
-
-/**
- * Internal event bus — emits 'punch' and 'deviceStatus' events.
- */
-export const punchEvents = new EventEmitter();
-
-/**
- * In-memory state of attendance devices (schoolId -> 'connected' | 'disconnected')
- */
-export const deviceStatuses = new Map<string, 'connected' | 'disconnected'>();
-
+import { processPunch, InvalidPunch } from "./modules/attendance/punch.service.js";
 
 
 export async function buildServer() {
@@ -93,14 +82,14 @@ export async function buildServer() {
     schema: {
       body: {
         type: "object",
-        required: ["secret", "schoolId", "deviceUserId", "recordTime", "deviceIp", "deviceSn"],
+        required: ["secret", "schoolId", "deviceUserId", "recordTime", "deviceIp"],
         properties: {
           secret: { type: "string" },
-          schoolId: { type: "string" },
-          deviceUserId: { type: "string" },
-          recordTime: { type: "string" },
-          deviceIp: { type: "string" },
-          deviceSn: { type: "number" },
+          schoolId: { type: "string", format: "uuid" },
+          deviceUserId: { type: "string", pattern: "^[0-9]{1,10}$" },
+          recordTime: { type: "string", format: "date-time" },
+          deviceIp: { type: "string", minLength: 1, maxLength: 255 },
+          deviceSn: { type: ["integer", "null"], minimum: 0 },
         },
       },
     },
@@ -111,7 +100,7 @@ export async function buildServer() {
         deviceUserId: string;
         recordTime: string;
         deviceIp: string;
-        deviceSn: number;
+        deviceSn?: number | null;
       };
 
       // 1. Validate shared secret
@@ -129,6 +118,7 @@ export async function buildServer() {
 
         return reply.status(result.alreadyExists ? 200 : 201).send(result);
       } catch (err) {
+        if (err instanceof InvalidPunch) return reply.status(400).send({ error: err.message });
         request.log.error({ err }, "[punch] Failed to process punch event");
         return reply.status(500).send({ error: "Internal server error" });
       }
@@ -154,8 +144,9 @@ export async function buildServer() {
         return reply.status(401).send({ error: "Unauthorized" });
       }
 
-      deviceStatuses.set(body.schoolId, body.status);
-      punchEvents.emit("deviceStatus", { schoolId: body.schoolId, status: body.status });
+      const school = await prisma.school.findFirst({ where: { id: body.schoolId, deletedAt: null }, select: { id: true } });
+      if (!school) return reply.status(400).send({ error: "Unknown or inactive SCHOOL_ID." });
+      reportDeviceStatus(body.schoolId, body.status);
 
       return reply.send({ success: true });
     },
@@ -164,7 +155,10 @@ export async function buildServer() {
   app.get("/health", async () => ({ status: "ok" }));
 
 
+  const deviceStatusTimer = setInterval(expireDeviceStatuses, 5000);
+  deviceStatusTimer.unref();
   app.addHook("onClose", async () => {
+    clearInterval(deviceStatusTimer);
     await prisma.$disconnect();
   });
 

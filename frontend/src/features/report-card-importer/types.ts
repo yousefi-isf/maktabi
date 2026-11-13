@@ -10,4 +10,4 @@ export type SingleStudentReportCard = ReportCardBatchDto['students'][number];
 export type ReportCardCourse = SingleStudentReportCard['courses'][number];
 export type ReportCardModule = ReportCardCourse['modules'][number];
 
-export type ImporterStep = 'upload' | 'preview' | 'importing' | 'success';
+export type ImporterStep = 'input' | 'preview' | 'importing' | 'success';

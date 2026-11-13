@@ -2,6 +2,12 @@ import type { TRPC_ERROR_CODE_KEY } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
 
 const APP_ERROR_MESSAGES = {
+	CLASS_NOT_FOUND: "کلاس مورد نظر یافت نشد.",
+	CLASS_IN_USE: "امکان حذف این کلاس وجود ندارد زیرا دانش‌آموزانی در آن ثبت‌نام کرده‌اند.",
+	SUBJECT_NOT_FOUND: "درس مورد نظر یافت نشد.",
+	SUBJECT_IN_USE: "این درس به دلیل داشتن اطلاعات وابسته قابل حذف نیست.",
+	STUDENT_NOT_FOUND_IN_ACTIVE_SCHOOL: "دانش‌آموز در مدرسهٔ فعال یافت نشد.",
+
 	AUTHENTICATION_REQUIRED: "Authentication is required",
 	SUPER_ADMIN_REQUIRED: "Super admin privileges are required",
 	ACTIVE_SCHOOL_NOT_SELECTED: "No active school is selected",

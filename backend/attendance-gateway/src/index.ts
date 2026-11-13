@@ -1,23 +1,33 @@
-import ZKLib from 'node-zklib';
+import ZKLib from "node-zklib";
+import { loadGatewayConfig } from "./config.js";
+import { toPunch } from "./device-monitor.js";
 
-async function run(): Promise<void> {
-    const zkInstance = new ZKLib('192.168.2.201', 4370, 5200, 5000);
-
-    try {
-        await zkInstance.createSocket();
-
-        const users = await zkInstance.getUsers();
-        console.log('=== Users ===');
-        console.log(users.data);
-
-        const logs = await zkInstance.getAttendances();
-        console.log('=== Attendance Records ===');
-        console.log(logs.data);
-
-        await zkInstance.disconnect();
-    } catch (err) {
-        console.log('Error:', err);
-    }
+async function run() {
+	const config = loadGatewayConfig();
+	process.env.TZ = config.timeZone;
+	const device = new ZKLib(config.deviceIp, config.devicePort, 10_000, 5000);
+	try {
+		await device.createSocket();
+		const users = await device.getUsers();
+		console.log(
+			"Device users:",
+			users.data.map(({ userId, name, role }) => ({
+				userId,
+				name,
+				deviceRole: role,
+			})),
+		);
+		const logs = await device.getAttendances();
+		console.log("Device log count:", logs.data.length);
+		console.log(
+			"Recent records (UTC):",
+			logs.data.slice(-10).map((record) => toPunch(record, config)),
+		);
+	} finally {
+		await device.disconnect();
+	}
 }
-
-run();
+void run().catch((error) => {
+	console.error(error instanceof Error ? error.message : "Device read failed.");
+	process.exitCode = 1;
+});

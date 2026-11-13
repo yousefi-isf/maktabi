@@ -39,7 +39,7 @@ export const reportCardModuleDtoSchema = z.object({
   row: z.number().int().positive(),
   code: z.string().trim().min(1), // e.g. "68810511" or "885101"
   title: z.string().trim().min(1), // e.g. "معادله‌های درجه دوم"
-  orderIndex: z.number().int().min(1).max(5),
+  orderIndex: z.number().int().min(1).max(10),
   moduleContinuous: z.number().min(0).max(20).nullable(), // continuous score (1-5)
   competencyScore: z.string().trim().nullable().optional(), // e.g. "احراز شایستگی"
   competencyLevel: z.enum(["not_achieved", "achieved", "beyond_expectation"]).nullable().optional(),
@@ -68,7 +68,7 @@ export const reportCardCourseDtoSchema = z.object({
   finalScore: z.number().min(0).max(20),
   result: z.string().trim().default("قبول"), // "قبول" | "مردود" | "ناتمام"
   isPassed: z.boolean().default(true),
-  // 5 modules for modular courses (empty for theoretical courses)
+  // Modules for modular courses (some reports contain 10 rows) (empty for theoretical courses)
   modules: z.array(reportCardModuleDtoSchema).default([]),
 });
 export type ReportCardCourseDto = z.infer<typeof reportCardCourseDtoSchema>;

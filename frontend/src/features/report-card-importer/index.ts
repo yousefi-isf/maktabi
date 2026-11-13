@@ -1,6 +1,6 @@
 export * from './types';
 export * from './report-card-importer-view';
-export * from './file-dropzone';
+export * from './report-card-text-input';
 export * from './preview-summary';
 export * from './students-preview-table';
 export * from './student-report-card-dialog';

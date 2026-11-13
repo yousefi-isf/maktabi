@@ -1,9 +1,22 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
+import { hasPermission } from "@/lib/permissions";
+import { DASHBOARD_REQUIREMENT } from "@/lib/dashboard-access";
 import { AttendanceSummaryCard } from "@/features/dashboard/AttendanceSummaryCard";
 import { LivePunchesCard } from "@/features/dashboard/LivePunchesCard";
 import { StudentRankingsView } from "@/features/rankings";
 
 export const Route = createFileRoute("/_authenticated/")({
+	beforeLoad: ({ context }) => {
+		if (!hasPermission(context.me.permissions, DASHBOARD_REQUIREMENT)) {
+			throw redirect({
+				to: hasPermission(context.me.permissions, {
+					anyOf: ["attendance.record.create", "attendance.record.update"],
+				})
+					? "/attendance/classroom"
+					: "/account",
+			});
+		}
+	},
 	component: RouteComponent,
 });
 

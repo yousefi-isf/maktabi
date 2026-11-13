@@ -49,7 +49,7 @@ export function StudentRankingsView() {
 		enabled: Boolean(filters.academicYearId),
 	});
 
-	/* ―――――― 3. Mutation to recalculate GPAs from Score table if requested ――――― */
+	/* Recalculate using the current filters and retained report-card results. */
 	const recalculateMutation = useMutation(
 		trpc.rankings.recalculateGpas.mutationOptions(),
 	);
@@ -60,11 +60,14 @@ export function StudentRankingsView() {
 			const res = await recalculateMutation.mutateAsync({
 				academicYearId: filters.academicYearId,
 				classId: filters.classId || undefined,
+				gradeLevelId: filters.gradeLevelId || undefined,
+				fieldOfStudyId: filters.fieldOfStudyId || undefined,
 			});
 			showSuccessToast(res.message);
-			await queryClient.invalidateQueries(
-				trpc.rankings.getStudentRankings.pathFilter(),
-			);
+			await Promise.all([
+				queryClient.invalidateQueries(trpc.rankings.getStudentRankings.pathFilter()),
+				queryClient.invalidateQueries(trpc.rankings.getStudentScoreDetail.pathFilter()),
+			]);
 		} catch (err) {
 			showTRPCErrorToast(err);
 		}

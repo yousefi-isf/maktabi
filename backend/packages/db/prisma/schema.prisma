@@ -330,6 +330,7 @@ model User {
   userSchools   UserSchool[]
   announcements Announcement[]
   auditLogs     AuditLog[]
+  attendanceConfirmations Attendance[] @relation("AttendanceConfirmer")
 
   // Post-ERD additions (see IMPLEMENTATION NOTES §10): isSuperAdmin is the
   // system-wide escape hatch that bypasses school membership/RBAC entirely;
@@ -520,6 +521,7 @@ model Enrollment {
   totalUnitsPassed Decimal?         @map("total_units_passed") @db.Decimal(4, 2)
   totalUnitsTaken  Decimal?         @map("total_units_taken") @db.Decimal(4, 2)
   totalScoreSum    Decimal?         @map("total_score_sum") @db.Decimal(6, 2)
+  gpaBasis         Json?            @map("gpa_basis")
   createdAt        DateTime         @default(now()) @map("created_at") @db.Timestamptz
   updatedAt        DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
   deletedAt        DateTime?        @map("deleted_at") @db.Timestamptz
@@ -709,6 +711,12 @@ model Attendance {
   attDate     DateTime         @map("att_date") @db.Timestamptz
   periodNo    Int?             @map("period_no") // null alongside timetableId for daily-only tracking
   status      AttendanceStatus
+  dailyKey    String? @unique @map("daily_key")
+  confirmedById String? @map("confirmed_by_id")
+  confirmedAt DateTime? @map("confirmed_at") @db.Timestamptz
+  manualOverride Boolean @default(false) @map("manual_override")
+  note String?
+  devicePunchLogId String? @map("device_punch_log_id")
   createdAt   DateTime         @default(now()) @map("created_at") @db.Timestamptz
   updatedAt   DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
   deletedAt   DateTime?        @map("deleted_at") @db.Timestamptz
@@ -718,6 +726,8 @@ model Attendance {
   student     Student     @relation(fields: [studentId], references: [id])
   schoolClass SchoolClass @relation(fields: [classId], references: [id])
   timetable   Timetable?  @relation(fields: [timetableId], references: [id])
+  confirmedBy User? @relation("AttendanceConfirmer", fields: [confirmedById], references: [id])
+  devicePunchLog DevicePunchLog? @relation(fields: [devicePunchLogId], references: [id])
 
   // ERD's real constraint is UNIQUE(student_id, att_date, period_no) — see
   // IMPLEMENTATION NOTES, periodNo being nullable breaks this as written.
@@ -751,19 +761,17 @@ model DevicePunchLog {
   recordTime   DateTime @map("record_time") @db.Timestamptz
   /// IP address of the physical device that produced this event.
   deviceIp     String   @map("device_ip")
-  /// ZKTeco internal sequential serial for this punch record (userSn field).
-  /// Together with deviceIp, this uniquely identifies a punch — used to
-  /// prevent duplicate inserts on gateway reconnect / replay.
-  deviceSn     Int      @map("device_sn")
+  /// Device user UID (userSn), not an attendance sequence. Absent on UDP devices.
+  deviceSn     Int?     @map("device_sn")
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   school  School   @relation(fields: [schoolId], references: [id])
   student Student? @relation(fields: [studentId], references: [id])
+  attendances Attendance[]
 
-  /// Idempotency guard: same physical device cannot produce two log rows
-  /// for the same sequential record number.
-  @@unique([deviceIp, deviceSn])
+  /// One device/user/time event per school; repeating a user UID is normal.
+  @@unique([schoolId, deviceIp, deviceUserId, recordTime], name: "event", map: "device_punch_log_event_key")
   @@index([schoolId, recordTime])
   @@index([studentId, recordTime])
   @@map("device_punch_log")

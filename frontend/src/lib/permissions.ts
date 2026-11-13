@@ -14,7 +14,7 @@ export type PermissionRequirement =
 	| { anyOf: readonly PermissionCode[] }
 	| { allOf: readonly PermissionCode[] };
 
-type AppPath = FileRouteTypes["fullPaths"];
+type AppPath = FileRouteTypes["to"];
 
 export type NavLeafItem = {
 	title: string;

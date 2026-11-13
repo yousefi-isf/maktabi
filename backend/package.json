@@ -5,16 +5,18 @@
   "main": "src/server.ts",
   "type": "module",
   "scripts": {
+    "typecheck": "tsc --noEmit",
     "dev": "tsx watch --conditions=development --env-file=.env src/server.ts",
     "build": "pnpm --dir packages/db build && tsc",
     "start": "node --env-file=.env dist/server.js",
     "db:seed": "pnpm --filter @maktabi/db exec prisma db seed",
-    "db:seed:principal": "tsx --env-file=.env packages/db/prisma/run-sarami-principal.ts",
+    "db:seed:principal": "tsx --conditions=development --env-file=.env packages/db/prisma/run-sarami-principal.ts",
     "db:generate": "pnpm --filter @maktabi/db exec prisma generate",
     "db:reset": "pnpm --filter @maktabi/db exec prisma migrate reset",
     "db:migrate:dev": "pnpm --filter @maktabi/db exec prisma migrate dev",
     "db:status": "pnpm --filter @maktabi/db exec prisma migrate status",
-    "db:studio": "pnpm --filter @maktabi/db exec prisma studio"
+    "db:studio": "pnpm --filter @maktabi/db exec prisma studio",
+    "test:report-card-import": "node --conditions=development --import tsx packages/db/tests/report-card-import.test.ts"
   },
   "imports": {
     "#env": {
@@ -26,17 +28,15 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@better-auth/prisma-adapter": "^1.7.7",
-    "@fastify/cors": "^11.3.1",
-    "@fastify/helmet": "^13.1.2",
+    "@better-auth/prisma-adapter": "^1.7.21",
+    "@fastify/cors": "^11.4.1",
+    "@fastify/helmet": "^13.2.0",
     "@maktabi/db": "workspace:*",
     "@node-rs/argon2": "^2.2.2",
-    "@trpc/server": "^11.19.0",
-    "better-auth": "^1.7.7",
-    "dotenv": "^16.6.1",
-    "fastify": "^5.12.7",
-    "pdfjs-dist": "^6.4.299",
-    "unpdf": "^1.8.1",
+    "@trpc/server": "^11.28.0",
+    "better-auth": "^1.7.21",
+    "dotenv": "^18.0.10",
+    "fastify": "^5.12.8",
     "zod": "^4.6.7"
   },
   "devDependencies": {

@@ -2,7 +2,7 @@ import { z } from "zod";
 import { router, tenantProcedure } from "../../trpc/trpc.js";
 import { PERMISSIONS } from "../../config/permissions.js";
 import { appError } from "../../trpc/app-error.js";
-import { Prisma } from "@maktabi/db";
+
 
 export const classesRouter = router({
   /* ――――――――――――――――――――――――――――――――― 1. List ―――――――――――――――――――――――――――――――― */
@@ -145,7 +145,7 @@ export const classesRouter = router({
       if (!existingClass || existingClass.schoolId !== ctx.activeSchoolId) {
         throw appError({
           code: "NOT_FOUND",
-          appCode: "RESOURCE_NOT_FOUND",
+          appCode: "CLASS_NOT_FOUND",
         });
       }
 
@@ -193,15 +193,14 @@ export const classesRouter = router({
       if (!existingClass || existingClass.schoolId !== ctx.activeSchoolId) {
         throw appError({
           code: "NOT_FOUND",
-          appCode: "RESOURCE_NOT_FOUND",
+          appCode: "CLASS_NOT_FOUND",
         });
       }
 
       if (existingClass._count.enrollments > 0) {
         throw appError({
           code: "BAD_REQUEST",
-          appCode: "RELATION_VIOLATION",
-          message: "امکان حذف این کلاس وجود ندارد زیرا دانش‌آموزانی در آن ثبت‌نام کرده‌اند.",
+          appCode: "CLASS_IN_USE",
         });
       }
 

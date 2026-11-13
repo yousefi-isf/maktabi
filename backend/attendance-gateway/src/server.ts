@@ -1,369 +1,203 @@
-import Fastify from 'fastify'
-import ZKLib, { type ZKUser } from 'node-zklib'
+import { timingSafeEqual } from "node:crypto";
+import { pathToFileURL } from "node:url";
+import { setTimeout as sleep } from "node:timers/promises";
+import Fastify from "fastify";
+import ZKLib from "node-zklib";
+import { loadGatewayConfig, type GatewayConfig } from "./config.js";
+import { DurableOutbox } from "./outbox.js";
+import { BackendClient, OutboxDelivery } from "./backend-client.js";
+import { DeviceMonitor, type AttendanceDevice } from "./device-monitor.js";
+import { acquireGatewayLock } from "./lock.js";
 
-// Load .env natively (requires Node 20.6+)
-try { process.loadEnvFile() } catch (e) {}
-
-const DEVICE_IP = process.env.DEVICE_IP || '192.168.2.201'
-const DEVICE_PORT = Number(process.env.DEVICE_PORT) || 4370
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:4000'
-const GATEWAY_SECRET = process.env.GATEWAY_SECRET || ''
-const SCHOOL_ID = process.env.SCHOOL_ID || ''
-
-const POLL_INTERVAL_MS = 1500 // Check for new logs every 1.5s (also serves as keep-alive)
-const RECONNECT_DELAY_MS = 5000 // 5s delay before reconnect attempt
-
-const gateway = Fastify({
-  logger: false // Keep console clean for real-time attendance logs
-})
-
-let zkInstance: ZKLib | null = null
-let isDeviceConnected = false
-let isConnecting = false
-let isPolling = false
-let isShuttingDown = false
-let pollTimer: NodeJS.Timeout | null = null
-let reconnectTimer: NodeJS.Timeout | null = null
-let connectionId = 0 // To track stale connection events
-
-// Tracking variables for new attendance records
-let lastKnownUserSn: number | null = null
-let lastKnownLogCount = 0
-
-// In-memory cache of device users for instant lookup (ID -> User info)
-const userCache = new Map<string, ZKUser>()
-
-async function syncDeviceStatus(status: 'connected' | 'disconnected') {
-  if (!BACKEND_URL || !GATEWAY_SECRET || !SCHOOL_ID) {
-    console.warn(`[Sync] ⚠️ Missing ENV configs, cannot sync status '${status}'.`);
-    return;
-  }
-  try {
-    console.log(`[Sync] 📡 Sending device status '${status}' to backend...`);
-    const res = await fetch(`${BACKEND_URL}/internal/device/status`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ secret: GATEWAY_SECRET, schoolId: SCHOOL_ID, status })
-    });
-    if (!res.ok) {
-      console.error(`[Sync] ❌ Backend rejected status update: ${res.status}`);
-    } else {
-      console.log(`[Sync] ✅ Backend confirmed status: ${status}`);
-    }
-  } catch (err: any) {
-    console.warn(`[Sync] ⚠️ Failed to notify backend of status (${status}): ${err.message}`);
-  }
+export function buildGatewayApp(
+	config: GatewayConfig,
+	monitor: DeviceMonitor,
+	outbox: DurableOutbox,
+	delivery: OutboxDelivery,
+	heartbeat: { lastSuccessAt: number | null; error: string | null },
+) {
+	const app = Fastify({ logger: false });
+	app.addHook("onRequest", async (request, reply) => {
+		if (request.url.split("?")[0] === "/health") return;
+		const expected = config.apiToken
+			? Buffer.from(`Bearer ${config.apiToken}`)
+			: null;
+		const supplied = Buffer.from(request.headers.authorization || "");
+		if (
+			!expected ||
+			expected.length !== supplied.length ||
+			!timingSafeEqual(expected, supplied)
+		) {
+			return reply
+				.code(401)
+				.send({
+					error: "A configured GATEWAY_API_TOKEN bearer token is required.",
+				});
+		}
+	});
+	app.get("/health", async (_request, reply) => {
+		const backendReachable =
+			heartbeat.lastSuccessAt !== null &&
+			Date.now() - heartbeat.lastSuccessAt < 35_000;
+		const healthy =
+			monitor.connected && backendReachable && !delivery.lastError;
+		return reply
+			.code(healthy ? 200 : 503)
+			.send({
+				status: healthy ? "ok" : "degraded",
+				deviceConnected: monitor.connected,
+				backendReachable,
+				pendingEvents: outbox.size,
+			});
+	});
+	app.get("/device/users", async () => ({
+		total: monitor.users.length,
+		users: monitor.users,
+	}));
+	app.get("/device/logs/recent", async () => ({
+		total: monitor.totalLogs,
+		connected: monitor.connected,
+		recent: monitor.recent,
+	}));
+	return app;
 }
 
-function clearTimers() {
-  if (pollTimer) {
-    clearInterval(pollTimer)
-    pollTimer = null
-  }
-  if (reconnectTimer) {
-    clearTimeout(reconnectTimer)
-    reconnectTimer = null
-  }
+export async function startGateway() {
+	const config = loadGatewayConfig();
+	// node-zklib constructs local Date objects from the device's wall-clock fields.
+	// Set the process timezone before any SDK read, irrespective of the host timezone.
+	process.env.TZ = config.timeZone;
+	const releaseLock = await acquireGatewayLock(config.outboxPath);
+	let outbox: DurableOutbox;
+	try {
+		outbox = await DurableOutbox.load(config.outboxPath);
+	} catch (error) {
+		await releaseLock();
+		throw error;
+	}
+	if (
+		outbox.pending.some(
+			({ punch }) =>
+				punch.schoolId !== config.schoolId ||
+				punch.deviceIp !== config.deviceIp,
+		)
+	) {
+		await releaseLock();
+		throw new Error(
+			"Pending outbox events belong to another device/school. Use a separate GATEWAY_DATA_DIR; preserve the existing queue.",
+		);
+	}
+	const client = new BackendClient(config);
+	const delivery = new OutboxDelivery(outbox, client, (receipt) => {
+		console.log(
+			`[Sync] ${receipt.alreadyExists ? "Already saved" : "Saved"}: ${receipt.studentName || "No matching student in the school"} at ${receipt.recordTime}`,
+		);
+	});
+	const monitor = new DeviceMonitor(
+		config,
+		outbox,
+		() =>
+			new ZKLib(
+				config.deviceIp,
+				config.devicePort,
+				10_000,
+				5000,
+			) as AttendanceDevice,
+	);
+	const heartbeat = {
+		lastSuccessAt: null as number | null,
+		error: null as string | null,
+	};
+	const app = buildGatewayApp(config, monitor, outbox, delivery, heartbeat);
+	try {
+		await app.listen({ port: config.port, host: config.host });
+	} catch (error) {
+		await releaseLock();
+		throw error;
+	}
+	console.log(
+		`[Gateway] Listening on ${config.host}:${config.port}. Device timezone: ${config.timeZone}. Pending events: ${outbox.size}.`,
+	);
+	const controller = new AbortController();
+	const pause = (ms: number) =>
+		sleep(ms, undefined, { signal: controller.signal }).catch((error) => {
+			if (error.name !== "AbortError") throw error;
+		});
+	const deviceWorker = (async () => {
+		while (!controller.signal.aborted) {
+			await monitor.poll();
+			await pause(monitor.connected ? config.pollIntervalMs : 5000);
+		}
+	})();
+	const deliveryWorker = (async () => {
+		let previousError: string | null = null;
+		while (!controller.signal.aborted) {
+			await delivery.flush();
+			if (delivery.lastError && delivery.lastError !== previousError)
+				console.warn(
+					`[Sync] ${delivery.lastError} Events remain in the durable queue for retry.`,
+				);
+			previousError = delivery.lastError;
+			await pause(1000);
+		}
+	})();
+	const heartbeatWorker = (async () => {
+		while (!controller.signal.aborted) {
+			const status = monitor.connected ? "connected" : "disconnected";
+			try {
+				await client.sendStatus(status);
+				heartbeat.lastSuccessAt = Date.now();
+				heartbeat.error = null;
+			} catch (error) {
+				const message =
+					error instanceof Error ? error.message : "Heartbeat failed.";
+				if (heartbeat.error !== message) console.warn(`[Heartbeat] ${message}`);
+				heartbeat.error = message;
+			}
+			if (status === (monitor.connected ? "connected" : "disconnected"))
+				await pause(10_000);
+		}
+	})();
+	let shutdown: Promise<void> | undefined;
+	const stop = () =>
+		(shutdown ??= (async () => {
+			controller.abort();
+			delivery.stop();
+			await Promise.allSettled([deviceWorker, deliveryWorker, heartbeatWorker]);
+			await monitor.disconnect();
+			try {
+				await client.sendStatus("disconnected");
+			} catch {}
+			await outbox.close();
+			await app.close();
+			await releaseLock();
+		})());
+	const onSignal = () => {
+		void stop().catch((error) => {
+			console.error(error);
+			process.exitCode = 1;
+		});
+	};
+	process.once("SIGINT", onSignal);
+	process.once("SIGTERM", onSignal);
+	for (const worker of [deviceWorker, deliveryWorker, heartbeatWorker]) {
+		void worker.catch((error) => {
+			console.error("[Gateway] Worker failed; shutting down safely.", error);
+			process.exitCode = 1;
+			void stop();
+		});
+	}
+	return { app, stop };
 }
 
-function scheduleReconnect(reason: string, triggerConnectionId: number) {
-  if (isShuttingDown) return
-  // Ignore events from old, closed connections
-  if (triggerConnectionId !== connectionId) return
-
-  syncDeviceStatus('disconnected'); // Always notify backend of drop immediately
-  isDeviceConnected = false
-  isPolling = false
-  clearTimers()
-
-  console.log(`[ZKLib] ⚠️ Connection dropped (${reason}). Reconnecting in ${RECONNECT_DELAY_MS / 1000}s...`)
-  reconnectTimer = setTimeout(async () => {
-    reconnectTimer = null
-    await connectToDevice()
-  }, RECONNECT_DELAY_MS)
+if (
+	process.argv[1] &&
+	import.meta.url === pathToFileURL(process.argv[1]).href
+) {
+	void startGateway().catch((error) => {
+		console.error(
+			`[Gateway] ${error instanceof Error ? error.message : "Startup failed."}`,
+		);
+		process.exitCode = 1;
+	});
 }
-
-async function loadDeviceUsers(): Promise<void> {
-  if (!zkInstance) return
-  try {
-    const res = await zkInstance.getUsers()
-    if (res && res.data) {
-      userCache.clear()
-      for (const u of res.data) {
-        userCache.set(String(u.userId), u)
-      }
-      console.log(`[ZKLib] 👥 Synchronized ${userCache.size} users into local memory.`)
-    }
-  } catch (err: any) {
-    console.warn(`[ZKLib] ⚠️ Failed to fetch users list: ${err?.message || err}`)
-  }
-}
-
-function resolveUserRole(role?: number): string {
-  if (role === undefined || role === null) return 'Unknown'
-  switch (role) {
-    case 0:
-      return 'User'
-    case 14:
-      return 'SuperAdmin'
-    case 2:
-      return 'Enroller'
-    case 6:
-      return 'Manager'
-    default:
-      return `Role(${role})`
-  }
-}
-
-function startRealTimePolling() {
-  if (pollTimer) clearInterval(pollTimer)
-
-  pollTimer = setInterval(async () => {
-    if (!isDeviceConnected || !zkInstance || isPolling || isShuttingDown) return
-    isPolling = true
-
-    try {
-      // 1. Send ultra-lightweight getInfo (keeps TCP active and checks for changes)
-      const info = await zkInstance.getInfo()
-
-      // 2. Check if the device has recorded any new attendances
-      if (info.logCounts !== lastKnownLogCount) {
-        // Fetch all attendance logs to extract newly added records
-        const attendances = await zkInstance.getAttendances()
-
-        if (attendances && attendances.data) {
-          const newRecords = attendances.data
-            .filter((rec) => rec.userSn > (lastKnownUserSn ?? 0))
-            .sort((a, b) => a.userSn - b.userSn)
-
-          if (newRecords.length > 0) {
-            for (const record of newRecords) {
-              const userIdStr = String(record.deviceUserId)
-              let user = userCache.get(userIdStr)
-
-              // If user is not yet in cache (e.g. registered recently), refresh cache
-              if (!user) {
-                await loadDeviceUsers()
-                user = userCache.get(userIdStr)
-              }
-
-              const userName = user?.name ? user.name.trim() : 'Unknown'
-              const userRole = resolveUserRole(user?.role)
-
-              console.log('----------------------------------------------------')
-              console.log('🔔 [New Real-Time Attendance Event]:')
-              console.log(`👤 User ID: ${record.deviceUserId}`)
-              console.log(`📛 Name: ${userName}`)
-              console.log(`🛡️ Role: ${userRole}`)
-              console.log(`🔢 Record Serial (#userSn): ${record.userSn}`)
-              console.log(`⏰ Time: ${record.recordTime ? new Date(record.recordTime).toISOString() : 'Unknown'}`)
-              console.log('Raw Record:', {
-                ...record,
-                name: userName,
-                role: userRole
-              })
-
-              // 🔴 Send the punch to the backend
-              if (BACKEND_URL && GATEWAY_SECRET && SCHOOL_ID) {
-                try {
-                  const res = await fetch(`${BACKEND_URL}/internal/device/punch`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      secret: GATEWAY_SECRET,
-                      schoolId: SCHOOL_ID,
-                      deviceUserId: String(record.deviceUserId),
-                      recordTime: record.recordTime ? new Date(record.recordTime).toISOString() : new Date().toISOString(),
-                      deviceIp: DEVICE_IP,
-                      deviceSn: record.userSn,
-                    })
-                  })
-                  
-                  if (!res.ok) {
-                    console.error(`[Sync] ❌ Failed to sync to backend: ${res.status} ${res.statusText}`)
-                  } else {
-                    const data = await res.json()
-                    const msg = data.alreadyExists ? 'Already processed' : 'Saved to database'
-                    console.log(`[Sync] ✅ Success! (${msg})`)
-                    if (data.studentName) {
-                      console.log(`[Sync] 🧑‍🎓 Matched Student: ${data.studentName} (National Code: ${data.nationalCode})`)
-                    } else if (!data.alreadyExists) {
-                      console.log(`[Sync] ⚠️ Warning: Unrecognized national code prefix. Record saved as unknown.`)
-                    }
-                  }
-                } catch (err: any) {
-                  console.error(`[Sync] ❌ Network error syncing to backend: ${err.message}`)
-                }
-              } else {
-                console.warn('[Sync] ⚠️ BACKEND_URL, GATEWAY_SECRET, or SCHOOL_ID not set. Skipping backend sync.')
-              }
-
-              console.log('----------------------------------------------------')
-
-              lastKnownUserSn = record.userSn
-            }
-          }
-        }
-
-        lastKnownLogCount = info.logCounts
-      }
-    } catch (err: any) {
-      console.warn(`[ZKLib] ⚠️ Polling error: ${err?.message || err}`)
-      scheduleReconnect('Device polling failed', connectionId)
-    } finally {
-      isPolling = false
-    }
-  }, POLL_INTERVAL_MS)
-}
-
-async function connectToDevice() {
-  if (isShuttingDown || isConnecting) return
-  isConnecting = true
-
-  try {
-    // Cleanly close previous instance if any
-    if (zkInstance) {
-      try {
-        await zkInstance.disconnect()
-      } catch { }
-      zkInstance = null
-    }
-
-    console.log(`[ZKLib] 🔄 Connecting to attendance device (${DEVICE_IP}:${DEVICE_PORT})...`)
-
-    const currentConnId = ++connectionId;
-
-    const instance = new ZKLib(DEVICE_IP, DEVICE_PORT, 10000, 5000)
-
-    await instance.createSocket(
-      (err) => {
-        scheduleReconnect(err?.message || 'Socket error', currentConnId)
-      },
-      () => {
-        scheduleReconnect('Socket closed', currentConnId)
-      }
-    )
-
-    // Enable TCP keep-alive
-    const tcpSocket = (instance as any).zklibTcp?.socket
-    if (tcpSocket) {
-      tcpSocket.setKeepAlive(true, 10000)
-      tcpSocket.setTimeout(0)
-    }
-
-    // Get initial baseline
-    const info = await instance.getInfo()
-    const initialLogs = await instance.getAttendances()
-
-    if (initialLogs && initialLogs.data && initialLogs.data.length > 0) {
-      const maxSn = Math.max(...initialLogs.data.map((r) => r.userSn))
-      lastKnownUserSn = maxSn
-    } else {
-      lastKnownUserSn = 0
-    }
-
-    lastKnownLogCount = info.logCounts
-    zkInstance = instance
-    isDeviceConnected = true
-
-    console.log('[ZKLib] ✅ Connected to device successfully.')
-    console.log(`[ZKLib] 📊 Device Status: Users: ${info.userCounts}, Total Logs: ${info.logCounts}, Capacity: ${info.logCapacity}`)
-    console.log(`[ZKLib] 🎯 Initial baseline established at record #${lastKnownUserSn}.`)
-
-    // Notify backend
-    await syncDeviceStatus('connected');
-
-    // Load registered users into memory cache
-    await loadDeviceUsers()
-
-    console.log('[ZKLib] 🎧 Real-time attendance monitor is ACTIVE.')
-    console.log('[ZKLib] 👉 Place a finger or scan a card on the device to test!\n')
-
-    // Start smart real-time polling
-    startRealTimePolling()
-  } catch (error: any) {
-    isDeviceConnected = false
-    console.error(`[ZKLib] ❌ Failed to connect: ${error?.message || error}`)
-    scheduleReconnect('Connection failed', connectionId)
-  } finally {
-    isConnecting = false
-  }
-}
-
-// REST Endpoints
-gateway.get('/health', async () => ({
-  status: 'ok',
-  device: {
-    ip: DEVICE_IP,
-    port: DEVICE_PORT,
-    connected: isDeviceConnected,
-    totalLogs: lastKnownLogCount,
-    latestRecordSerial: lastKnownUserSn,
-    cachedUsersCount: userCache.size
-  }
-}))
-
-gateway.get('/device/users', async () => {
-  return {
-    total: userCache.size,
-    users: Array.from(userCache.values()).map((u) => ({
-      userId: u.userId,
-      name: u.name?.trim() || 'Unknown',
-      role: resolveUserRole(u.role),
-      cardno: u.cardno
-    }))
-  }
-})
-
-gateway.get('/device/logs/recent', async () => {
-  if (!zkInstance || !isDeviceConnected) {
-    return { error: 'Device is not connected' }
-  }
-  try {
-    const logs = await zkInstance.getAttendances()
-    return {
-      total: logs.data.length,
-      recent: logs.data.slice(-10)
-    }
-  } catch (err: any) {
-    return { error: err?.message || 'Failed to fetch logs' }
-  }
-})
-
-// Start HTTP server
-async function startServer() {
-  try {
-    const address = await gateway.listen({ port: 3002, host: '0.0.0.0' })
-    console.log(`🚀 Attendance Gateway server listening on port 3002 (${address})`)
-
-    // Initiate connection
-    await connectToDevice()
-  } catch (err) {
-    console.error('Failed to start HTTP server:', err)
-    process.exit(1)
-  }
-}
-
-startServer()
-
-// Graceful shutdown handling
-const handleShutdown = async (signal: string) => {
-  isShuttingDown = true
-  clearTimers()
-  console.log(`\n[ZKLib] Received ${signal}. Shutting down and disconnecting device...`)
-
-  try {
-    if (zkInstance && isDeviceConnected) {
-      await syncDeviceStatus('disconnected')
-      await zkInstance.disconnect()
-    }
-  } catch { }
-
-  await gateway.close()
-  process.exit(0)
-}
-
-process.on('SIGINT', () => handleShutdown('SIGINT'))
-process.on('SIGTERM', () => handleShutdown('SIGTERM'))
-
-

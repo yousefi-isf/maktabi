@@ -9,7 +9,7 @@ import type { PunchItem as PunchResult } from '@/features/dashboard/LivePunchesC
 
 export const Route = createFileRoute('/_authenticated/attendance/')({
 	beforeLoad: guardPermission({
-		anyOf: ['attendance.record.read', 'attendance.record.read.own'],
+		anyOf: ['attendance.record.read'],
 	}),
 	component: AttendanceDashboard,
 });
@@ -84,8 +84,8 @@ function AttendanceDashboard() {
 		<div className="flex flex-col gap-6 p-6">
 			<div className="flex items-center justify-between">
 				<div>
-					<h1 className="text-2xl font-bold tracking-tight">داشبورد زنده حضور و غیاب</h1>
-					<p className="text-muted-foreground mt-1">مانیتورینگ لحظه‌ای دستگاه کارت‌ساعت</p>
+					<h1 className="text-2xl font-bold tracking-tight">ثبت اولیهٔ دستگاه</h1>
+					<p className="text-muted-foreground mt-1">ترددهای دستگاه؛ تأیید نهایی حضور در بخش تثبیت حضور کلاس انجام می‌شود.</p>
 				</div>
 				
 				{deviceStatus === 'connected' ? (
@@ -178,7 +178,7 @@ function AttendanceDashboard() {
 										<td className="px-6 py-4">
 											{punch.studentId ? (
 												<span className="bg-emerald-500/10 text-emerald-600 px-3 py-1 rounded-full text-xs font-medium border border-emerald-500/20">
-													موفق
+													ثبت اولیه
 												</span>
 											) : (
 												<span className="bg-amber-500/10 text-amber-600 px-3 py-1 rounded-full text-xs font-medium border border-amber-500/20">
